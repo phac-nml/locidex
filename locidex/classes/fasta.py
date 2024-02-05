@@ -24,7 +24,7 @@ class parse_fasta:
         self.seq_obj = self.parse_fasta()
 
 
-        return self.status
+        return
 
     def get_seqids(self):
         if self.seq_obj is not None:
@@ -49,7 +49,7 @@ class parse_fasta:
                 seq = str(record.seq)
                 gene_name = id
                 seq_id = id
-                if self.pars_def:
+                if self.parse_def:
                     h = id.split(self.delim)
                     if len(h) > 1:
                         gene_name = h[0]

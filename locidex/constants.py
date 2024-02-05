@@ -25,12 +25,11 @@ qcovs
 sstrand
 evalue
 bitscore
-sseq
 '''.strip().split('\n')
 
 
 FILE_TYPES = {
-    'genbank':["gbk","genbank","gbf","gbk.gz","genbank.gz","gbf.gz"],
+    'genbank':["gbk","genbank","gbf","gbk.gz","genbank.gz","gbf.gz","gbff","gbff.gz"],
     'fasta':["fasta","fas","fa","ffn","fna","fasta.gz","fas.gz","fa.gz","ffn.gz","fna.gz"],
 }
 
@@ -58,8 +57,12 @@ DB_CONFIG_FIELDS = [
     "db_version",
     "db_date",
     "db_author",
-    "db_num_loci",
-    "db_filenames",
+    "db_desc",
+    "db_num_seqs",
+    "is_nucl",
+    "is_prot",
+    "nucleotide_db_name",
+    "protein_db_name",
 ]
 
 SEARCH_RUN_DATA = {

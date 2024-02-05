@@ -23,12 +23,14 @@ class seq_intake:
         if not os.path.isfile(self.input_file):
             self.messages.append(f'Error {self.input_file} does not exist')
             self.status = False
-            return self.status
+
+        if not self.status:
+            return
 
         if file_type == 'genbank':
             self.status = self.process_gbk()
         elif file_type == 'fasta':
-            self.status = self.process_fasta()
+            self.process_fasta()
         elif file_type == 'gff':
             self.status = False
         elif file_type == 'gtf':
@@ -37,15 +39,13 @@ class seq_intake:
         if self.status:
             self.add_codon_data()
 
-        return self.status
-
-
     def add_codon_data(self):
         for record in self.seq_data:
             if record['aa_len'] == 0:
                 continue
-            dna_len = record['dna_seq']
+
             dna_seq = record['dna_seq']
+            dna_len = len(dna_seq)
             start_codon = ''
             stop_codon = ''
             count_internal_stop = 0
@@ -60,9 +60,11 @@ class seq_intake:
 
     def process_gbk(self):
         obj = parse_gbk(self.input_file)
+
         if obj.status == False:
             return False
         acs = obj.get_acs()
+
         for a in acs:
             features = obj.get_feature(a,self.feat_key)
             for seq in features:
@@ -83,46 +85,174 @@ class seq_intake:
     def process_fasta(self):
         obj = parse_fasta(self.input_file)
         if obj.status == False:
-            return False
+            return
         ids = obj.get_seqids()
         for id in ids:
-            features = obj.get_feature(id, self.feat_key)
-            for seq in features:
-                seq = seq['dna_seq']
-                dtype = guess_alphabet(seq)
-                dna_seq = ''
-                dna_hash = ''
-                dna_len = 0
-                aa_seq = ''
-                aa_hash = ''
-                aa_len = 0
-                if dtype == 'dna':
-                    dna_seq = seq
-                    dna_hash = calc_md5([seq])[0]
-                    dna_len = len(seq)
-                    aa_seq = six_frame_translation(dna_seq,self.translation_table)
-                    aa_hash = calc_md5([aa_seq])[0]
-                    aa_len = len(aa_seq)
-                else:
-                    aa_seq = six_frame_translation(dna_seq,self.translation_table)[0][0]
-                    aa_hash = calc_md5([aa_seq])[0]
-                    aa_len = len(aa_seq)
+            features = obj.get_seq_by_id(id)
+            seq = features['seq']
+            dtype = guess_alphabet(seq)
+            dna_seq = ''
+            dna_hash = ''
+            dna_len = 0
+            aa_seq = ''
+            aa_hash = ''
+            aa_len = 0
+            if dtype == 'dna':
+                dna_seq = seq
+                dna_hash = calc_md5([seq])[0]
+                dna_len = len(seq)
+                aa_seq = six_frame_translation(dna_seq,self.translation_table)
+                aa_hash = calc_md5([aa_seq])[0]
+                aa_len = len(aa_seq)
+            else:
+                aa_seq = six_frame_translation(dna_seq,self.translation_table)[0][0]
+                aa_hash = calc_md5([aa_seq])[0]
+                aa_len = len(aa_seq)
+
+            self.seq_data.append({
+                'parent_id': features['gene_name'],
+                'locus_name': features['gene_name'],
+                'seq_id': features['seq_id'],
+                'dna_seq': dna_seq,
+                'dna_hash': dna_hash,
+                'dna_len': dna_len,
+                'aa_seq': aa_seq,
+                'aa_hash': aa_hash,
+                'aa_len': aa_len,
+
+            })
+
+        return
 
 
-                self.seq_data.append({
-                    'parent_id': seq['gene_name'],
-                    'locus_name': seq['gene_name'],
-                    'seq_id': seq['seq_id'],
-                    'dna_seq': dna_seq,
-                    'dna_hash': dna_hash,
-                    'dna_len': dna_len,
-                    'aa_seq': aa_seq,
-                    'aa_hash': aa_hash,
-                    'aa_len': aa_len,
+class seq_store:
+    stored_fields = ['parent_id','locus_name','seq_id','dna_hash','dna_len','aa_hash','aa_len','start_codon','stop_codon','count_internal_stop']
+    record = {
+        'db_info': {},
+        'db_seq_info': {},
+        'query_data': {
+            'sample_name':'',
+            'query_seq_data': {},
+            'query_hit_columns': [],
+            'query_hits': {},
+            "locus_profile":{}
+        }
+    }
 
-                })
+    def __init__(self,sample_name,db_config_dict,metadata_dict,query_seq_records,blast_columns,filters={},stored_fields=[]):
+        self.sample_name = sample_name
+        self.record['query_data']['sample_name'] = sample_name
+        self.add_db_config(db_config_dict)
+        self.add_seq_data(query_seq_records)
+        if len(stored_fields) > 0 :
+            self.stored_fields = stored_fields
+        self.add_db_metadata(metadata_dict)
+        self.add_hit_cols(blast_columns)
+        self.filters = filters
 
-        return True
+
+    def add_db_config(self,conf):
+        self.record['db_info'] = conf
+
+    def add_hit_cols(self,columns):
+        self.record['query_hit_columns'] = columns
+
+    def add_seq_data(self,query_seq_records):
+        for idx in range(0, len(query_seq_records)):
+            self.record['query_data']['query_seq_data'][idx] = {}
+            for f in self.stored_fields:
+                self.record['query_data']['query_seq_data'][idx][f] = ''
+                if f in query_seq_records[idx]:
+                    self.record['query_data']['query_seq_data'][idx][f] = query_seq_records[idx][f]
+
+    def add_db_metadata(self,metadata_dict):
+        locus_profile = {'sample_name':self.sample_name}
+        for seq_index in metadata_dict:
+            self.record['db_seq_info'][seq_index] = metadata_dict[seq_index]
+            locus_profile[metadata_dict[seq_index]['locus_name']] = {
+                    'nucleotide':[],
+                    'protein':[]
+                }
+        self.record['query_data']["locus_profile"] = locus_profile
+
+    def prepopulate_hit_data(self,df,id_col):
+        ids = list(df[id_col].unique())
+        for i in ids:
+            if str(i) not in self.record['query_data']['query_hits']:
+                self.record['query_data']['query_hits'][str(i)] = {
+                    'nucleotide':[],
+                    'protein':[]
+                }
+
+    def add_hit_data(self,df,dbtype,id_col,prepopulate=True):
+        if prepopulate:
+            self.prepopulate_hit_data(df,id_col)
+        for index, row in df.iterrows():
+            qid = str(row[id_col])
+            self.record['query_data']['query_hits'][qid][dbtype].append(row.to_dict())
+
+    def filter_hits(self):
+        query_hits = self.record['query_data']['query_hits']
+        for qid in query_hits:
+            for dbtype in query_hits[qid]:
+                filt = []
+                pbitscore = 0
+                pbest_hit = ''
+                for hit in query_hits[qid][dbtype]:
+                    hit_id = str(hit['sseqid'])
+
+                    qlen = hit['qlen']
+                    pident = hit['pident']
+                    qcovs = hit['qcovs']
+                    bitscore = hit['bitscore']
+                    hit_name = self.record['db_seq_info'][hit_id]['locus_name']
+
+                    hinfo = self.record["db_seq_info"][hit_id]
+                    if dbtype == 'nucleotide':
+                        if "dna_min_len" not in hinfo:
+                            min_len = self.filters["dna_min_len"]
+                        else:
+                            min_len = hinfo["dna_min_len"]
+                        if "dna_max_len" not in hinfo:
+                            max_len = self.filters["dna_min_len"]
+                        else:
+                            max_len = hinfo["dna_max_len"]
+                        if "min_dna_match_cov" not in hinfo:
+                            min_cov = self.filters["min_dna_match_cov"]
+                        else:
+                            min_cov = hinfo["dna_min_cov"]
+                        if "dna_min_ident" not in hinfo:
+                            min_ident = self.filters["dna_min_ident"]
+                        else:
+                            min_ident = hinfo["dna_min_ident"]
+                    else:
+                        if qlen < hinfo["aa_min_len"] or qlen > hinfo["aa_max_len"] or pident < hinfo["aa_min_ident"]:
+                            continue
+                        if "aa_min_len" not in hinfo:
+                            min_len = self.filters["aa_min_len"]
+                        else:
+                            min_len = hinfo["aa_min_len"]
+                        if "aa_max_len" not in hinfo:
+                            max_len = self.filters["aa_min_len"]
+                        else:
+                            max_len = hinfo["aa_max_len"]
+                        if "min_aa_match_cov" not in hinfo:
+                            min_cov = self.filters["min_aa_match_cov"]
+                        else:
+                            min_cov = hinfo["aa_min_cov"]
+                        if "aa_min_ident" not in hinfo:
+                            min_ident = self.filters["aa_min_ident"]
+                        else:
+                            min_ident = hinfo["aa_min_ident"]
+
+                    if qlen < min_len or qlen > max_len or pident < min_ident or qcovs < min_cov:
+                        continue
+                    self.record['query_data']["locus_profile"][hit_name][dbtype].append(qid)
+                    filt.append(hit)
+                    if bitscore > pbitscore:
+                        pbitscore = bitscore
+                        pbest_hit = hit
+                query_hits[qid][dbtype] = filt
 
 
 

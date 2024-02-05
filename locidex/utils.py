@@ -47,13 +47,16 @@ def calc_md5(list):
 def translate_dna(dna_seq,trans_table=11):
     l = len(dna_seq)
     r = l % 3
-    s = ''.join(list(dna_seq)[:-r])
+    if r == 0:
+        s = dna_seq
+    else:
+        s = ''.join(list(dna_seq)[:-r])
     return str(Seq(s).translate(table=trans_table))
 
 def six_frame_translation(dna_seq,trans_table):
     fwd = []
     rev = []
-    for i in range(0,2):
+    for i in range(0,3):
         fwd.append(translate_dna(dna_seq[i:], trans_table))
         rev.append(translate_dna(revcomp(dna_seq)[i:], trans_table))
     return (fwd, rev)
@@ -72,7 +75,9 @@ def guess_alphabet(seq):
         dna_bases = ['A','T','C','G','N']
         l = len(seq)
         c = 0
-        for b in dna_bases:
+        for b in counts:
+            if b not in dna_bases:
+                continue
             c+= counts[b]
         if c / l >= 0.7:
             dtype = 'dna'
@@ -96,7 +101,7 @@ def write_seq_list(seqs,output_file,format='json',seq_type='dna',seq_id_key='ind
                     s = record['aa_seq']
                 oh.write(f">{id}\n{s}\n")
 
-def write_seq_dict(output_file,data):
+def write_seq_dict(data,output_file):
     with open(output_file, 'w') as oh:
         for id in data:
             oh.write(f">{id}\n{data[id]}\n")

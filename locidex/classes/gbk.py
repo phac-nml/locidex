@@ -6,19 +6,18 @@ import os
 from locidex.utils import revcomp,calc_md5
 
 class parse_gbk:
-    gbk_file = None
+    input_file = None
     seq_obj = None
     status = True
     messages = []
 
     def __init__(self,input_file):
-        self.gbk_file = input_file
+        self.input_file= input_file
         if not os.path.isfile(self.input_file):
             self.messages.append(f'Error {self.input_file} does not exist')
             self.status = False
         self.seq_obj = self.parse_reference_gbk()
 
-        return self.status
 
     def get_acs(self):
         if self.seq_obj is not None:
@@ -34,7 +33,7 @@ class parse_gbk:
 
     def get_feature(self,acs,feature):
         s = self.get_seq_by_acs(acs)
-        if feature in s:
+        if feature in s['features']:
             return s['features'][feature]
         else:
             return {}
@@ -54,10 +53,10 @@ class parse_gbk:
         dict
             A dictionary of all the reference features
         """
-        encoding = guess_type(self.gbk_file)[1]
+        encoding = guess_type(self.input_file)[1]
         _open = partial(gzip.open, mode='rt') if encoding == 'gzip' else open
         sequences = {}
-        with _open(self.gbk_file) as handle:
+        with _open(self.input_file) as handle:
             for record in GenBank.parse(handle):
                 gb_accession = record.locus
                 gb_accession_version = 1

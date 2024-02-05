@@ -1,3 +1,5 @@
+import pandas as pd
+
 from locidex.classes import run_command
 import os
 
@@ -26,11 +28,8 @@ class blast_search:
         self.BLAST_TABLE_COLS = blast_columns
         self.parse_seqids = parse_seqids
 
-        if not os.path.isfile(self.input_db_path):
-            self.messages.append(f'Error {self.input_db_path} blast db does not exist')
-            self.status = False
 
-        elif not os.path.isfile(self.input_query_path):
+        if not os.path.isfile(self.input_query_path):
             self.messages.append(f'Error {self.input_query_path} query fasta does not exist')
             self.status = False
 
@@ -43,9 +42,9 @@ class blast_search:
             self.messages.append(f'Error {blast_method} is not a supported blast method: {self.blast_method}')
             self.status = False
 
-        self.run_blast()
+        self.messages.append(self.run_blast())
 
-        return self.status
+
 
     def makeblastdb(self):
         dbtype = 'nucl'
@@ -65,7 +64,12 @@ class blast_search:
         extensions = ['nsq', 'nin', 'nhr']
         for e in extensions:
             if not os.path.isfile(f'{self.input_db_path}.{e}'):
-                return False
+                extensions2 = ['pto', 'ptf', 'phr']
+                for e2 in extensions2:
+                    if not os.path.isfile(f'{self.input_db_path}.{e2}'):
+                        return False
+
+
         return True
 
     def run_blast(self):
@@ -74,7 +78,7 @@ class blast_search:
             '-query', self.input_query_path,
             '-db', self.input_db_path,
             '-out', self.output_results,
-            '-outfmt', '6 {}'.format(' '.join(self.BLAST_TABLE_COLS)),
+            '-outfmt', "'6 {}'".format(' '.join(self.BLAST_TABLE_COLS)),
         ]
         for p in self.blast_params:
             if p == 'parse_seqids':
@@ -102,15 +106,23 @@ class parse_blast:
         if not os.path.isfile(self.input_file):
             self.messages.append(f'Error {self.input_file} does not exist')
             self.status = False
-
+        self.read_hit_table()
         self.columns = self.df.columns.tolist()
 
+        for id_col in ['qseqid','sseqid']:
+            tp = {}
+            if id_col in self.columns:
+                tp[id_col] = 'object'
+            self.df = self.df.astype(tp)
         for col_name in self.filter_options:
             if col_name in self.columns:
                 min_value = self.filter_options[col_name]['min']
                 max_value = self.filter_options[col_name]['max']
                 include = self.filter_options[col_name]['include']
                 self.filter_df(col_name, min_value, max_value,include)
+
+    def read_hit_table(self):
+        self.df = pd.read_csv(self.input_file,header=None,names=self.BLAST_TABLE_COLS,sep="\t",low_memory=False)
 
 
     def filter_df(self,col_name,min_value,max_value,include):
