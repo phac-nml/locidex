@@ -127,6 +127,8 @@ class seq_reporter:
             num_alleles = len(allele_hashes)
             if num_alleles > 1 and self.mode == 'conservative':
                 allele_hashes = ['-']
+            elif num_alleles == 0:
+                allele_hashes = ['-']
             self.profile[loci_name] = ",".join([str(x) for x in allele_hashes])
 
 
