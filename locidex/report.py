@@ -126,7 +126,7 @@ class seq_reporter:
                 allele_hashes.append(self.query_seq_data[seq_id][key])
             num_alleles = len(allele_hashes)
             if num_alleles > 1 and self.mode == 'conservative':
-                allele_hashes = []
+                allele_hashes = ['-']
             self.profile[loci_name] = ",".join([str(x) for x in allele_hashes])
 
 
