@@ -52,8 +52,6 @@ def parse_args():
                         help='Format of query file [genbank,fasta]')
     parser.add_argument('--translation_table', type=int, required=False,
                         help='output directory', default=11)
-    parser.add_argument('-a', '--annotate', required=False, help='Perform annotation on unannotated input fasta',
-                        action='store_true')
     parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
     parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
                         action='store_true')
@@ -99,9 +97,6 @@ def run():
     min_aa_len = cmd_args.min_aa_len
     max_aa_len = cmd_args.max_aa_len
     sample_name = cmd_args.name
-    perform_annotation = cmd_args.annotation
-    if not perform_annotation:
-        perform_annotation = True
 
     if sample_name == None:
         sample_name = os.path.basename(query_file)
@@ -146,7 +141,7 @@ def run():
             print(f'Format for query file must be one of {list(FILE_TYPES.keys())}, you supplied {format}')
         sys.exit()
 
-    seq_obj = seq_intake(query_file,format,'CDS',translation_table,perform_annotation)
+    seq_obj = seq_intake(query_file,format,'CDS',translation_table)
 
     if seq_obj.status == False:
         print(f'Something went wrong parsing query file: {query_file}, please check logs and messages:\n{seq_obj.messages}')

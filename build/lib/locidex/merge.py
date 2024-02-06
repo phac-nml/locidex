@@ -29,12 +29,12 @@ def get_file_list(input_files):
     if len(input_files) > 1:
         file_list = input_files
     else:
-        if re.search(".json$", input_files[0]) or re.search(".json.gz$", input_files[0]):
+        if re.search(".json$", input_files) or re.search(".json.gz$", input_files):
             file_list = [input_files]
         else:
-            encoding = guess_type(input_files[0])[1]
+            encoding = guess_type(input_files)[1]
             _open = partial(gzip.open, mode='rt') if encoding == 'gzip' else open
-            with _open(input_files[0]) as f:
+            with _open(input_files) as f:
                 for line in f:
                     file_list.append(line)
     return file_list
@@ -42,8 +42,6 @@ def get_file_list(input_files):
 def read_file_list(file_list):
     records = {}
     for file in file_list:
-        if not os.path.isfile(file):
-            continue
         encoding = guess_type(file)[1]
         _open = partial(gzip.open, mode='rt') if encoding == 'gzip' else open
         with _open(file) as f:
@@ -58,10 +56,9 @@ def run():
     analysis_parameters = vars(cmd_args)
 
     #Input Parameters
-    input_files = cmd_args.input[0]
+    input_files = cmd_args.input
     outdir = cmd_args.outdir
     force = cmd_args.force
-
 
 
     run_data = {}

@@ -2,7 +2,6 @@ import os
 from locidex.classes.gbk import parse_gbk
 from locidex.classes.fasta import parse_fasta
 from locidex.utils import guess_alphabet, calc_md5, six_frame_translation
-from locidex.classes.prodigal import gene_prediction
 
 class seq_intake:
     input_file = ''
@@ -15,7 +14,7 @@ class seq_intake:
     messages = []
     seq_data = []
 
-    def __init__(self,input_file,file_type,feat_key='CDS',translation_table=11,perform_annotation=False):
+    def __init__(self,input_file,file_type,feat_key='CDS',translation_table=11):
         self.input_file = input_file
         self.file_type = file_type
         self.translation_table = translation_table
@@ -30,10 +29,7 @@ class seq_intake:
 
         if file_type == 'genbank':
             self.status = self.process_gbk()
-        elif file_type == 'fasta' and perform_annotation==True:
-            self.process_seq_hash(gene_prediction(self.input_file).predict().sequences())
-            self.process_fasta()
-        elif file_type == 'fasta' and perform_annotation==False:
+        elif file_type == 'fasta':
             self.process_fasta()
         elif file_type == 'gff':
             self.status = False
@@ -127,43 +123,6 @@ class seq_intake:
             })
 
         return
-
-    def process_seq_hash(self,sequences):
-        for id in sequences:
-            seq = sequences[id]
-            dtype = guess_alphabet(seq)
-            dna_seq = ''
-            dna_hash = ''
-            dna_len = 0
-            aa_seq = ''
-            aa_hash = ''
-            aa_len = 0
-            if dtype == 'dna':
-                dna_seq = seq
-                dna_hash = calc_md5([seq])[0]
-                dna_len = len(seq)
-                aa_seq = six_frame_translation(dna_seq, self.translation_table)
-                aa_hash = calc_md5([aa_seq])[0]
-                aa_len = len(aa_seq)
-            else:
-                aa_seq = six_frame_translation(dna_seq, self.translation_table)[0][0]
-                aa_hash = calc_md5([aa_seq])[0]
-                aa_len = len(aa_seq)
-            self.seq_data.append({
-                'parent_id': id,
-                'locus_name': id,
-                'seq_id': id,
-                'dna_seq': dna_seq,
-                'dna_hash': dna_hash,
-                'dna_len': dna_len,
-                'aa_seq': aa_seq,
-                'aa_hash': aa_hash,
-                'aa_len': aa_len,
-
-            })
-
-        return
-
 
 
 class seq_store:
