@@ -36,18 +36,18 @@ def get_file_list(input_files):
             _open = partial(gzip.open, mode='rt') if encoding == 'gzip' else open
             with _open(input_files[0]) as f:
                 for line in f:
-                    file_list.append(line)
+                    file_list.append(line.rstrip())
     return file_list
 
 def read_file_list(file_list):
     records = {}
-    for file in file_list:
-        if not os.path.isfile(file):
+    for f in file_list:
+        if not os.path.isfile(f):
             continue
-        encoding = guess_type(file)[1]
+        encoding = guess_type(f)[1]
         _open = partial(gzip.open, mode='rt') if encoding == 'gzip' else open
-        with _open(file) as f:
-            data = json.load(f)
+        with _open(f) as fh:
+            data = json.load(fh)
             records = records | data
     return records
 

@@ -160,6 +160,9 @@ def run():
     force = cmd_args.force
 
 
+    if sample_name is None:
+        sample_name = '.'.join(os.path.basename(input_file).split('.')[:-1])
+
     run_data = SEARCH_RUN_DATA
     run_data['analysis_start_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     run_data['parameters'] = vars(cmd_args)
