@@ -1,5 +1,4 @@
 import json
-import shutil
 import pandas as pd
 import os, sys, re, collections, operator, math, time,base64
 from functools import partial
@@ -9,10 +8,7 @@ from datetime import datetime
 from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
 from locidex.version import __version__
 from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BLAST_TABLE_COLS, DB_CONFIG_FIELDS,DB_EXPECTED_FILES
-from locidex.classes.seq_intake import seq_intake, seq_store
-from locidex.utils import write_seq_list, write_seq_dict, filter_hsps_df
-from locidex.classes.blast import blast_search, parse_blast
-from locidex.classes.db import search_db_conf, db_config
+
 
 def parse_args():
     class CustomFormatter(ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter):
@@ -151,25 +147,6 @@ class seq_reporter:
         return pd.DataFrame.from_dict(data)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def run():
     cmd_args = parse_args()
     analysis_parameters = vars(cmd_args)
@@ -201,7 +178,7 @@ def run():
     if len(seq_store_dict) == 0:
         sys.exit()
 
-    allele_obj = seq_reporter(seq_store_dict, method='nucleotide', mode='conservative', filters={})
+    allele_obj = seq_reporter(seq_store_dict, method='nucleotide', mode='conservative', label=label, filters={})
     if report_format == 'profile':
         allele_obj.populate_profile()
         profile = {sample_name: allele_obj.profile}
