@@ -14,7 +14,6 @@ ordered_tasks = [
     'search',
     'report',
     'merge',
-    'format',
     'build'
 ]
 
