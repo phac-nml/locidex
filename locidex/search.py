@@ -218,7 +218,7 @@ def run():
 
     store_obj.filter_hits()
     store_obj.convert_profile_to_list()
-    
+
     del(filtered_df)
     with open(os.path.join(outdir,"seq_store.json"),"w") as out:
         json.dump(store_obj.record,out,indent=4)
