@@ -30,7 +30,7 @@ def get_file_list(input_files):
         file_list = input_files
     else:
         if re.search(".json$", input_files[0]) or re.search(".json.gz$", input_files[0]):
-            file_list = [input_files]
+            file_list = input_files
         else:
             encoding = guess_type(input_files[0])[1]
             _open = partial(gzip.open, mode='rt') if encoding == 'gzip' else open

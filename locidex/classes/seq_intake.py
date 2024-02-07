@@ -211,8 +211,8 @@ class seq_store:
         for seq_index in metadata_dict:
             self.record['db_seq_info'][seq_index] = metadata_dict[seq_index]
             locus_profile[metadata_dict[seq_index]['locus_name']] = {
-                    'nucleotide':[],
-                    'protein':[]
+                    'nucleotide':set(),
+                    'protein':set()
                 }
         self.record['query_data']["locus_profile"] = locus_profile
 
@@ -288,7 +288,7 @@ class seq_store:
 
                     if qlen < min_len or qlen > max_len or pident < min_ident or qcovs < min_cov:
                         continue
-                    self.record['query_data']["locus_profile"][hit_name][dbtype].append(qid)
+                    self.record['query_data']["locus_profile"][hit_name][dbtype].add(qid)
                     filt.append(hit)
                     if bitscore > pbitscore:
                         pbitscore = bitscore
