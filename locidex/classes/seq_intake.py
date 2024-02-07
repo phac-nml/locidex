@@ -233,8 +233,8 @@ class seq_store:
             self.record['query_data']['query_hits'][qid][dbtype].append(row.to_dict())
 
     def convert_profile_to_list(self):
-        for locus_name in self.locus_profile:
-            for dtype in self.locus_profile[locus_name]:
+        for locus_name in self.record['query_data']['locus_profile']:
+            for dtype in self.record['query_data']['locus_profile'][locus_name]:
                 self.record['query_data']['locus_profile'][locus_name][dtype] = list(self.locus_profile[locus_name][dtype])
 
     def filter_hits(self):
