@@ -190,6 +190,7 @@ class seq_store:
         self.add_db_metadata(metadata_dict)
         self.add_hit_cols(blast_columns)
         self.filters = filters
+        self.record['query_data']['sample_name'] = self.sample_name
 
 
     def add_db_config(self,conf):
@@ -207,7 +208,7 @@ class seq_store:
                     self.record['query_data']['query_seq_data'][idx][f] = query_seq_records[idx][f]
 
     def add_db_metadata(self,metadata_dict):
-        locus_profile = {'sample_name':self.sample_name}
+        locus_profile = {}
         for seq_index in metadata_dict:
             self.record['db_seq_info'][seq_index] = metadata_dict[seq_index]
             locus_profile[metadata_dict[seq_index]['locus_name']] = {
@@ -235,6 +236,7 @@ class seq_store:
     def convert_profile_to_list(self):
         for locus_name in self.record['query_data']['locus_profile']:
             for dtype in self.record['query_data']['locus_profile'][locus_name]:
+                print(self.record['query_data']['locus_profile'][locus_name])
                 self.record['query_data']['locus_profile'][locus_name][dtype] = list(self.record['query_data']['locus_profile'][locus_name][dtype])
 
     def filter_hits(self):
