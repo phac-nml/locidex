@@ -99,7 +99,7 @@ def run():
     min_aa_len = cmd_args.min_aa_len
     max_aa_len = cmd_args.max_aa_len
     sample_name = cmd_args.name
-    perform_annotation = cmd_args.annotation
+    perform_annotation = cmd_args.annotate
     if not perform_annotation:
         perform_annotation = True
 
