@@ -235,7 +235,7 @@ class seq_store:
     def convert_profile_to_list(self):
         for locus_name in self.record['query_data']['locus_profile']:
             for dtype in self.record['query_data']['locus_profile'][locus_name]:
-                self.record['query_data']['locus_profile'][locus_name][dtype] = list(self.locus_profile[locus_name][dtype])
+                self.record['query_data']['locus_profile'][locus_name][dtype] = list(self.record['query_data']['locus_profile'][locus_name][dtype])
 
     def filter_hits(self):
         query_hits = self.record['query_data']['query_hits']
