@@ -41,11 +41,11 @@ def parse_args():
     parser.add_argument('--min_dna_ident', type=float, required=False, help='Global minumum DNA percent identity required for match',
                         default=80.0)
     parser.add_argument('--min_aa_ident', type=float, required=False, help='Global minumum AA percent identity required for match',
-                        default=90.0)
+                        default=80.0)
     parser.add_argument('--min_dna_match_cov', type=float, required=False, help='Global minumum DNA percent hit coverage identity required for match',
-                        default=95.0)
+                        default=80.0)
     parser.add_argument('--min_aa_match_cov', type=float, required=False, help='Global minumum AA percent hit coverage identity required for match',
-                        default=95.0)
+                        default=80.0)
     parser.add_argument('--n_threads','-t', type=str, required=False,
                         help='CPU Threads to use', default=1)
     parser.add_argument('--format', type=str, required=False,
@@ -217,6 +217,8 @@ def run():
         store_obj.add_hit_data(hit_df,db_label,'qseqid')
 
     store_obj.filter_hits()
+    store_obj.convert_profile_to_list()
+    
     del(filtered_df)
     with open(os.path.join(outdir,"seq_store.json"),"w") as out:
         json.dump(store_obj.record,out,indent=4)
