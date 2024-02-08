@@ -4,6 +4,7 @@ import os, sys, re, collections, operator, math, time,base64
 from functools import partial
 from mimetypes import guess_type
 import gzip
+from copy import deepcopy
 from datetime import datetime
 from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
 from locidex.version import __version__
@@ -36,7 +37,7 @@ class seq_reporter:
     profile = {}
     loci = {}
     db_seq_info = {}
-    def __init__(self,data_dict,method='nucleotide',mode='conservative',label='locus_name',filters={}):
+    def __init__(self,data_dict,method='nucleotide',mode='normal',label='locus_name',filters={}):
         self.label = label
         self.method = method
         self.mode = mode
@@ -52,7 +53,7 @@ class seq_reporter:
         for lid in self.data_dict["db_seq_info"]:
             locus_name = self.db_seq_info[lid]["locus_name"]
             self.loci[lid] = locus_name
-            self.profile[locus_name] = []
+            self.profile[locus_name] = ''
 
     def filter_hits(self):
         for qid in self.query_hits:
@@ -112,11 +113,111 @@ class seq_reporter:
 
                 self.query_hits[qid][dbtype] = filt
 
+    def calc_query_best_hit(self):
+        best_hits = {}
+        for qid in self.query_hits:
+            best_hits[qid] = {}
+            for dbtype in self.query_hits[qid]:
+                best_hits[dbtype] = []
+                hit_ids = []
+                hit_bit = []
+                for hit in self.query_hits[qid][dbtype]:
+                    hit_ids.append(str(hit['sseqid']))
+                    hit_bit.append(hit['bitscore'])
+                if len(hit_bit) == 0:
+                    continue
+                max_bit = max(hit_bit)
+                top_ids = []
+                for idx, value in enumerate(hit_bit):
+                    if value == max_bit:
+                        top_ids.append(idx)
+                best_hits[dbtype] = top_ids
+        return best_hits
+
+    def get_hit_locinames(self):
+        hit_names = {}
+        for qid in self.query_hits:
+            hit_names[qid] = {}
+            for dbtype in self.query_hits[qid]:
+                hit_names[qid][dbtype] = set()
+                for hit in self.query_hits[qid][dbtype]:
+                    hit_id = str(hit['sseqid'])
+                    hinfo = self.db_seq_info[hit_id]
+                    hit_name = hinfo['locus_name']
+                    hit_names[qid][dbtype].add(hit_name)
+        return hit_names
+    
+    def get_loci_to_query_map(self,hit_names,dbtype):
+        loci_lookup = {}
+        for qid in hit_names:
+            if not dbtype in hit_names[qid]:
+                continue
+            for l in hit_names[qid][dbtype]:
+                if not l in loci_lookup:
+                    loci_lookup[l] = []
+                loci_lookup[l].append(qid)
+        return loci_lookup
+
+    def allele_assignment(self,dbtype):
+        query_best_hits = self.calc_query_best_hit()
+        hit_loci_names = self.get_hit_locinames()
+        loci_lookup = self.get_loci_to_query_map(hit_loci_names,dbtype)
+        
+        self.populate_profile()
+        
+        loci_names_to_assign = set(self.profile.keys())
+        assigned_loci = set()
+        
+        #Fix the values of any loci where there is a single matching query or no matching queries
+        for locus_name in self.profile:
+            query_hashes = self.profile[locus_name].split(',')
+            num_queries = len(query_hashes)
+            if num_queries == 1 and query_hashes[0] != '-':
+                assigned_loci.add(locus_name )
+            elif len(loci_lookup[locus_name]) == 0:
+                assigned_loci.add(locus_name)
+        
+        loci_names_to_assign = loci_names_to_assign - assigned_loci
+        profile = deepcopy(self.locus_profile)
+        
+        for locus_name in loci_names_to_assign:
+            matches = loci_lookup[locus_name ]
+            num_matches = len(matches)
+            if num_matches <= 1:
+                assigned_loci.add(locus_name)
+                continue
+            
+            for qid in matches:
+                best_hits = query_best_hits[qid][dbtype]
+                best_hit_names = set()
+                for l in best_hits:
+                    hinfo = self.db_seq_info[l]
+                    best_hit_names.add(hinfo['locus_name'])
+                if len(best_hit_names) == 1:
+                    continue
+                if locus_name not in best_hit_names:
+                    if qid in profile[locus_name]:
+                        del(profile[locus_name][qid])
+
+        self.locus_profile = profile
+        self.populate_profile()
+
+
+            
+                
+        
+        
+            
+
+
+
+
+
     def populate_profile(self):
-        for loci_name in self.profile:
+        for locus_name in self.profile:
             values = set()
-            if loci_name in self.locus_profile:
-                values = set(self.locus_profile[loci_name][self.method])
+            if locus_name in self.locus_profile:
+                values = set(self.locus_profile[locus_name][self.method])
             allele_hashes = []
             for seq_id in values:
                 if self.method == 'nucleotide':
@@ -129,7 +230,7 @@ class seq_reporter:
                 allele_hashes = ['-']
             elif num_alleles == 0:
                 allele_hashes = ['-']
-            self.profile[loci_name] = ",".join([str(x) for x in allele_hashes])
+        self.profile[locus_name] = ",".join([str(x) for x in allele_hashes])
 
 
     def extract_hit_data(self,dbtype):
@@ -185,7 +286,7 @@ def run():
 
     allele_obj = seq_reporter(seq_store_dict, method='nucleotide', mode='conservative', label=label, filters={})
     if report_format == 'profile':
-        allele_obj.populate_profile()
+        allele_obj.allele_assignment('nucleotide')
         profile = {sample_name: allele_obj.profile}
         with open(os.path.join(outdir,"profile.json"),"w") as out:
             json.dump(profile,out,indent=4)
