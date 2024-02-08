@@ -174,7 +174,7 @@ class seq_reporter:
             num_queries = len(query_hashes)
             if num_queries == 1 and query_hashes[0] != '-':
                 assigned_loci.add(locus_name )
-            elif len(loci_lookup[locus_name]) == 0:
+            elif locus_name not in loci_lookup or len(loci_lookup[locus_name]) == 0:
                 assigned_loci.add(locus_name)
         
         loci_names_to_assign = loci_names_to_assign - assigned_loci
