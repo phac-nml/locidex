@@ -284,7 +284,7 @@ def run():
     if len(seq_store_dict) == 0:
         sys.exit()
 
-    allele_obj = seq_reporter(seq_store_dict, method='nucleotide', mode='conservative', label=label, filters={})
+    allele_obj = seq_reporter(seq_store_dict, method='nucleotide', mode='normal', label=label, filters={})
     if report_format == 'profile':
         allele_obj.allele_assignment('nucleotide')
         profile = {sample_name: allele_obj.profile}
