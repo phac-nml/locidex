@@ -53,7 +53,7 @@ class seq_reporter:
         for lid in self.data_dict["db_seq_info"]:
             locus_name = self.db_seq_info[lid]["locus_name"]
             self.loci[lid] = locus_name
-            self.profile[locus_name] = ''
+            self.profile[locus_name] = []
 
     def filter_hits(self):
         for qid in self.query_hits:
@@ -164,10 +164,10 @@ class seq_reporter:
         loci_lookup = self.get_loci_to_query_map(hit_loci_names,dbtype)
         
         self.populate_profile()
-        
+
         loci_names_to_assign = set(self.profile.keys())
         assigned_loci = set()
-        
+
         #Fix the values of any loci where there is a single matching query or no matching queries
         for locus_name in self.profile:
             query_hashes = self.profile[locus_name].split(',')
@@ -176,17 +176,17 @@ class seq_reporter:
                 assigned_loci.add(locus_name )
             elif locus_name not in loci_lookup or len(loci_lookup[locus_name]) == 0:
                 assigned_loci.add(locus_name)
-        
+
         loci_names_to_assign = loci_names_to_assign - assigned_loci
         profile = deepcopy(self.locus_profile)
-        
+
         for locus_name in loci_names_to_assign:
             matches = loci_lookup[locus_name ]
             num_matches = len(matches)
             if num_matches <= 1:
                 assigned_loci.add(locus_name)
                 continue
-            
+
             for qid in matches:
                 if not dbtype in query_best_hits[qid]:
                     continue
@@ -227,12 +227,13 @@ class seq_reporter:
                 elif self.method == 'protein':
                     key = "aa_hash"
                 allele_hashes.append(self.query_seq_data[seq_id][key])
+
             num_alleles = len(allele_hashes)
             if num_alleles > 1 and self.mode == 'conservative':
                 allele_hashes = ['-']
             elif num_alleles == 0:
                 allele_hashes = ['-']
-        self.profile[locus_name] = ",".join([str(x) for x in allele_hashes])
+            self.profile[locus_name] = ",".join(list(set([str(x) for x in allele_hashes])))
 
 
     def extract_hit_data(self,dbtype):
