@@ -188,6 +188,8 @@ class seq_reporter:
                 continue
             
             for qid in matches:
+                if not dbtype in query_best_hits[qid]:
+                    continue
                 best_hits = query_best_hits[qid][dbtype]
                 best_hit_names = set()
                 for l in best_hits:
