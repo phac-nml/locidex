@@ -21,8 +21,8 @@
 ## Introduction
 
 A common function for many tools in bacterial typing is performing similarity searching using NCBI [blast](https://blast.ncbi.nlm.nih.gov/Blast.cgi). 
-Blast provides a robust command line interface for  constructing and using databases for similarity searching and is ubiquitous.  
-There are many typing applications where custom code is written around the blast command line interface to perform 
+Blast provides a robust command line interface for  constructing and using databases for similarity searching and is ubiquitous. There are many typing 
+applications where custom code is written around the blast command line interface to perform 
 searches for a variety of downstream applications. One major application within public health is identification of 
 specific target sequences within an assembly to perform gene-by-gene phylogenetic analysis 
 (MLST, cgMLST, wgMLST), antimicrobial resistance gene detection, virulence gene detection, and in silico predictions of 
@@ -42,7 +42,8 @@ routine operations with the limitation that comparing between jurisdictions requ
 sequence data rather than the allele identifiers.   
 
 In recent years, the concept of using cryptographic hashes of the 
-allele sequence itself have gained traction in a variety of different allele calling software such as Chewbbaca to 
+allele sequence itself have gained traction in a variety of different allele calling software such as 
+[Chewbbaca](https://github.com/B-UMMI/chewBBACA) to 
 provide decentralized allele identifiers. Hashing the sequence yields a determinist and fixed-size hash value which 
 can be compared in the same manner as integers. There are numerous hash functions with different strengths and weaknesses 
 but MD5 digests have broad adoption in the software community and are routinely used to provide some assurance that a 
@@ -66,16 +67,25 @@ high variability databases to be used without building custom logic downstream. 
 of loci can exhibit considerable variability as is the case for genes of interest for typing applications. 
 This provides greater flexibility for the designation of ideal thresholds for a given application. 
 However, these values can be overridden using the report module filtering parameters as well as by modifying the values 
-within the database. Locidex is meant to be optimized for routine operation level searching where it is useful to have 
+within the database. 
+
+Locidex is meant to be optimized for routine operation level searching where it is useful to have 
 default parameters that are set for the user to have reproducibility, which is combined with flexibility to  apply 
 multiple filtering parameters on the sequence store after the fact. This allows exploring different thresholds 
 without the need to recompute blast searches each time and allows for different use cases of data from a common data store. 
 Frequently there is a desire to include additional information about given locus such as different identifiers, 
 functional properties, and phenotypic effects.  The database format of locidex allows inclusion of any number of fields 
-that allow the user to describe their data which is bundled into the search result object for convenience to downstream analyses.  
+that allow the user to describe their data which is bundled into the search result object for convenience to downstream analyses.
+[Chewbbaca](https://github.com/B-UMMI/chewBBACA) is an excellent choice for an open source allele caller and provides many advanced features 
+for developing, curating and using gene-by-gene schemes.  It provides a great deat of additional information regarding partial gene sequences. 
+For R&D applications, this functionality can be extremely useful. However, for some operational contexts, the design of [Chewbbaca](https://github.com/B-UMMI/chewBBACA)
+provides information that is not desireable and at present it has issues with multiple instances using the same database at once with 
+novel allele detection enabled (https://github.com/B-UMMI/chewBBACA/issues/168). Locidex does not have the full features for a gene-by-gene software package like [Chewbbaca](https://github.com/B-UMMI/chewBBACA)
+but can be used to acheive similar results while being a more generic tool kit for blast searches such as [abricate](https://github.com/tseemann/abricate)
 
 **Search**
 
+The search module is meant to use locidex formated datbase directories
 Input Data Formats: GenBank, Fasta (of individual loci sequences)
 - DNA and protein blast searches
 - Md5 hashing of alleles
@@ -147,6 +157,110 @@ If you run ``locidex``, you should see the following usage statement:
 
 
 
+Locidex Database structure
+=====
+Similar to  [abricate](https://github.com/tseemann/abricate), Locidex uses a fixed database structure layout. Locidex supports
+nucleotide (blastn) and protein (blastp) blast searches. Locidex utilizes a few controlled fields in config.json and meta.json
+but completely supports the additon of any number of additional fields that may be desired by the database builder. 
+There is a nested folder structure for the blast databases which must conform to the layout below.
+```
+{DB folder name}
+├── config.json                     #required
+├── meta.json                       #required
+└── blast                           #required
+    └── nucleotide                  #optional but >= 1must be present
+        ├──nucleotide.fasta
+        ├──nucleotide.ndb
+        ├──nucleotide.nhr
+        ├──nucleotide.nin
+        ├──nucleotide.njs
+        ├──nucleotide.nsq
+        ├──nucleotide.ntf
+        └──nucleotide.nto 
+    └──protein                      #optional but >= 1must be present
+        ├── protein.fasta
+        ├── protein.pdb
+        ├── protein.phr
+        ├── protein.pin
+        ├── protein.pjs
+        ├── protein.pot
+        ├── protein.psq
+        ├── protein.ptf
+        └──protein.pto
+```
+
+**config.json**
+
+This [JSON](https://www.json.org/json-en.html) file is responsible for encoding the metadata regarding the locidex database which will be bundled into the seq_store output
+of the search module. It also determines whethere a given database is used for nucleotide and/or protein blast searches.
+This data assists with provenance information regarding search results.
+
+            {
+                "db_name": "Salmonella Chewbbaca-Online cgMLST",
+                "db_version": "1.0.0",
+                "db_date": "2024-02-01",
+                "db_author": "James Robertson",
+                "db_desc": "Data obtained from: https://chewbbaca.online/species/8",
+                "db_num_seqs":8558,
+                "is_nucl": "True",
+                "is_prot": "True",
+                "nucleotide_db_name": "nucelotide",
+                "protein_db_name": "protein"
+            }
+
+
+**meta.json**
+
+Frequently, there is a desire to encode contextual metadata with sequence data for different analytical operations. These can
+range from encoding gene and allele identifiers to phenotypic effects and beyond. The options for developers has been to encode this into the fasta
+header directy with different delimeters between fields or to have an additional file with the desired contextual information separate from the sequence data.
+Locidex utilizes the later approach with all of the data encoded in [JSON](https://www.json.org/json-en.html) for easy parsing by downstream applications.
+This file is used by the search module to bundle this contextual information regarding the database sequences for later use without the need to pass the original
+meta.json information between processes. An example stub is shown below for metadata. and any number of additional fields can be added to records.
+
+    {
+        "info": {
+            "num_seqs": 8558,
+            "is_cds": "True",
+            "trans_table": 11,
+            "dna_min_len": 72,
+            "dna_max_len": 10644,
+            "dna_min_ident": 80,
+            "aa_min_len": 24,
+            "aa_max_len": 3548,
+            "aa_min_ident": 80
+        },
+        "meta": {
+            "0": {
+                "locus_name": "SAL_CGMLST_000000001",
+                "locus_name_alt": "INNUENDO_cgMLST-00038301_1",
+                "locus_product": NaN,
+                "locus_description": NaN,
+                "locus_uid": NaN,
+                "dna_seq_len": 1521,
+                "dna_seq_hash": "c172404ec34947c7d85f0d3e7fa3b808",
+                "aa_seq_len": 507,
+                "aa_seq_hash": "8a28aca12bcf1608564244a688e79db6",
+                "dna_min_len": 1217,
+                "dna_max_len": 1825,
+                "aa_min_len": 406,
+                "aa_max_len": 608,
+                "dna_min_ident": 80,
+                "aa_min_ident": 80
+            }
+        }
+    }
+
+**blast databases**
+
+The blast folder must be present for a locidex database to be valid with nucleotide and/or protein subfolders present. 
+For each folder present it must contain the fasta file used to generate the database (nucleotide.fasta|protein.fasta) and
+a corresponding blast database with the folder name without ".fasta" present. The structure is designed to allow for the 
+inclusion of other sequence similarity search tools at a later date with minimal modifications. Protein searching via HMMs
+and other tools such as [diamond](https://github.com/bbuchfink/diamond) may be included in later releases.
+
+
+
 Supported input formats
 =====
 **GenBank**
@@ -154,7 +268,8 @@ Supported input formats
 [GenBank format](https://www.ncbi.nlm.nih.gov/genbank/samplerecord/) is a widely used format for storing and sharing 
 biological sequence data, primarily DNA sequences. It was developed by the National Center for Biotechnology Information 
 (NCBI). GenBank format files typically have a .gb or .gbk extension. When using GenBank format as input to locidex, the
-translations (if applicable) are provided by the file rather than being translated by locidex.
+translations (if applicable) are provided by the file rather than being translated by locidex. This format is used as input
+to locidex search.
 
 The GenBank format consists of multiple componets but the relevant ones for locidex are:
 
@@ -171,7 +286,11 @@ such as DNA, RNA, or protein sequences. It is named after the FASTA software pac
 FASTA files typically have a .fasta or .fa extension. Locidex supports both nucleotide and protein sequences as input but 
 it must consist of extracted CDS, ORFs, Genes which are to be hashed. You can supply contigs but no extraction will occur and
 the entire sequence will be treated as a single query. You will need to provide the extracted gene sequences from a tool such as [prodigal](https://github.com/hyattpd/Prodigal), [prokka](https://github.com/tseemann/prokka), 
-[bakta](https://github.com/oschwengers/bakta) and an appropriate translation table if the protein coding sequences.
+[bakta](https://github.com/oschwengers/bakta) and an appropriate translation table if the protein coding sequences. This format is used as input
+to locidex search.
+
+
+
 
 **Sequence store**
 
@@ -220,7 +339,33 @@ Coming soon
 
 ## FAQ
 
-Coming soon
+**Can I use non-coding sequences as input to locidex?**
+
+Yes, you can toggle off protein coding within the database config to avoid translation and protein blast searches.
+However, if you want to use the "allele" identity of your locus such as an rRNA gene, then you will need to extract out the sequences
+you want to match.
+
+**Do I need to have a representitive of every allele I want to match in my database?**
+No, the benefit of having dual searching with protein and dna is that you can have a sparsely populated database of sequences that 
+meet your applications specific need.  This means you can deduplicate using a tool such as [cd-hit](https://sites.google.com/view/cd-hit) to remove highly similar sequences
+from your database to reduce runtime and complexity. You will need to empiracly determine what level of diversity is sufficient
+for your specific application.
+
+**How does Locidex handel multicopy loci?**
+
+Ideally a gene-by-gene scheme consists of only single copy genes but bacterial genomes are dynamic and 
+genuine dulplications can occur, in addition to assembly artifacts and contamination. There are a variety of approaches
+available to manages these cases. Within the 7-gene [mlst](https://github.com/tseemann/mlst) tool multiple alleles for a given locus are reported 
+with a comma delimiting each allele. However, this poses an issue for calculating genetic distances since it is unclear how to treat
+the multiple alleles. 1) treat the combination as a novel allele 2) blank the column 3) select the earliest allele in the database 4)
+Use a similarity score to rate which is the best allele to include. The most conservative approach is to not interpret that column
+by blanking it in distance calculations which results in blunting resolution which is implemented withing locidex as the conservative mode.
+Alternatively, by using an approach to select only one of the loci to match will have mixed effect (options 3, 4) that can result in
+inconsistencies where some isolates appeare more similar or dissimilar than they are.  The prefered method that locidex has implented as its default (normal)
+mode is to combine the result into a new "allele" hash that is derived from calculating the md5 hash of the concatonated allele md5 hashes which
+have been sorted alphabetically. This has the benefit of the same combination of alleles will always result in the same hash code and will match when this occurs.
+Conversely, it will count a difference even when the component alleles may match between two samples.
+
 
 ## Citation
 
