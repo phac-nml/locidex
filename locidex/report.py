@@ -9,7 +9,7 @@ from datetime import datetime
 from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
 from locidex.version import __version__
 from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BLAST_TABLE_COLS, DB_CONFIG_FIELDS,DB_EXPECTED_FILES
-
+from locidex.utils import calc_md5
 
 def parse_args():
     class CustomFormatter(ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter):
@@ -21,6 +21,7 @@ def parse_args():
     parser.add_argument('-i','--input', type=str, required=True,help='Input file to report')
     parser.add_argument('-o', '--outdir', type=str, required=True, help='Output file to put results')
     parser.add_argument('-n', '--name', type=str, required=False, help='Sample name to include default=filename')
+    parser.add_argument('-m', '--mode', type=str, required=False, help='Allele profile assignment [normal,conservative]',default='normal')
     parser.add_argument('-p', '--prop', type=str, required=False, help='Metadata label to use for aggregation',default='locus_name')
     parser.add_argument('--report_format', type=str, required=False,
                         help='Report format of parsed results [profile]',default='profile')
@@ -231,6 +232,8 @@ class seq_reporter:
             num_alleles = len(allele_hashes)
             if num_alleles > 1 and self.mode == 'conservative':
                 allele_hashes = ['-']
+            elif num_alleles > 1 and self.mode == 'normal':
+                allele_hashes = calc_md5(["".join([str(x) for x in sorted(allele_hashes)])])
             elif num_alleles == 0:
                 allele_hashes = ['-']
             self.profile[locus_name] = ",".join(list(set([str(x) for x in allele_hashes])))
@@ -264,6 +267,7 @@ def run():
     report_format = cmd_args.report_format
     sample_name = cmd_args.name
     force = cmd_args.force
+    mode = cmd_args.mode
 
 
     if sample_name is None:
@@ -287,7 +291,7 @@ def run():
     if len(seq_store_dict) == 0:
         sys.exit()
 
-    allele_obj = seq_reporter(seq_store_dict, method='nucleotide', mode='normal', label=label, filters={})
+    allele_obj = seq_reporter(seq_store_dict, method='nucleotide', mode=mode, label=label, filters={})
     if report_format == 'profile':
         allele_obj.allele_assignment('nucleotide')
         profile = {sample_name: allele_obj.profile}
