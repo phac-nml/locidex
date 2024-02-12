@@ -101,7 +101,7 @@ def run():
     sample_name = cmd_args.name
     perform_annotation = cmd_args.annotate
     if not perform_annotation:
-        perform_annotation = True
+        perform_annotation = False
 
     if sample_name == None:
         sample_name = os.path.basename(query_file)
