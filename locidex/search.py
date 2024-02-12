@@ -218,10 +218,15 @@ def run():
 
     store_obj.filter_hits()
     store_obj.convert_profile_to_list()
-
+    run_data['result_file'] = os.path.join(outdir,"seq_store.json")
     del(filtered_df)
-    with open(os.path.join(outdir,"seq_store.json"),"w") as out:
+    with open(os.path.join(outdir,run_data['result_file']),"w") as out:
         json.dump(store_obj.record,out,indent=4)
+
+
+    run_data['analysis_end_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    with open(os.path.join(outdir,"results.json"),"w") as out:
+        json.dump(run_data,indent=4)
 
 
 # call main function

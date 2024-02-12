@@ -69,9 +69,37 @@ SEARCH_RUN_DATA = {
 
 }
 
+FORMAT_RUN_DATA = {
+
+}
+
 DB_EXPECTED_FILES = {
     'config':'config.json',
     'meta':'meta.json',
     'nucleotide':'nucleotide.fasta',
     'protein':'protein.fasta',
 }
+
+LOCIDEX_DB_HEADER = [
+    'seq_id',
+    'locus_name',
+    'locus_name_alt',
+    'locus_product',
+    'locus_description',
+    'locus_uid',
+    'dna_seq',
+    'dna_seq_len',
+    'dna_seq_hash',
+    'aa_seq',
+    'aa_seq_len',
+    'aa_seq_hash',
+    'dna_min_len',
+    'dna_max_len',
+    'aa_min_len',
+    'aa_max_len',
+    'dna_min_ident',
+    'aa_min_ident',
+    'min_dna_match_cov',
+    'min_aa_match_cov'
+    'count_int_stops'
+]
