@@ -4,20 +4,23 @@ import pandas as pd
 import os, sys
 from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
 from locidex.version import __version__
-from locidex.constants import FORMAT_RUN_DATA
+from locidex.constants import FORMAT_RUN_DATA, DB_CONFIG_FIELDS
 from locidex.classes import run_command
 
 class locidex_build:
     input_file = None
     outdir = None
     blast_dir = None
+    is_dna = False
+    is_protein = False
     df = None
+    config = {}
     meta = {}
     status = True
     messages = []
 
 
-    def __init__(self, input_file, outdir,seq_columns=['dna_seq','aa_seq'],force=False):
+    def __init__(self, input_file, outdir,config={},seq_columns={'nucleotide':'dna_seq','protein':'aa_seq'},force=False):
         self.input_file = input_file
         self.outdir = outdir
         self.force = force
@@ -31,6 +34,27 @@ class locidex_build:
             return
 
         self.df = self.read_data( self.input_file)
+        self.config["db_num_seqs"] = len(self.df)
+        for t in seq_columns:
+            col_name = seq_columns[t]
+            s = self.is_seqtype_present(col_name)
+            if s:
+                self.create_seq_db(t, col_name)
+                if t == 'nucleotide':
+                    self.is_dna = True
+                    self.config["nucleotide_db_name"] = t
+                elif t == 'protien':
+                    self.is_protein  = True
+                    self.config["protein_db_name"] = t
+        self.config["is_nucl"] = self.is_dna
+        self.config["is_prot"] = self.is_protein
+
+    def create_seq_db(self,stype,col_name):
+        d = os.path.join(self.blast_dir,stype)
+        self.init_dir(d)
+        f = os.path.join(d,"{}.fasta".format(stype))
+        self.write_seq_file(f,col_name)
+
 
     def init_dir(self,d):
         if os.path.isdir(d) and not self.force:
@@ -51,11 +75,15 @@ class locidex_build:
         else:
             return pd.DataFrame()
 
-    def set_coding(self,col_name):
+    def is_seqtype_present(self,col_name):
         s = True
         if not col_name in self.df:
             return False
-        values = self.df[col_name].astype('str').unique
+        values = self.df[col_name].dropna().astype('str').unique().to_list()
+        if len(values) == 0:
+            return False
+        return True
+
 
     def write_seq_file(self,f,col_name):
         oh = open(f, "w")
@@ -95,22 +123,18 @@ def parse_args():
         pass
 
     parser = ArgumentParser(
-        description="Locidex: Format an existing allele database into Locidex build tsv format",
+        description="Locidex: Build a locidex database",
         formatter_class=CustomFormatter)
-    parser.add_argument('-i','--input', type=str, required=True,help='Input directory of fasta files or input fasta')
+    parser.add_argument('-i','--input_file', type=str, required=True,help='Input tsv formated for locidex')
     parser.add_argument('-o', '--outdir', type=str, required=True, help='Output directory to put results')
-    parser.add_argument('--min_len_frac', type=int, required=False, help='Used to calculate individual sequence minimum acceptable length (0 - 1)',
-                        default=0.7)
-    parser.add_argument('--max_len_frac', type=int, required=False, help='Used to calculate individual sequence maximimum acceptable length (1 - n)',
-                        default=1.3)
-    parser.add_argument('--min_ident', type=float, required=False, help='Global minumum percent identity required for match',
-                        default=80.0)
-    parser.add_argument('--min_match_cov', type=float, required=False, help='Global minumum percent hit coverage identity required for match',
-                        default=80.0)
-    parser.add_argument('--translation_table', type=int, required=False,
-                        help='output directory', default=11)
-    parser.add_argument('-n', '--not_coding', required=False, help='Skip translation',
-                        action='store_true')
+    parser.add_argument('-n', '--name', type=str, required=False, help='DB name',default='Locidex Database')
+    parser.add_argument('-a', '--author', type=str, required=False, help='Author Name for Locidex Database',default='')
+    parser.add_argument('-d', '--date', type=str, required=False, help='Creation date for Locidex Database',
+                        default='')
+    parser.add_argument('-c', '--db_ver', type=str, required=False, help='Version code for locidex db',
+                        default='1.0.0')
+    parser.add_argument('-c', '--db_desc',type=str, required=False, help='Version code for locidex db',
+                        default='')
     parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
     parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
                         action='store_true')
@@ -120,25 +144,30 @@ def parse_args():
 
 def run():
     cmd_args = parse_args()
-    input = cmd_args.input
+    input_file = cmd_args.input
     outdir = cmd_args.outdir
-    min_len_frac = cmd_args.min_len_frac
-    max_len_frac = cmd_args.max_len_frac
-    min_ident = cmd_args.min_ident
-    min_match_cov = cmd_args.min_match_cov
-    trans_table = cmd_args.translation_table
     force = cmd_args.force
-
-    is_coding = True
-    if cmd_args.not_coding:
-        is_coding = False
-
     run_data = FORMAT_RUN_DATA
     run_data['analysis_start_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     run_data['parameters'] = vars(cmd_args)
 
-    run_data['result_file'] = os.path.join(outdir)
+    config = {}
+    for f in DB_CONFIG_FIELDS:
+        config[f] = ''
 
+    config["db_name"] = cmd_args.name
+    config["db_version"] = cmd_args.db_ver
+    config["db_desc"] = cmd_args.db_desc
+    config["db_author"] = cmd_args.author
+    if cmd_args.date == '':
+        config["db_date"] = datetime.now().strftime("%d/%m/%Y")
+
+    if not os.path.isfile(input_file):
+        print(f'Error {input_file} does not exist, please check path and try again')
+        sys.exit()
+
+    run_data['result_file'] = os.path.join(outdir)
+    obj = locidex_build(input_file, outdir,config=config,seq_columns={'nucleotide':'dna_seq','protein':'aa_seq'},force=force)
     run_data['analysis_end_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     with open(os.path.join(outdir,"results.json"),"w") as out:
         json.dump(run_data,indent=4)
