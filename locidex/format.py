@@ -1,16 +1,19 @@
-from Bio import SeqIO
-import pathlib
-from locidex.utils import six_frame_translation, revcomp, calc_md5
+import gzip
 import json
+import os
+import pathlib
+import sys
+from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
 from datetime import datetime
-import pandas as pd
-import os, sys
 from functools import partial
 from mimetypes import guess_type
-import gzip
-from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
-from locidex.version import __version__
+
+import pandas as pd
+from Bio import SeqIO
+
 from locidex.constants import LOCIDEX_DB_HEADER, FILE_TYPES, FORMAT_RUN_DATA
+from locidex.utils import six_frame_translation, revcomp, calc_md5
+from locidex.version import __version__
 
 
 class locidex_format:

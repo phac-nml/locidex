@@ -1,15 +1,16 @@
 import json
-import pandas as pd
-import os, sys, re, collections, operator, math, time,base64
-from functools import partial
-from mimetypes import guess_type
-import gzip
+import os
+import sys
+from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
 from copy import deepcopy
 from datetime import datetime
-from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
-from locidex.version import __version__
-from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BLAST_TABLE_COLS, DB_CONFIG_FIELDS,DB_EXPECTED_FILES
+
+import pandas as pd
+
+from locidex.constants import SEARCH_RUN_DATA
 from locidex.utils import calc_md5
+from locidex.version import __version__
+
 
 def parse_args():
     class CustomFormatter(ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter):

@@ -1,12 +1,17 @@
+import gzip
 import json
-import pandas as pd
-import os, sys, re
+import os
+import re
+import sys
+from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
+from datetime import datetime
 from functools import partial
 from mimetypes import guess_type
-import gzip
-from datetime import datetime
-from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
+
+import pandas as pd
+
 from locidex.version import __version__
+
 
 def parse_args():
     class CustomFormatter(ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter):

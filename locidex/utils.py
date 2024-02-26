@@ -1,9 +1,12 @@
 import hashlib
 import json
 import os
-from Bio.Seq import Seq
 from collections import Counter
+
+from Bio.Seq import Seq
+
 from locidex.constants import NT_SUB, PROTEIN_ALPHA, DNA_ALPHA
+
 
 def revcomp(s):
     """

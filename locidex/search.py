@@ -1,18 +1,19 @@
 import json
-import shutil
-import pandas as pd
-import os, sys, re, collections, operator, math, time,base64
-from functools import partial
-from mimetypes import guess_type
-import gzip
-from datetime import datetime
+import os
+import re
+import sys
 from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
-from locidex.version import __version__
-from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BLAST_TABLE_COLS, DB_CONFIG_FIELDS,DB_EXPECTED_FILES
-from locidex.classes.seq_intake import seq_intake, seq_store
-from locidex.utils import write_seq_list, write_seq_dict, filter_hsps_df
+from datetime import datetime
+
+import pandas as pd
+
 from locidex.classes.blast import blast_search, parse_blast
 from locidex.classes.db import search_db_conf, db_config
+from locidex.classes.seq_intake import seq_intake, seq_store
+from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BLAST_TABLE_COLS, DB_CONFIG_FIELDS, DB_EXPECTED_FILES
+from locidex.utils import write_seq_dict
+from locidex.version import __version__
+
 
 def parse_args():
     class CustomFormatter(ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter):
@@ -23,8 +24,6 @@ def parse_args():
         formatter_class=CustomFormatter)
     parser.add_argument('-q','--query', type=str, required=True,help='Query sequence file')
     parser.add_argument('-o', '--outdir', type=str, required=True, help='Output directory to put results')
-    parser.add_argument('-p', '--prog', type=str, required=False, help='Blast program to use [blastn, blastp, combined]',
-                        default='combined')
     parser.add_argument('-n', '--name', type=str, required=False, help='Sample name to include default=filename')
     parser.add_argument('-d', '--db', type=str, required=False, help='Locidex database directory')
     parser.add_argument('-c', '--config', type=str, required=False, help='Locidex parameter config file (json)')
@@ -46,6 +45,8 @@ def parse_args():
                         default=80.0)
     parser.add_argument('--min_aa_match_cov', type=float, required=False, help='Global minumum AA percent hit coverage identity required for match',
                         default=80.0)
+    parser.add_argument('--max_target_seqs', type=int, required=False, help='Maximum number of hit seqs per query',
+                        default=10)
     parser.add_argument('--n_threads','-t', type=str, required=False,
                         help='CPU Threads to use', default=1)
     parser.add_argument('--format', type=str, required=False,
@@ -70,36 +71,29 @@ def create_fasta_from_df(df,label_col,seq_col,out_file):
 
 
 
+def run_search(config):
 
+    # Input Parameters
+    query_file = config['query']
+    outdir = config['outdir']
+    db_dir = config['db']
+    min_dna_ident = config['min_dna_ident']
+    min_aa_ident =config['min_aa_ident']
+    min_evalue = config['min_evalue']
+    min_dna_match_cov = config['min_dna_match_cov']
+    min_aa_match_cov = config['min_aa_match_cov']
+    n_threads = config['n_threads']
+    translation_table = config['translation_table']
+    force = config['force']
+    format = config['format']
+    min_dna_len = config['min_dna_len']
+    max_dna_len = config['max_dna_len']
+    min_aa_len = config['min_aa_len']
+    max_aa_len = config['max_aa_len']
+    sample_name = config['name']
+    perform_annotation = config['annotate']
+    max_target_seqs = config['max_target_seqs']
 
-
-
-
-def run():
-    cmd_args = parse_args()
-    analysis_parameters = vars(cmd_args)
-
-    #Input Parameters
-    query_file = cmd_args.query
-    outdir = cmd_args.outdir
-    blast_program = cmd_args.prog
-    db_dir = cmd_args.db
-    config_file = cmd_args.config
-    min_dna_ident = cmd_args.min_dna_ident
-    min_aa_ident = cmd_args.min_aa_ident
-    min_evalue = cmd_args.min_evalue
-    min_dna_match_cov = cmd_args.min_dna_match_cov
-    min_aa_match_cov = cmd_args.min_aa_match_cov
-    n_threads = cmd_args.n_threads
-    translation_table = cmd_args.translation_table
-    force = cmd_args.force
-    format = cmd_args.format
-    min_dna_len = cmd_args.min_dna_len
-    max_dna_len = cmd_args.max_dna_len
-    min_aa_len = cmd_args.min_aa_len
-    max_aa_len = cmd_args.max_aa_len
-    sample_name = cmd_args.name
-    perform_annotation = cmd_args.annotate
     if not perform_annotation:
         perform_annotation = False
 
@@ -107,22 +101,19 @@ def run():
         sample_name = os.path.basename(query_file)
 
 
-    max_target_seqs = 10
-
     run_data = SEARCH_RUN_DATA
     run_data['analysis_start_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    run_data['parameters'] = vars(cmd_args)
+    run_data['parameters'] = config
 
-    #Validate database is valid
-    db_database_config = search_db_conf(db_dir,DB_EXPECTED_FILES,DB_CONFIG_FIELDS)
+    # Validate database is valid
+    db_database_config = search_db_conf(db_dir, DB_EXPECTED_FILES, DB_CONFIG_FIELDS)
     if db_database_config.status == False:
         print(f'There is an issue with provided db directory: {db_dir}\n {db_database_config.messages}')
         sys.exit()
 
     metadata_path = db_database_config.meta_file_path
-    metadata_obj = db_config(metadata_path,['meta','info'])
+    metadata_obj = db_config(metadata_path, ['meta', 'info'])
     blast_database_paths = db_database_config.blast_paths
-
 
     if os.path.isdir(outdir) and not force:
         print(f'Error {outdir} exists, if you would like to overwrite, then specify --force')
@@ -146,27 +137,30 @@ def run():
             print(f'Format for query file must be one of {list(FILE_TYPES.keys())}, you supplied {format}')
         sys.exit()
 
-    seq_obj = seq_intake(query_file,format,'CDS',translation_table,perform_annotation)
+    seq_obj = seq_intake(query_file, format, 'CDS', translation_table, perform_annotation)
 
     if seq_obj.status == False:
-        print(f'Something went wrong parsing query file: {query_file}, please check logs and messages:\n{seq_obj.messages}')
+        print(
+            f'Something went wrong parsing query file: {query_file}, please check logs and messages:\n{seq_obj.messages}')
         sys.exit()
 
+    if perform_annotation:
+        for idx,genes in enumerate(seq_obj.prodigal_genes):
+            with open(os.path.join(outdir,f"annotations_{idx}.gbk"),'w') as oh:
+                genes.write_genbank(oh, sequence_id=f'{sample_name}_{idx}')
 
-    blast_dir_base = os.path.join(outdir,'blast')
+    blast_dir_base = os.path.join(outdir, 'blast')
     if not os.path.isdir(blast_dir_base):
         os.makedirs(blast_dir_base, 0o755)
 
     blast_params = {
-        'evalue':min_evalue,
-        'max_target_seqs':max_target_seqs,
-        'num_threads':n_threads,
+        'evalue': min_evalue,
+        'max_target_seqs': max_target_seqs,
+        'num_threads': n_threads,
     }
 
-
-
     filter_options = {
-        'evalue': {'min':None, 'max':min_evalue, 'include':None},
+        'evalue': {'min': None, 'max': min_evalue, 'include': None},
     }
 
     df = pd.DataFrame.from_dict(seq_obj.seq_data)
@@ -176,57 +170,78 @@ def run():
         'min_dna_len': min_dna_len,
         'max_dna_len': max_dna_len,
         'min_dna_ident': min_dna_ident,
-        'min_dna_match_cov':min_dna_match_cov,
+        'min_dna_match_cov': min_dna_match_cov,
         'min_aa_len': min_aa_len,
         'max_aa_len': max_aa_len,
         'min_aa_ident': min_aa_ident,
         'min_aa_match_cov': min_aa_match_cov,
 
     }
-    store_obj = seq_store(sample_name,db_database_config.config_obj.config,metadata_obj.config['meta'],seq_obj.seq_data,BLAST_TABLE_COLS,hit_filters)
+    store_obj = seq_store(sample_name, db_database_config.config_obj.config, metadata_obj.config['meta'],
+                          seq_obj.seq_data, BLAST_TABLE_COLS, hit_filters)
 
     for db_label in blast_database_paths:
         label_col = 'index'
         if db_label == 'nucleotide':
             blast_prog = 'blastn'
             seq_col = 'dna_seq'
-            d = os.path.join(blast_dir_base,'nucleotide')
-            filter_options['pident'] = {'min':min_dna_ident, 'max':None, 'include':None}
+            d = os.path.join(blast_dir_base, 'nucleotide')
+            filter_options['pident'] = {'min': min_dna_ident, 'max': None, 'include': None}
             filter_options['qcovs'] = {'min': min_dna_match_cov, 'max': None, 'include': None}
 
         elif db_label == 'protein':
             blast_prog = 'blastp'
             seq_col = 'aa_seq'
             d = os.path.join(blast_dir_base, 'protein')
-            filter_options['pident'] = {'min':min_aa_ident, 'max':None, 'include':None}
+            filter_options['pident'] = {'min': min_aa_ident, 'max': None, 'include': None}
             filter_options['qcovs'] = {'min': min_aa_match_cov, 'max': None, 'include': None}
 
         if not os.path.isdir(d):
             os.makedirs(d, 0o755)
         else:
-            if os.path.isfile(os.path.join(d,"queries.fasta")):
-                os.remove(os.path.join(d,"queries.fasta"))
+            if os.path.isfile(os.path.join(d, "queries.fasta")):
+                os.remove(os.path.join(d, "queries.fasta"))
             if os.path.isfile(os.path.join(d, "hsps.txt")):
                 os.remove(os.path.join(d, "hsps.txt"))
 
         db_path = blast_database_paths[db_label]
-        create_fasta_from_df(filtered_df, label_col, seq_col, os.path.join(d,"queries.fasta"))
-        perform_search(os.path.join(d,"queries.fasta"), os.path.join(d,"hsps.txt"), db_path, blast_prog, blast_params, BLAST_TABLE_COLS)
-        hit_obj = parse_blast(os.path.join(d,"hsps.txt"),BLAST_TABLE_COLS,filter_options)
+        create_fasta_from_df(filtered_df, label_col, seq_col, os.path.join(d, "queries.fasta"))
+        perform_search(os.path.join(d, "queries.fasta"), os.path.join(d, "hsps.txt"), db_path, blast_prog, blast_params,
+                       BLAST_TABLE_COLS)
+        hit_obj = parse_blast(os.path.join(d, "hsps.txt"), BLAST_TABLE_COLS, filter_options)
         hit_df = hit_obj.df
-        store_obj.add_hit_data(hit_df,db_label,'qseqid')
+        store_obj.add_hit_data(hit_df, db_label, 'qseqid')
 
     store_obj.filter_hits()
     store_obj.convert_profile_to_list()
-    run_data['result_file'] = os.path.join(outdir,"seq_store.json")
-    del(filtered_df)
-    with open(os.path.join(outdir,run_data['result_file']),"w") as out:
-        json.dump(store_obj.record,out,indent=4)
+    run_data['result_file'] = os.path.join(outdir, "seq_store.json")
+    del (filtered_df)
 
+    with open(os.path.join(outdir, run_data['result_file']), "w") as fh:
+        fh.write(json.dumps(store_obj.record, indent=4))
 
     run_data['analysis_end_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    with open(os.path.join(outdir,"results.json"),"w") as out:
-        json.dump(run_data,indent=4)
+    with open(os.path.join(outdir,"run.json"),'w' ) as fh:
+        fh.write(json.dumps(run_data, indent=4))
+
+
+
+
+def run():
+    cmd_args = parse_args()
+    analysis_parameters = vars(cmd_args)
+    config_file = cmd_args.config
+
+    config = {}
+    if config_file is not None:
+        with open(config_file) as fh:
+            config = json.loads(fh.read())
+
+    for p in analysis_parameters:
+        if not p in config:
+            config[p] = analysis_parameters[p]
+
+    run_search(config)
 
 
 # call main function

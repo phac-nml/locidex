@@ -8,6 +8,7 @@ import pyrodigal
 class gene_prediction:
     file = None
     sequences = {}
+    genes = []
     status = True
     messages = []
 
@@ -18,13 +19,15 @@ class gene_prediction:
             self.status = False
 
 
-    def predict(self):
+    def predict(self,num_threads=1):
         encoding = guess_type(self.file)[1]
         _open = partial(gzip.open, mode='rt') if encoding == 'gzip' else open
         with _open(self.file) as f:
             for record in SeqIO.parse(f, 'fasta'):
                 orf_finder = pyrodigal.GeneFinder(meta=True)
-                for i, pred in enumerate(orf_finder.find_genes(bytes(record.seq))):
+                genes =  orf_finder.find_genes(bytes(record.seq))
+                for i, pred in enumerate(genes):
                     id = f">{record.id}_{i + 1}"
                     self.sequences[id] = pred.sequence()
+                self.genes.append(genes)
 

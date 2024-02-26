@@ -1,7 +1,6 @@
-import os
 import json
+import os
 import pathlib
-import sys
 
 
 class db_config:

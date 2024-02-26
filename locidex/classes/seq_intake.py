@@ -14,8 +14,9 @@ class seq_intake:
     status = True
     messages = []
     seq_data = []
+    prodigal_genes = []
 
-    def __init__(self,input_file,file_type,feat_key='CDS',translation_table=11,perform_annotation=False):
+    def __init__(self,input_file,file_type,feat_key='CDS',translation_table=11,perform_annotation=False,num_threads=1):
         self.input_file = input_file
         self.file_type = file_type
         self.translation_table = translation_table
@@ -31,7 +32,10 @@ class seq_intake:
         if file_type == 'genbank':
             self.status = self.process_gbk()
         elif file_type == 'fasta' and perform_annotation==True:
-            self.process_seq_hash(gene_prediction(self.input_file).predict().sequences())
+            sobj = gene_prediction(self.input_file)
+            sobj.predict(num_threads)
+            self.prodigal_genes = sobj.genes
+            self.process_seq_hash(sobj.sequences)
             self.process_fasta()
         elif file_type == 'fasta' and perform_annotation==False:
             self.process_fasta()
