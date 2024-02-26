@@ -83,40 +83,6 @@ provides information that is not desireable and at present it has issues with mu
 novel allele detection enabled (https://github.com/B-UMMI/chewBBACA/issues/168). Locidex does not have the full features for a gene-by-gene software package like [Chewbbaca](https://github.com/B-UMMI/chewBBACA)
 but can be used to acheive similar results while being a more generic tool kit for blast searches such as [abricate](https://github.com/tseemann/abricate)
 
-**Search**
-
-The search module is meant to use locidex formated datbase directories
-Input Data Formats: GenBank, Fasta (of individual loci sequences)
-- DNA and protein blast searches
-- Md5 hashing of alleles
-- Storage of results for post processing in json format
-
-**Report**
-
-Produce loci hash profiles in multiple formats (json, tsv, parquet)
-- Filter results based on user criteria
-- Multi-copy loci handling
-
-Optional: (Not required for MVP)
-Produce concatenates fasta sequences based on allele profiles
-
-**Merge**
-
-- Accepts list of files on command line or file of files and reads and concatenates the files into an allele profile in TSV format
-- reads gz and uncompressed inputs
-
-**Format**
-
-- Takes common formats of gene-by-gene databases and formats them for use with locidex build module
-
-
-**Build**
-
-Builds locidex db folder structure
-- Creates database configuration file
-- Creates loci metadata file
-- Construct blast databases (nucleotide and/or protein)
-
 
 ## Installation
 
@@ -155,10 +121,76 @@ If you run ``locidex``, you should see the following usage statement:
     format  Not Implemented
     build   Not Implemented
 
+**Search**
+
+The search module is meant to use locidex formated datbase directories
+Input Data Formats: GenBank, Fasta (of individual loci sequences)
+- DNA and protein blast searches
+- Md5 hashing of alleles
+- Storage of results for post-processing in json format
+
+**Report**
+
+Produce loci hash profiles in multiple formats (json, tsv, parquet)
+- Filter results based on user criteria
+- Multi-copy loci handling
+
+Optional: (Not required for MVP)
+Produce concatenates fasta sequences based on allele profiles
+
+**Merge**
+
+Accepts list of report files on command line or file of files and reads and concatenates the files into an allele profile in TSV format (reads gz and uncompressed inputs).
+
+        locidex merge -i ./example/merge_in/profile_1.json ./example/merge_in/profile_2.json  -o ./example/merge_out/
+        
+- merging multiple files provided on the command line to -i
 
 
-Locidex Database structure
-=====
+        locidex merge -i ./example/merge_in/file_list.txt ./example/merge_out/ 
+
+- merging a file which is a list of paths to report files
+
+**Format**
+
+Takes common formats of gene-by-gene databases and formats them for use with locidex build module. It accepts a directory of 
+fasta files: ["fasta","fas","fa","ffn","fna","fasta.gz","fas.gz","fa.gz","ffn.gz","fna.gz"] which have the locus name of 
+as the file name and allele id's are present in the fasta header separated by an underscore. ie. aroC would have the
+file name aroC.fas and the header line would be >aroC_1. Additionally, format will accept a concatonated file of all 
+loci in a  single fasta file which has the fasta def line as >{locus name}_{allele id}. These two formats are common with
+most of the major MLST databases.
+
+        locidex format -i ./example/format_db_mlst_in/ -o ./example/mlst_out/ 
+
+**Output**:
+```
+{out folder name}
+├── results.json                    
+└── locidex.txt
+```
+
+
+
+**Build**
+
+Builds locidex db folder structure
+- Creates database configuration file
+- Creates loci metadata file
+- Construct blast databases (nucleotide and/or protein)
+
+Takes the output of locidex format which may or may not have additional columns added. There are specific fields being looked for 
+in the file which either or both are required depending on the type of db being built "dna_seq", "aa_seq". It extracts the sequence
+data (nucleotide|protein) and initializes the config.json, meta.json and blast db structure which locidex search requires.
+
+        locidex build -i ./example/build_db_mlst_in/senterica.mlst.txt -o ./example/mlst_out_db/ 
+
+**Output**:
+
+See - [Database structure](#Database)
+
+
+## Database
+
 Similar to  [abricate](https://github.com/tseemann/abricate), Locidex uses a fixed database structure layout. Locidex supports
 nucleotide (blastn) and protein (blastp) blast searches. Locidex utilizes a few controlled fields in config.json and meta.json
 but completely supports the additon of any number of additional fields that may be desired by the database builder. 
