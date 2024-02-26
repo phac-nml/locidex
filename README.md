@@ -126,24 +126,44 @@ If you run ``locidex``, you should see the following usage statement:
 The search module is meant to use locidex formated datbase directories
 Input Data Formats: GenBank, Fasta (of individual loci sequences)
 - DNA and protein blast searches
-- Md5 hashing of alleles
-  - Storage of results for post-processing in json format
+- Md5 hashing of alleles 
+- Storage of results for post-processing in json format
  
-        locidex search -q ./example/search/NC_003198.1.fasta -d .example/build_db_mlst_out -o ./example/search/NC_003198_fasta -n 8 --annotate
+
+    locidex search -q ./example/search/NC_003198.1.fasta -d .example/build_db_mlst_out -o ./example/search/NC_003198_fasta -n 8 --annotate
     
 -run in annotation mode with a fasta input
 
 
-        locidex search -q ./example/search/NC_003198.1.gbk -d .example/build_db_mlst_out -o ./example/search/NC_003198_fasta -n 8
+    locidex search -q ./example/search/NC_003198.1.gbk -d .example/build_db_mlst_out -o ./example/search/NC_003198_fasta -n 8
 
 -run with existing annotations in GenBank format
 
+**Output**:
+```
+{out folder name}
+├── blast
+  ├── nucleotide
+    ├── hsps.txt        
+    └── queries.fasta
+  ├── protein
+    ├── hsps.txt        
+    └── queries.fasta      
+├── seq_store.json
+└── results.json  
+```
+See "Sequence Store" for description of the seq_store.json output file
 
 **Report**
 
 Produce loci hash profiles in multiple formats (json, tsv, parquet)
 - Filter results based on user criteria
 - Multi-copy loci handling
+
+
+    locidex report -i .example/search/seq_store.json -o ./example/report_out --name NC_003198
+
+
 
 Optional: (Not required for MVP)
 Produce concatenates fasta sequences based on allele profiles
@@ -160,6 +180,12 @@ Accepts list of report files on command line or file of files and reads and conc
         locidex merge -i ./example/merge_in/file_list.txt ./example/merge_out/ 
 
 - merging a file which is a list of paths to report files
+
+```
+{out folder name}
+├── profile.tsv   
+└── results.json  
+```
 
 **Format**
 
@@ -338,7 +364,7 @@ to locidex search.
 
 This is a locidex defined filetype which uses [JSON](https://www.json.org/json-en.html) to store information about the 
 query sequences including their hash values along with the metadata regarding the database which was queried and its 
-sequences. This format is used as input to locidex report.
+sequences (seq_store.json). This format is used as input to locidex report.
 
     {
             'db_info': { database configuration file data},
