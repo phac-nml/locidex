@@ -63,11 +63,11 @@ class locidex_format:
 
     def process_dir(self):
         files = self.get_dir_files(self.input)
-        for f in files:
+        for f in files['file']:
             for e in self.valid_ext:
                 if e in f[1]:
-                    self.gene_name = f[1].replace(e,'')
-                    self.parse_fasta(f)
+                    self.gene_name = f[1].replace(f'.{e}','')
+                    self.parse_fasta(f[0])
                     break
 
 
@@ -139,8 +139,6 @@ class locidex_format:
         seq = six_frame_translation[i][k]
         return {'offset': offset, 'revcomp': r, 'frame': s, 'seq': seq, 'count_int_stops': min_int_stop}
 
-    def parse_directory(self):
-        pass
 
     def create_row(self):
         row = {}
@@ -148,10 +146,10 @@ class locidex_format:
             row[f] = ''
         return row
 
-    def parse_fasta(self, in_file):
-        encoding = guess_type(self.input_file)[1]
+    def parse_fasta(self, input_file):
+        encoding = guess_type(input_file)
         _open = partial(gzip.open, mode='rt') if encoding == 'gzip' else open
-        with _open(in_file) as f:
+        with _open(input_file) as f:
             for record in SeqIO.parse(f, 'fasta'):
                 id = str(record.id)
                 if self.input_type == 'file':
@@ -174,7 +172,7 @@ class locidex_format:
                 row['locus_name_alt'] = id
                 row['locus_product'] = ''
                 row['locus_description'] = ''
-                row['locus_uid'] = id.split(self.delim)[-1],
+                row['locus_uid'] = id.split(self.delim)[-1]
                 row['dna_seq'] = dna_seq
                 row['dna_seq_len'] = dna_len
                 row['dna_seq_hash'] = calc_md5([dna_seq])[0]
@@ -242,7 +240,7 @@ def run():
         is_coding = False
 
     run_data = FORMAT_RUN_DATA
-    run_data['analysis_start_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    run_data['analysis_start_time'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     run_data['parameters'] = vars(cmd_args)
 
     if os.path.isdir(outdir) and not force:
@@ -256,15 +254,16 @@ def run():
         print(f'Error {input} does not exist as a file or directory')
         sys.exit()
 
-    obj = locidex_format(input,outdir,LOCIDEX_DB_HEADER,min_len_frac=min_len_frac,max_len_frac=max_len_frac, min_ident=min_ident,
-                   min_cov_perc=min_match_cov,trans_table=trans_table,is_protein=is_coding,valid_ext=FILE_TYPES['fasta'])
+
+    obj = locidex_format(input=input,header=LOCIDEX_DB_HEADER,is_protein=is_coding,min_len_frac=min_len_frac,max_len_frac=max_len_frac, min_ident_perc=min_ident,
+                   min_cov_perc=min_match_cov,trans_table=trans_table,valid_ext=FILE_TYPES['fasta'])
 
     run_data['result_file'] = os.path.join(outdir,"locidex.txt")
     pd.DataFrame.from_dict(obj.get_data(),orient='index').to_csv(run_data['result_file'],sep="\t",index=False,header=True)
 
-    run_data['analysis_end_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    with open(os.path.join(outdir,"results.json"),"w") as out:
-        json.dump(run_data,indent=4)
+    run_data['analysis_end_time'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open(os.path.join(outdir,"results.json"),"w") as oh:
+        oh.write(json.dumps(run_data,indent=4))
 
 
 

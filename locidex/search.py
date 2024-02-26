@@ -2,6 +2,7 @@ import json
 import os
 import re
 import sys
+from pathlib import Path
 from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
 from datetime import datetime
 
@@ -145,9 +146,17 @@ def run_search(config):
         sys.exit()
 
     if perform_annotation:
+        gbk_data = []
         for idx,genes in enumerate(seq_obj.prodigal_genes):
-            with open(os.path.join(outdir,f"annotations_{idx}.gbk"),'w') as oh:
+            f = os.path.join(outdir,f"annotations_{idx}.gbk")
+            with open(f,'w') as oh:
                 genes.write_genbank(oh, sequence_id=f'{sample_name}_{idx}')
+            gbk_data.append(Path(f).read_text())
+            os.remove(f)
+        f = os.path.join(outdir, f"annotations.gbk")
+        with open(f, 'w') as oh:
+            oh.write("\n".join([str(x) for x in gbk_data]))
+
 
     blast_dir_base = os.path.join(outdir, 'blast')
     if not os.path.isdir(blast_dir_base):

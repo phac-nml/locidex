@@ -47,7 +47,7 @@ setup(
     classifiers=classifiers,
     package_dir={'locidex': 'locidex'},
     package_data={
-        "": ["*.txt"],
+        "": ["*.txt","*.fas","*.fasta","*.json","nucleotide*","protein*"],
     },
 
     install_requires=[
