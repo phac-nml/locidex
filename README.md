@@ -118,8 +118,8 @@ If you run ``locidex``, you should see the following usage statement:
     search  Query set of ORFs, Genes against a database to produce a sequence store for downstream processing
     report  Filter a sequence store and produce and extract of blast results and gene profile
     merge   Merge a set of gene profiles into a standard profile format
-    format  Not Implemented
-    build   Not Implemented
+    format  Format fasta files from other MLST databases for use with locidex build
+    build   Builds locidex db 
 
 **Search**
 
@@ -127,7 +127,17 @@ The search module is meant to use locidex formated datbase directories
 Input Data Formats: GenBank, Fasta (of individual loci sequences)
 - DNA and protein blast searches
 - Md5 hashing of alleles
-- Storage of results for post-processing in json format
+  - Storage of results for post-processing in json format
+ 
+        locidex search -q ./example/search/NC_003198.1.fasta -d .example/build_db_mlst_out -o ./example/search/NC_003198_fasta -n 8 --annotate
+    
+-run in annotation mode with a fasta input
+
+
+        locidex search -q ./example/search/NC_003198.1.gbk -d .example/build_db_mlst_out -o ./example/search/NC_003198_fasta -n 8
+
+-run with existing annotations in GenBank format
+
 
 **Report**
 
