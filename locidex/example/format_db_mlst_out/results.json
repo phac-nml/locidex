@@ -1,0 +1,16 @@
+{
+    "analysis_start_time": "2024-02-26 16:07:42",
+    "parameters": {
+        "input": "/Users/jrobertson/PycharmProjects/locidex/locidex/example/format_db_mlst_in",
+        "outdir": "/Users/jrobertson/PycharmProjects/locidex/locidex/example/format_db_mlst_out",
+        "min_len_frac": 0.7,
+        "max_len_frac": 1.3,
+        "min_ident": 80.0,
+        "min_match_cov": 80.0,
+        "translation_table": 11,
+        "not_coding": false,
+        "force": true
+    },
+    "result_file": "/Users/jrobertson/PycharmProjects/locidex/locidex/example/format_db_mlst_out/locidex.txt",
+    "analysis_end_time": "2024-02-26 16:07:42"
+}
