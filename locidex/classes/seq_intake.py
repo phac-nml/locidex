@@ -269,11 +269,9 @@ class seq_store:
                         else:
                             max_len = hinfo["dna_max_len"]
                         if "min_dna_match_cov" not in hinfo:
-                            min_cov = self.filters["min_dna_match_cov"]
+                            min_cov = self.filters["dna_min_cov"]
                         else:
-                            print(hit_id)
-                            print(hinfo)
-                            min_cov = hinfo["dna_min_cov"]
+                            min_cov = hinfo["min_dna_match_cov"]
                         if "dna_min_ident" not in hinfo:
                             min_ident = self.filters["dna_min_ident"]
                         else:
