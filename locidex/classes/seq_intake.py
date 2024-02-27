@@ -1,4 +1,6 @@
 import os
+import sys
+
 from locidex.classes.gbk import parse_gbk
 from locidex.classes.fasta import parse_fasta
 from locidex.utils import guess_alphabet, calc_md5, six_frame_translation
@@ -109,11 +111,11 @@ class seq_intake:
                 dna_seq = seq
                 dna_hash = calc_md5([seq])[0]
                 dna_len = len(seq)
-                aa_seq = six_frame_translation(dna_seq,self.translation_table)
+                aa_seq = six_frame_translation(dna_seq,self.translation_table)[0][0]
                 aa_hash = calc_md5([aa_seq])[0]
                 aa_len = len(aa_seq)
             else:
-                aa_seq = six_frame_translation(dna_seq,self.translation_table)[0][0]
+                aa_seq = seq
                 aa_hash = calc_md5([aa_seq])[0]
                 aa_len = len(aa_seq)
 
@@ -146,11 +148,11 @@ class seq_intake:
                 dna_seq = seq
                 dna_hash = calc_md5([seq])[0]
                 dna_len = len(seq)
-                aa_seq = six_frame_translation(dna_seq, self.translation_table)
+                aa_seq = six_frame_translation(dna_seq, self.translation_table)[0][0]
                 aa_hash = calc_md5([aa_seq])[0]
                 aa_len = len(aa_seq)
             else:
-                aa_seq = six_frame_translation(dna_seq, self.translation_table)[0][0]
+                aa_seq = seq
                 aa_hash = calc_md5([aa_seq])[0]
                 aa_len = len(aa_seq)
             self.seq_data.append({

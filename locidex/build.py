@@ -43,25 +43,26 @@ class locidex_build:
             col_name = seq_columns[t]
             s = self.is_seqtype_present(col_name)
             if s:
+                outfile  = os.path.join(self.blast_dir, t)
                 if t == 'nucleotide':
                     self.is_dna = True
                     self.config["nucleotide_db_name"] = t
-                    blast_method = 'blastn'
+                    blast_method = 'nucl'
+
                 elif t == 'protien':
                     self.is_protein  = True
                     self.config["protein_db_name"] = t
-                    blast_method = 'blastp'
-                self.create_seq_db(t, col_name, blast_method)
+                    blast_method = 'prot'
+                self.create_seq_db(t, col_name, outfile, blast_method)
         self.config["is_nucl"] = self.is_dna
         self.config["is_prot"] = self.is_protein
         self.get_metadata(self.df,columns_to_exclude=list(seq_columns.values()))
 
     def create_seq_db(self,stype,col_name,outfile,blast_method='nucl'):
-        d = os.path.join(self.blast_dir,stype)
-        self.init_dir(d)
-        f = os.path.join(d,"{}.fasta".format(stype))
+        self.init_dir(outfile)
+        f = os.path.join(outfile,"{}.fasta".format(stype))
         self.write_seq_file(f,col_name)
-        (stdout,stderr) = self.makeblastdb(fasta_file=f,outfile=os.path.join(d,stype),blast_method=blast_method)
+        (stdout,stderr) = self.makeblastdb(fasta_file=f,outfile=os.path.join(outfile,stype),blast_method=blast_method)
         self.messages.append(stderr)
 
     def init_dir(self,d):
