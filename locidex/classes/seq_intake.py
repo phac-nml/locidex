@@ -290,9 +290,9 @@ class seq_store:
                         else:
                             max_len = hinfo["aa_max_len"]
                         if "min_aa_match_cov" not in hinfo:
-                            min_cov = self.filters["min_aa_match_cov"]
+                            min_cov = self.filters["aa_min_cov"]
                         else:
-                            min_cov = hinfo["aa_min_cov"]
+                            min_cov = hinfo["min_aa_match_cov"]
                         if "aa_min_ident" not in hinfo:
                             min_ident = self.filters["aa_min_ident"]
                         else:
