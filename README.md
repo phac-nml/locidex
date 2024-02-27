@@ -137,6 +137,10 @@ Input Data Formats: GenBank, Fasta (of individual loci sequences)
 - DNA and protein blast searches
 - Md5 hashing of alleles 
 - Storage of results for post-processing in json format
+
+Gene annotation is notoriously inconsistent between different software and so it is **STRONGLY** recommended to use the same method
+for annotation of your database and what you will use to search. ie. if using prodigal for searching, use prodigal for constructing the database.
+
  
 
     locidex search -q ./example/search/NC_003198.1.fasta -d .example/build_db_mlst_out -o ./example/search/NC_003198_fasta -n 8 --annotate
@@ -404,7 +408,31 @@ and are included whether they have a query match or not. This format is used as 
                 'locus_7': 'cc1311359fd1cd1803722ecffec279fc,50605327a347ca7d540722e69bf2204f', #Multiple queries match locus
     }
 
+## Quick Start
 
+MLST Example: The 7-gene MLST scheme targets from https://pubmlst.org/organisms/salmonella-spp were used as targets to extract
+the full length CDS annotations from NC_003198.1 (Salmonella Typhi CT18). Note that these are not just the MLST target sequences
+but the full orf and so this will differ from normal MLST results. If you want to use the subsections of the loci, you will need
+to extract these using another method. These were separated into individual fasta files
+for each gene but a concatonated version would also work as long as the fasta header began with the locus identifier.
+Format is used to take the fasta files to create a TSV file with each of the targets and individual match thresholds for each query.
+These can be modified by the user before building the database. The build function converts that TSV into a form that locidex search can use.
+In order to call the alleles from the blast results of the search module, the report module is called and the samples are named based on the 
+user input. If no name is specified then the base name of the file is used. Finally, the individual profiles are merged into a TSV file which 
+is compatible with downstream gene profile input.
+
+    locidex format -i ~/example/format_db_mlst_in/ -o ~/example/format_db_mlst_out/ --force
+    locidex build -i ~/example/format_db_mlst_out/locidex.txt -o ~/example/build_db_mlst_out/ --force
+    
+    locidex search -q ~/example/search/NC_003198.1.gbk -d ~/example/build_db_mlst_out/ -o ./mlst_ncbi_annotated --force 
+    locidex search -q ~/example/search/NC_003198.1.fasta -d ~/example/build_db_mlst_out/ -o ./mlst_prodigal --force --annotate
+    
+    locidex report -i ./mlst_ncbi_annotated/seq_store.json -o ./mlst_ncbi_annotated/report --name ncbi --force
+    locidex report -i ./mlst_prodigal/seq_store.json -o ./mlst_prodigal/report --name prodigal --force
+    
+    locidex merge -i ./mlst_ncbi_annotated/report/profile.json .//mlst_prodigal/report/profile.json -o ./merged --force
+    
+    
 
 
 ## Benchmarks
