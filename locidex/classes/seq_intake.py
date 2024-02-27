@@ -271,6 +271,8 @@ class seq_store:
                         if "min_dna_match_cov" not in hinfo:
                             min_cov = self.filters["min_dna_match_cov"]
                         else:
+                            print(hit_id)
+                            print(hinfo)
                             min_cov = hinfo["dna_min_cov"]
                         if "dna_min_ident" not in hinfo:
                             min_ident = self.filters["dna_min_ident"]
