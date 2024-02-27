@@ -116,10 +116,19 @@ If you run ``locidex``, you should see the following usage statement:
     Available commands:
     
     search  Query set of ORFs, Genes against a database to produce a sequence store for downstream processing
-    report  Filter a sequence store and produce and extract of blast results and gene profile
-    merge   Merge a set of gene profiles into a standard profile format
+    report  Filter a sequence store and produce and extract of blast results and gene profile (allele calling)
+    merge   Merge a set of gene profiles into a standard "allele" profile format 
     format  Format fasta files from other MLST databases for use with locidex build
     build   Builds locidex db 
+
+
+Workflows
+=====
+![alt text](https://github.com/phac-nml/locidex/blob/main/LocidexWorkflows.png?raw=true)
+
+Locidex is designed to be very modular so that developers and users can mix and match different components for their individual goals.
+Each tool is designed so that it can be imported as a python library to extend and implement custom behaviour. A description of each tool and 
+its inputs/outputs is provided below.
 
 **Search**
 
@@ -352,10 +361,10 @@ on the sequence and additional qualifiers providing details about the feature.
 [FASTA](https://en.wikipedia.org/wiki/FASTA_format) format is a simple and widely used text-based format for representing biological sequences, 
 such as DNA, RNA, or protein sequences. It is named after the FASTA software package, which first introduced this format. 
 FASTA files typically have a .fasta or .fa extension. Locidex supports both nucleotide and protein sequences as input but 
-it must consist of extracted CDS, ORFs, Genes which are to be hashed. You can supply contigs but no extraction will occur and
-the entire sequence will be treated as a single query. You will need to provide the extracted gene sequences from a tool such as [prodigal](https://github.com/hyattpd/Prodigal), [prokka](https://github.com/tseemann/prokka), 
-[bakta](https://github.com/oschwengers/bakta) and an appropriate translation table if the protein coding sequences. This format is used as input
-to locidex search.
+it must consist of extracted CDS, ORFs, Genes which are to be hashed. You can provide the extracted gene sequences from a tool such as [prodigal](https://github.com/hyattpd/Prodigal), [prokka](https://github.com/tseemann/prokka), 
+[bakta](https://github.com/oschwengers/bakta) and an appropriate translation table if the protein coding sequences. 
+You can supply contigs but unless you specify --annotate (gene annotation using pyrodigal) no extraction will occur and
+the entire sequence will be treated as a single query.  This format is can be used as input to locidex search.
 
 
 
@@ -396,9 +405,6 @@ and are included whether they have a query match or not. This format is used as 
     }
 
 
-
-Quick start
-=====
 
 
 ## Benchmarks
