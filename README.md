@@ -448,6 +448,7 @@ However, if you want to use the "allele" identity of your locus such as an rRNA 
 you want to match.
 
 **Do I need to have a representitive of every allele I want to match in my database?**
+
 No, the benefit of having dual searching with protein and dna is that you can have a sparsely populated database of sequences that 
 meet your applications specific need.  This means you can deduplicate using a tool such as [cd-hit](https://sites.google.com/view/cd-hit) to remove highly similar sequences
 from your database to reduce runtime and complexity. You will need to empiracly determine what level of diversity is sufficient
