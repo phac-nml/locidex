@@ -5,10 +5,12 @@ import sys
 tasks = {
     'search': 'Query set of ORFs, Genes against a database to produce a sequence store for downstream processing',
     'report': 'Filter a sequence store and produce and extract of blast results and gene profile',
-    'merge': 'Merge a set of gene profiles into a standard profile format',
-    'format': 'Not Implemented',
-    'build': 'Not Implemented',
+    'merge':  'Merge a set of gene profiles into a standard profile format',
+    'format': 'Format fasta files from other MLST databases for use with locidex build',
+    'build': 'Builds locidex db',
 }
+
+
 
 ordered_tasks = [
     'search',

@@ -57,6 +57,7 @@ setup(
         'six>=1.16.0',
         'pandas>=2.0.2 ',
         'biopython>=1.83',
+        'pyrodigal'
 
     ],
 
