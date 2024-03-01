@@ -28,6 +28,8 @@ class blast_search:
         self.BLAST_TABLE_COLS = blast_columns
         self.parse_seqids = parse_seqids
 
+        if self.output_db_path is None:
+            self.output_db_path = input_db_path
 
         if not os.path.isfile(self.input_query_path):
             self.messages.append(f'Error {self.input_query_path} query fasta does not exist')
@@ -42,6 +44,13 @@ class blast_search:
             self.messages.append(f'Error {blast_method} is not a supported blast method: {self.blast_method}')
             self.status = False
 
+        elif create_db and not self.is_blast_db_valid():
+            (stdout,stderr) = self.makeblastdb()
+            if not self.is_blast_db_valid():
+                self.messages.append(f'Error {self.output_db_path} is not a valid blast db and creation of db failed')
+                self.status = False
+
+
         self.messages.append(self.run_blast())
 
 
@@ -51,14 +60,14 @@ class blast_search:
         if self.blast_method == 'blastp':
             dbtype = 'prot'
         command = ['makeblastdb',
-                   '-in', self.input_query_path,
+                   '-in', self.input_db_path,
                    '-dbtype', dbtype]
         if self.parse_seqids:
             command.append('-parse_seqids')
         if self.output_db_path != None:
-            command.append('-out',self.output_db_path)
+            command +=['-out', self.output_db_path]
 
-        return run_command(command)
+        return run_command(" ".join([str(x) for x in command]))
 
     def is_blast_db_valid(self):
         extensions = ['nsq', 'nin', 'nhr']
@@ -68,7 +77,6 @@ class blast_search:
                 for e2 in extensions2:
                     if not os.path.isfile(f'{self.input_db_path}.{e2}'):
                         return False
-
 
         return True
 
@@ -85,7 +93,6 @@ class blast_search:
                 command.append(f'-{p}')
             else:
                 command += [f'-{p}', f'{self.blast_params[p]}']
-
         return run_command(" ".join([str(x) for x in command]))
 
 

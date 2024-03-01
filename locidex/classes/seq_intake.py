@@ -17,12 +17,15 @@ class seq_intake:
     messages = []
     seq_data = []
     prodigal_genes = []
+    skip_trans = False
+    DNA_AMBIG_CHARS = ['B', 'D', 'E', 'F', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'U', 'V', 'W', 'X', 'Y', 'Z', '-']
 
-    def __init__(self,input_file,file_type,feat_key='CDS',translation_table=11,perform_annotation=False,num_threads=1):
+    def __init__(self,input_file,file_type,feat_key='CDS',translation_table=11,perform_annotation=False,num_threads=1,skip_trans=False):
         self.input_file = input_file
         self.file_type = file_type
         self.translation_table = translation_table
         self.feat_key = feat_key
+        self.skip_trans = skip_trans
 
         if not os.path.isfile(self.input_file):
             self.messages.append(f'Error {self.input_file} does not exist')
@@ -83,6 +86,7 @@ class seq_intake:
                     'locus_name':seq['gene_name'],
                     'seq_id': seq['gene_name'],
                     'dna_seq': seq['dna_seq'],
+                    'dna_ambig_count': self.count_ambig_chars(seq['dna_seq'], self.DNA_AMBIG_CHARS),
                     'dna_hash': seq['dna_hash'],
                     'dna_len': len(seq['dna_seq']),
                     'aa_seq': seq['aa_seq'],
@@ -111,7 +115,10 @@ class seq_intake:
                 dna_seq = seq
                 dna_hash = calc_md5([seq])[0]
                 dna_len = len(seq)
-                aa_seq = six_frame_translation(dna_seq,self.translation_table)[0][0]
+                if self.skip_trans:
+                    aa_seq = ''
+                else:
+                    aa_seq = six_frame_translation(dna_seq,self.translation_table)[0][0]
                 aa_hash = calc_md5([aa_seq])[0]
                 aa_len = len(aa_seq)
             else:
@@ -124,6 +131,7 @@ class seq_intake:
                 'locus_name': features['gene_name'],
                 'seq_id': features['seq_id'],
                 'dna_seq': dna_seq,
+                'dna_ambig_count': self.count_ambig_chars(dna_seq, self.DNA_AMBIG_CHARS),
                 'dna_hash': dna_hash,
                 'dna_len': dna_len,
                 'aa_seq': aa_seq,
@@ -148,7 +156,10 @@ class seq_intake:
                 dna_seq = seq
                 dna_hash = calc_md5([seq])[0]
                 dna_len = len(seq)
-                aa_seq = six_frame_translation(dna_seq, self.translation_table)[0][0]
+                if self.skip_trans:
+                    aa_seq = ''
+                else:
+                    aa_seq = six_frame_translation(dna_seq, self.translation_table)[0][0]
                 aa_hash = calc_md5([aa_seq])[0]
                 aa_len = len(aa_seq)
             else:
@@ -161,6 +172,7 @@ class seq_intake:
                 'seq_id': id,
                 'dna_seq': dna_seq,
                 'dna_hash': dna_hash,
+                'dna_ambig_count':self.count_ambig_chars(dna_seq,self.DNA_AMBIG_CHARS),
                 'dna_len': dna_len,
                 'aa_seq': aa_seq,
                 'aa_hash': aa_hash,
@@ -169,6 +181,13 @@ class seq_intake:
             })
 
         return
+
+    def count_ambig_chars(self,seq,chars):
+        count = 0
+        for char in chars:
+            count+= seq.count(char)
+        return count
+
 
 
 
