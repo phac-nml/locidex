@@ -18,7 +18,8 @@ class seq_intake:
     seq_data = []
     prodigal_genes = []
     skip_trans = False
-    DNA_AMBIG_CHARS = ['B', 'D', 'E', 'F', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'U', 'V', 'W', 'X', 'Y', 'Z', '-']
+    DNA_AMBIG_CHARS = [ 'b', 'd', 'e', 'f', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 'u', 'v', 'w', 'x', 'y', 'z', '-']
+    DNA_IUPAC_CHARS = [ 'b', 'd', 'e', 'f', 'h', 'i', 'j', 'k', 'l', 'm', 'o', 'p', 'q', 'r', 's', 'u', 'v', 'w', 'x', 'y', 'z']
 
     def __init__(self,input_file,file_type,feat_key='CDS',translation_table=11,perform_annotation=False,num_threads=1,skip_trans=False):
         self.input_file = input_file
@@ -48,16 +49,15 @@ class seq_intake:
             self.status = False
         elif file_type == 'gtf':
             self.status = False
-
         if self.status:
             self.add_codon_data()
+
 
     def add_codon_data(self):
         for record in self.seq_data:
             if record['aa_len'] == 0:
                 continue
-
-            dna_seq = record['dna_seq']
+            dna_seq = record['dna_seq'].lower().replace('-','')
             dna_len = len(dna_seq)
             start_codon = ''
             stop_codon = ''
@@ -81,13 +81,17 @@ class seq_intake:
         for a in acs:
             features = obj.get_feature(a,self.feat_key)
             for seq in features:
+                s = seq['dna_seq'].lower().replace(char,'n')
+                for char in self.DNA_IUPAC_CHARS:
+                    s = s.replace(char,"n")
+
                 self.seq_data.append( {
                     'parent_id': a,
                     'locus_name':seq['gene_name'],
                     'seq_id': seq['gene_name'],
-                    'dna_seq': seq['dna_seq'],
+                    'dna_seq': s,
                     'dna_ambig_count': self.count_ambig_chars(seq['dna_seq'], self.DNA_AMBIG_CHARS),
-                    'dna_hash': seq['dna_hash'],
+                    'dna_hash': calc_md5([s])[0],
                     'dna_len': len(seq['dna_seq']),
                     'aa_seq': seq['aa_seq'],
                     'aa_hash': seq['aa_hash'],
@@ -112,7 +116,9 @@ class seq_intake:
             aa_hash = ''
             aa_len = 0
             if dtype == 'dna':
-                dna_seq = seq
+                dna_seq = seq.lower().replace('-','')
+                for char in self.DNA_IUPAC_CHARS:
+                    dna_seq = dna_seq.replace(char,"n")
                 dna_hash = calc_md5([seq])[0]
                 dna_len = len(seq)
                 if self.skip_trans:
@@ -122,7 +128,7 @@ class seq_intake:
                 aa_hash = calc_md5([aa_seq])[0]
                 aa_len = len(aa_seq)
             else:
-                aa_seq = seq
+                aa_seq = seq.lower().replace('-','')
                 aa_hash = calc_md5([aa_seq])[0]
                 aa_len = len(aa_seq)
 
@@ -153,7 +159,9 @@ class seq_intake:
             aa_hash = ''
             aa_len = 0
             if dtype == 'dna':
-                dna_seq = seq
+                dna_seq = seq.lower().replace('-','')
+                for char in self.DNA_IUPAC_CHARS:
+                    dna_seq = dna_seq.replace(char,"n")
                 dna_hash = calc_md5([seq])[0]
                 dna_len = len(seq)
                 if self.skip_trans:
@@ -163,7 +171,7 @@ class seq_intake:
                 aa_hash = calc_md5([aa_seq])[0]
                 aa_len = len(aa_seq)
             else:
-                aa_seq = seq
+                aa_seq = seq.lower().replace('-','')
                 aa_hash = calc_md5([aa_seq])[0]
                 aa_len = len(aa_seq)
             self.seq_data.append({

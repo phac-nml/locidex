@@ -113,7 +113,7 @@ class parse_gbk:
 
                         seq = ''.join(seq)
                         sequences[gb_accession]['features'][feat.key].append(
-                            {'gene_name': gene_name, 'dna_seq': seq, 'aa_seq': aa, 'positions': positions,
+                            {'gene_name': gene_name, 'dna_seq': seq.lower(), 'aa_seq': aa.lower(), 'positions': positions,
                              'gene_len': len(seq),'aa_hash':calc_md5([aa])[0],'dna_hash':calc_md5([seq])[0]})
 
         return sequences
