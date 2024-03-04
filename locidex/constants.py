@@ -1,3 +1,8 @@
+DNA_AMBIG_CHARS = ['b', 'd', 'e', 'f', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 'u', 'v', 'w', 'x',
+                   'y', 'z', '-']
+DNA_IUPAC_CHARS = ['b', 'd', 'e', 'f', 'h', 'i', 'j', 'k', 'l', 'm', 'o', 'p', 'q', 'r', 's', 'u', 'v', 'w', 'x', 'y',
+                   'z']
+
 NT_SUB = str.maketrans('acgtrymkswhbvdnxACGTRYMKSWHBVDNX',
                        'tgcayrkmswdvbhnxTGCAYRKMSWDVBHNX')
 
@@ -100,6 +105,8 @@ LOCIDEX_DB_HEADER = [
     'dna_min_ident',
     'aa_min_ident',
     'min_dna_match_cov',
-    'min_aa_match_cov'
-    'count_int_stops'
+    'min_aa_match_cov',
+    'count_int_stops',
+    'dna_ambig_count'
+
 ]

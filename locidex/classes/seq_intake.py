@@ -5,6 +5,7 @@ from locidex.classes.gbk import parse_gbk
 from locidex.classes.fasta import parse_fasta
 from locidex.utils import guess_alphabet, calc_md5, six_frame_translation
 from locidex.classes.prodigal import gene_prediction
+from locidex.constants import DNA_AMBIG_CHARS, DNA_IUPAC_CHARS
 
 class seq_intake:
     input_file = ''
@@ -18,8 +19,6 @@ class seq_intake:
     seq_data = []
     prodigal_genes = []
     skip_trans = False
-    DNA_AMBIG_CHARS = [ 'b', 'd', 'e', 'f', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 'u', 'v', 'w', 'x', 'y', 'z', '-']
-    DNA_IUPAC_CHARS = [ 'b', 'd', 'e', 'f', 'h', 'i', 'j', 'k', 'l', 'm', 'o', 'p', 'q', 'r', 's', 'u', 'v', 'w', 'x', 'y', 'z']
 
     def __init__(self,input_file,file_type,feat_key='CDS',translation_table=11,perform_annotation=False,num_threads=1,skip_trans=False):
         self.input_file = input_file
@@ -81,8 +80,8 @@ class seq_intake:
         for a in acs:
             features = obj.get_feature(a,self.feat_key)
             for seq in features:
-                s = seq['dna_seq'].lower().replace(char,'n')
-                for char in self.DNA_IUPAC_CHARS:
+                s = seq['dna_seq'].lower().replace('-','')
+                for char in DNA_IUPAC_CHARS:
                     s = s.replace(char,"n")
 
                 self.seq_data.append( {
@@ -90,7 +89,7 @@ class seq_intake:
                     'locus_name':seq['gene_name'],
                     'seq_id': seq['gene_name'],
                     'dna_seq': s,
-                    'dna_ambig_count': self.count_ambig_chars(seq['dna_seq'], self.DNA_AMBIG_CHARS),
+                    'dna_ambig_count': self.count_ambig_chars(seq['dna_seq'], DNA_AMBIG_CHARS),
                     'dna_hash': calc_md5([s])[0],
                     'dna_len': len(seq['dna_seq']),
                     'aa_seq': seq['aa_seq'],
@@ -137,7 +136,7 @@ class seq_intake:
                 'locus_name': features['gene_name'],
                 'seq_id': features['seq_id'],
                 'dna_seq': dna_seq,
-                'dna_ambig_count': self.count_ambig_chars(dna_seq, self.DNA_AMBIG_CHARS),
+                'dna_ambig_count': self.count_ambig_chars(dna_seq, DNA_AMBIG_CHARS),
                 'dna_hash': dna_hash,
                 'dna_len': dna_len,
                 'aa_seq': aa_seq,
@@ -180,7 +179,7 @@ class seq_intake:
                 'seq_id': id,
                 'dna_seq': dna_seq,
                 'dna_hash': dna_hash,
-                'dna_ambig_count':self.count_ambig_chars(dna_seq,self.DNA_AMBIG_CHARS),
+                'dna_ambig_count':self.count_ambig_chars(dna_seq, DNA_AMBIG_CHARS),
                 'dna_len': dna_len,
                 'aa_seq': aa_seq,
                 'aa_hash': aa_hash,
@@ -200,7 +199,7 @@ class seq_intake:
 
 
 class seq_store:
-    stored_fields = ['parent_id','locus_name','seq_id','dna_hash','dna_len','aa_hash','aa_len','start_codon','stop_codon','count_internal_stop']
+    stored_fields = ['parent_id','locus_name','seq_id','dna_hash','dna_len','aa_hash','aa_len','start_codon','stop_codon','count_internal_stop','dna_ambig_count']
     record = {
         'db_info': {},
         'db_seq_info': {},

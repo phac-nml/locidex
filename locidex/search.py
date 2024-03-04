@@ -94,6 +94,10 @@ def run_search(config):
     sample_name = config['name']
     perform_annotation = config['annotate']
     max_target_seqs = config['max_target_seqs']
+    if 'max_ambig_count' in config:
+        max_ambig_count = config['max_ambig_count']
+    else:
+        max_ambig_count = 99999999999999
 
     if not perform_annotation:
         perform_annotation = False
@@ -184,6 +188,7 @@ def run_search(config):
         'max_aa_len': max_aa_len,
         'min_aa_ident': min_aa_ident,
         'min_aa_match_cov': min_aa_match_cov,
+        'dna_ambig_count':max_ambig_count
 
     }
     store_obj = seq_store(sample_name, db_database_config.config_obj.config, metadata_obj.config['meta'],

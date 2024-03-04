@@ -14,6 +14,7 @@ from Bio import SeqIO
 from locidex.constants import LOCIDEX_DB_HEADER, FILE_TYPES, FORMAT_RUN_DATA
 from locidex.utils import six_frame_translation, revcomp, calc_md5
 from locidex.version import __version__
+from locidex.constants import DNA_AMBIG_CHARS, DNA_IUPAC_CHARS
 
 
 class locidex_format:
@@ -156,7 +157,7 @@ class locidex_format:
                     gene_name = "_".join(id.split(self.delim)[:-1])
                 else:
                     gene_name = self.gene_name
-                dna_seq = str(record.seq)
+                dna_seq = str(record.seq).lower().replace('-','')
                 if self.is_protein_coding:
                     t = self.pick_frame(six_frame_translation(dna_seq, trans_table=self.translation_table))
                     aa_seq = t['seq']
@@ -176,6 +177,8 @@ class locidex_format:
                 row['dna_seq'] = dna_seq
                 row['dna_seq_len'] = dna_len
                 row['dna_seq_hash'] = calc_md5([dna_seq])[0]
+                row['dna_ambig_count'] =dna_seq.count('n')
+
 
                 if self.is_protein_coding:
                     row['aa_seq'] = aa_seq

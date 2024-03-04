@@ -24,6 +24,8 @@ def parse_args():
     parser.add_argument('-n', '--name', type=str, required=False, help='Sample name to include default=filename')
     parser.add_argument('-m', '--mode', type=str, required=False, help='Allele profile assignment [normal,conservative]',default='normal')
     parser.add_argument('-p', '--prop', type=str, required=False, help='Metadata label to use for aggregation',default='locus_name')
+    parser.add_argument('-a', '--max_ambig', type=int, required=False, help='Maximum number of ambiguous characters allowed in a sequence',default=0)
+    parser.add_argument('-s', '--max_stop', type=int, required=False, help='Maximum number of internal stop codons allowed in a sequence',default=0)
     parser.add_argument('--report_format', type=str, required=False,
                         help='Report format of parsed results [profile]',default='profile')
 
@@ -39,7 +41,9 @@ class seq_reporter:
     profile = {}
     loci = {}
     db_seq_info = {}
-    def __init__(self,data_dict,method='nucleotide',mode='normal',label='locus_name',filters={}):
+    def __init__(self,data_dict,method='nucleotide',mode='normal',label='locus_name',filters={},max_ambig=0,max_int_stop=0):
+        self.max_ambig_count = max_ambig
+        self.max_int_stop_count = max_int_stop
         self.label = label
         self.method = method
         self.mode = mode
@@ -50,6 +54,17 @@ class seq_reporter:
         self.locus_profile = self.data_dict['query_data']["locus_profile"]
         self.blast_columns = self.data_dict["query_hit_columns"]
         self.build_profile()
+        self.filter_alleles()
+
+    def filter_alleles(self):
+        for seq_id in self.query_seq_data:
+            ambig_count = int(self.query_seq_data[seq_id]['dna_ambig_count'])
+            if isinstance(self.query_seq_data[seq_id]['count_internal_stop'], int):
+                stop_count = int(self.query_seq_data[seq_id]['count_internal_stop'])
+            else:
+                stop_count = 0
+            if ambig_count > self.max_ambig_count or stop_count > self.max_int_stop_count:
+                self.profile[seq_id] = ''
 
     def build_profile(self):
         for lid in self.data_dict["db_seq_info"]:
@@ -206,17 +221,6 @@ class seq_reporter:
         self.locus_profile = profile
         self.populate_profile()
 
-
-            
-                
-        
-        
-            
-
-
-
-
-
     def populate_profile(self):
         for locus_name in self.profile:
             values = set()
@@ -269,6 +273,8 @@ def run():
     sample_name = cmd_args.name
     force = cmd_args.force
     mode = cmd_args.mode
+    max_ambig = cmd_args.max_ambig
+    max_int_stop = cmd_args.max_stop
 
 
     if sample_name is None:
@@ -292,7 +298,9 @@ def run():
     if len(seq_store_dict) == 0:
         sys.exit()
 
-    allele_obj = seq_reporter(seq_store_dict, method='nucleotide', mode=mode, label=label, filters={})
+    allele_obj = seq_reporter(seq_store_dict, method='nucleotide', mode=mode, label=label, filters={},max_ambig=max_ambig,max_int_stop=max_int_stop)
+
+
     if report_format == 'profile':
         allele_obj.allele_assignment('nucleotide')
         profile = {sample_name: allele_obj.profile}
