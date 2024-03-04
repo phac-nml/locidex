@@ -12,9 +12,9 @@ import pandas as pd
 from locidex.classes.blast import blast_search, parse_blast
 from locidex.classes.db import search_db_conf, db_config
 from locidex.classes.seq_intake import seq_intake, seq_store
-from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BLAST_TABLE_COLS, DB_CONFIG_FIELDS, DB_EXPECTED_FILES
-from locidex.utils import write_seq_dict
+from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BLAST_TABLE_COLS, DB_CONFIG_FIELDS, DB_EXPECTED_FILES, NT_SUB
 from locidex.version import __version__
+
 
 def parse_args():
     class CustomFormatter(ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter):
@@ -63,12 +63,15 @@ def parse_args():
     return parser.parse_args()
 
 class extractor:
-    def __init__(self,df,seq_data,sseqid_col,queryid_col,qstart_col,qend_col,qlen_col,sstart_col,send_col,slen_col,sstrand_col):
+    seqs = {}
+    df = pd.DataFrame()
+    def __init__(self,df,seq_data,sseqid_col,queryid_col,qstart_col,qend_col,qlen_col,sstart_col,send_col,slen_col,sstrand_col,bitscore_col,overlap_thresh=1):
         self.is_complete(df,qstart_col,qend_col,qlen_col)
         self.is_contig_boundary(df,sstart_col,send_col,slen_col)
         self.set_revcomp(df,sstart_col,send_col,sstrand_col)
         self.set_extraction_pos(df,sstart_col,send_col)
-        self.extract_seq(df, sseqid_col, seq_data)
+        self.df = self.extend(df,sseqid_col, queryid_col, qstart_col, qend_col, sstart_col,send_col,slen_col, qlen_col, bitscore_col, overlap_threshold=1)
+        self.seqs = self.extract_seq(self.df, sseqid_col, seq_data)
         pass
 
     def is_5prime_complete(self,df,qstart_col):
@@ -89,7 +92,7 @@ class extractor:
 
     def set_revcomp(self,df,sstart_col,send_col,strand_col):
         df['reverse'] = np.where(df[sstart_col] > df[send_col], True, False)
-        df['complement'] = np.where(df[strand_col] > 'minus', True, False)
+        df['complement'] = np.where(df[strand_col] > 'plus', True, False)
 
     def set_extraction_pos(self,df,start_col,end_col):
         df['ext_start'] = df[start_col]
@@ -102,20 +105,168 @@ class extractor:
                 df.loc[idx, 'ext_start'] = start
                 df.loc[idx, 'ext_end'] = end
 
+    def remove_redundant_hits(self,df,seqid_col, bitscore_col, overlap_threshold=1):
+        seq_id_list = list(df[seqid_col].unique())
+        filter_df = []
+        for seqid in seq_id_list:
+            subset = df[df[seqid_col] == seqid]
+            prev_contig_id = ''
+            prev_index = -1
+            prev_contig_start = -1
+            prev_contig_end = -1
+            prev_score = 0
+            filter_rows = []
+            for idx, row in subset.iterrows():
+                contig_id = row[seqid_col]
+                contig_start = row['ext_start']
+                contig_end = row['ext_end']
+                score = float(row[bitscore_col])
+
+                if prev_contig_id == '':
+                    prev_index = idx
+                    prev_contig_id = contig_id
+                    prev_contig_start = contig_start
+                    prev_contig_end = contig_end
+                    prev_score = score
+                    continue
+
+                if (contig_start >= prev_contig_start and contig_start <= prev_contig_end) or (
+                        contig_end >= prev_contig_start and contig_end <= prev_contig_end):
+                    overlap = abs(contig_start - prev_contig_end)
+
+                    if overlap > overlap_threshold:
+                        if prev_score < score:
+                            filter_rows.append(prev_index)
+                        else:
+                            filter_rows.append(idx)
+
+                prev_index = idx
+                prev_contig_id = contig_id
+                prev_contig_start = contig_start
+                prev_contig_end = contig_end
+                prev_score = score
+
+
+            valid_ids = list( set(subset.index) - set(filter_rows)  )
+
+            filter_df.append(subset.filter(valid_ids, axis=0))
+
+
+        return pd.concat(filter_df, ignore_index=True)
+
+
+    def recursive_filter_overlap_records(self,df, seqid_col, qseqid_col, bitscore_col, overlap_threshold=1):
+        size = len(df)
+        prev_size = 0
+        while size != prev_size:
+            df = df.sort_values([seqid_col,qseqid_col,'ext_start', 'ext_end', bitscore_col],
+                                ascending=[True, True, True, True, False]).reset_index(drop=True)
+            df = self.remove_redundant_hits(df, seqid_col, bitscore_col, overlap_threshold=overlap_threshold)
+            prev_size = size
+            size = len(df)
+
+        return df
+
+    def recursive_filter_overlap_records_bck(self,df, seqid_col, bitscore_col, overlap_threshold=1):
+        size = len(df)
+        prev_size = 0
+        while size != prev_size:
+            df = df.sort_values([seqid_col,'ext_start', 'ext_end', bitscore_col],
+                                ascending=[True, True, True, False]).reset_index(drop=True)
+            df = self.remove_redundant_hits(df, seqid_col, bitscore_col, overlap_threshold=overlap_threshold)
+            prev_size = size
+            size = len(df)
+
+        return df
+
     def extract_seq(self,df,seqid_col,seq_data):
         seqs = []
         for idx,row in df.iterrows():
-            seqs.append(row['ext_start'])
+            start = row['ext_start'] -1
+            end = row['ext_end']
+            seqid = row[seqid_col]
+            is_reverse = row['reverse']
+            if seqid in seq_data:
+                seq = seq_data[seqid]['seq'][start:end]
 
-        #extraction needs work
+                if is_reverse:
+                    seq = seq[::-1].translate(NT_SUB)
+
+                seqs.append({'seqid':seqid, 'id':seq_data[seqid]['id'],
+                             'start':start, 'end':end, 'reverse':is_reverse,
+                             'seq':seq})
+        return seqs
 
 
+    def extend(self,df,seqid_col, queryid_col, qstart_col, qend_col, sstart_col,send_col,slen_col, qlen_col, bitscore_col, overlap_threshold=1):
+        df = self.recursive_filter_overlap_records(df, seqid_col, queryid_col, bitscore_col, overlap_threshold)
+        df = df.sort_values([seqid_col, 'ext_start', 'ext_end', bitscore_col],
+                            ascending=[True, True, True, False]).reset_index(drop=True)
+
+        queries = df[queryid_col].to_list()
+
+        #Remove incomplete hits when complete ones are present
+        filtered = []
+        for query in queries:
+            subset = df[df[queryid_col] == query]
+            complete = subset[subset['is_complete'] == True]
+            num_complete = len(complete)
+            if num_complete > 0:
+                filtered.append(complete)
+            else:
+                filtered.append(subset)
+        df = pd.concat(filtered, ignore_index=True)
 
 
+        trunc_records = df[df['is_complete'] == False]
+        if len(trunc_records) == 0:
+            return df
 
+        for idx, row in df.iterrows():
+            if row['is_complete']:
+                continue
 
+            qstart = int(row[qstart_col])
+            qend = int(row[qend_col])
+            qlen = int(row[qlen_col])
+            sstart = int(row[sstart_col])
+            send = int(row[send_col])
+            slen = int(row[slen_col])
 
+            five_p_complete = row['is_5prime_complete']
+            five_p_delta = qstart - 1
+            three_p_complete = row['is_3prime_complete']
+            three_p_delta = qlen - qend
 
+            is_rev = row[qend_col] - row[ qlen_col]
+
+            if not five_p_complete:
+                if is_rev:
+                    sstart += five_p_delta
+                else:
+                    sstart -= five_p_delta
+
+            if sstart < 1:
+                sstart = 1
+
+            if not three_p_complete:
+                if is_rev:
+                    send -= three_p_delta
+                else:
+                    send += three_p_delta
+
+            if send < slen:
+                send = slen
+
+            row[qstart_col] = qstart
+            row[qend_col] = qend
+            row[qlen_col] = qlen
+            row[sstart_col] = sstart
+            row[send_col] = send
+            row[slen_col] = slen
+            df.loc[idx] = row
+
+        return df
 
 
 
@@ -215,10 +366,13 @@ def run_extract(config):
 
     hit_df = parse_blast(hit_file, BLAST_TABLE_COLS, filter_options).df
 
-    extractor(hit_df,seq_data,sseqid_col='sseqid',queryid_col='qseqid',qstart_col='qstart',qend_col='qend',qlen_col='qlen',sstart_col='sstart',send_col='send',slen_col='slen',sstrand_col='sstrand')
+    exobj = extractor(hit_df,seq_data,sseqid_col='sseqid',queryid_col='qseqid',qstart_col='qstart',qend_col='qend',qlen_col='qlen',sstart_col='sstart',send_col='send',slen_col='slen',sstrand_col='sstrand',bitscore_col='bitscore')
 
-    print(hit_df)
+    exobj.df.to_csv(os.path.join(outdir,'filtered.hsps.txt'),header=True,sep="\t")
 
+    with open(os.path.join(outdir,'extracted.seqs.fasta'), 'w') as oh:
+        for idx,record in enumerate(exobj.seqs):
+            oh.write(">{}:{}\n{}\n".format(idx,record['id'],record['seq']))
 
 
 def run():

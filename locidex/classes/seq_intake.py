@@ -116,7 +116,7 @@ class seq_intake:
             aa_len = 0
             if dtype == 'dna':
                 dna_seq = seq.lower().replace('-','')
-                for char in self.DNA_IUPAC_CHARS:
+                for char in DNA_IUPAC_CHARS:
                     dna_seq = dna_seq.replace(char,"n")
                 dna_hash = calc_md5([seq])[0]
                 dna_len = len(seq)
