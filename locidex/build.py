@@ -48,8 +48,8 @@ class locidex_build:
                     self.is_dna = True
                     self.config["nucleotide_db_name"] = t
                     blast_method = 'nucl'
+                elif t == 'protein':
 
-                elif t == 'protien':
                     self.is_protein  = True
                     self.config["protein_db_name"] = t
                     blast_method = 'prot'
@@ -103,7 +103,7 @@ class locidex_build:
 
     def makeblastdb(self,fasta_file,outfile,blast_method):
         dbtype = 'nucl'
-        if blast_method == 'blastp':
+        if blast_method == 'prot':
             dbtype = 'prot'
         command = ['makeblastdb',
                    '-in', fasta_file,
@@ -113,6 +113,7 @@ class locidex_build:
         if outfile != None:
             command+= ['-out',outfile]
         command = " ".join([str(x) for x in command])
+
         return run_command(command)
 
     def get_metadata(self,df,columns_to_exclude=['dna_seq','aa_seq']):

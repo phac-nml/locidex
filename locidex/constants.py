@@ -6,11 +6,11 @@ DNA_IUPAC_CHARS = ['b', 'd', 'e', 'f', 'h', 'i', 'j', 'k', 'l', 'm', 'o', 'p', '
 NT_SUB = str.maketrans('acgtrymkswhbvdnxACGTRYMKSWHBVDNX',
                        'tgcayrkmswdvbhnxTGCAYRKMSWDVBHNX')
 
-PROTEIN_ALPHA = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y', 'X','*','B', 'Z','J' ]
-DNA_ALPHA = ['A', 'C', 'G', 'T', 'R', 'Y', 'S', 'W', 'K', 'M', 'B', 'D', 'H', 'V', 'N']
+PROTEIN_ALPHA = ['a', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'k', 'l', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'y', 'x','*','b', 'z','j' ]
+DNA_ALPHA = ['a', 'c', 'g', 't', 'r', 'y', 's', 'w', 'k', 'm', 'b', 'd', 'h', 'v', 'n']
 
-START_CODONS = ['ATG','GTG','CTG','TTG','ATA']
-STOP_CODONS = ['TAA','TAG','TTA','TCA','TGA','AGA','AGG']
+START_CODONS = ['atg','gtg','ctg','ttg','ata']
+STOP_CODONS = ['taa','tag','tta','tca','tga','aga','agg']
 
 
 BLAST_TABLE_COLS = '''

@@ -65,7 +65,7 @@ def six_frame_translation(dna_seq,trans_table):
     return (fwd, rev)
 
 def guess_alphabet(seq):
-    seq = seq.replace('-','')
+    seq = seq.lower().replace('-','')
     l = len(seq)
     if l == 0:
         return None
@@ -75,7 +75,7 @@ def guess_alphabet(seq):
     if len(set(counts.keys()) & pr_inf_chars) > 0:
         dtype = 'protein'
     else:
-        dna_bases = ['A','T','C','G','N']
+        dna_bases = ['a','t','c','g','n']
         l = len(seq)
         c = 0
         for b in counts:

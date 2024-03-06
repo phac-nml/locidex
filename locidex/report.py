@@ -41,6 +41,8 @@ class seq_reporter:
     profile = {}
     loci = {}
     db_seq_info = {}
+    failed_seqids = set()
+
     def __init__(self,data_dict,method='nucleotide',mode='normal',label='locus_name',filters={},max_ambig=0,max_int_stop=0):
         self.max_ambig_count = max_ambig
         self.max_int_stop_count = max_int_stop
@@ -54,23 +56,28 @@ class seq_reporter:
         self.locus_profile = self.data_dict['query_data']["locus_profile"]
         self.blast_columns = self.data_dict["query_hit_columns"]
         self.build_profile()
-        self.filter_alleles()
 
-    def filter_alleles(self):
+
+    def filter_queries(self):
+        failed_seqids = set()
         for seq_id in self.query_seq_data:
             ambig_count = int(self.query_seq_data[seq_id]['dna_ambig_count'])
             if isinstance(self.query_seq_data[seq_id]['count_internal_stop'], int):
                 stop_count = int(self.query_seq_data[seq_id]['count_internal_stop'])
             else:
                 stop_count = 0
+
             if ambig_count > self.max_ambig_count or stop_count > self.max_int_stop_count:
-                self.profile[seq_id] = ''
+                failed_seqids.add(seq_id)
+
+        self.failed_seqids =  failed_seqids
 
     def build_profile(self):
         for lid in self.data_dict["db_seq_info"]:
             locus_name = self.db_seq_info[lid]["locus_name"]
             self.loci[lid] = locus_name
             self.profile[locus_name] = []
+
 
     def filter_hits(self):
         for qid in self.query_hits:
@@ -179,6 +186,11 @@ class seq_reporter:
         query_best_hits = self.calc_query_best_hit()
         hit_loci_names = self.get_hit_locinames()
         loci_lookup = self.get_loci_to_query_map(hit_loci_names,dbtype)
+
+        for locus in loci_lookup:
+            loci_lookup[locus] = list(set(loci_lookup[locus]) - self.failed_seqids)
+
+
         
         self.populate_profile()
 
@@ -195,8 +207,8 @@ class seq_reporter:
                 assigned_loci.add(locus_name)
 
         loci_names_to_assign = loci_names_to_assign - assigned_loci
-        profile = deepcopy(self.locus_profile)
 
+        profile = deepcopy(self.locus_profile)
         for locus_name in loci_names_to_assign:
             matches = loci_lookup[locus_name ]
             num_matches = len(matches)
@@ -302,6 +314,7 @@ def run():
 
 
     if report_format == 'profile':
+        allele_obj.filter_queries()
         allele_obj.allele_assignment('nucleotide')
         profile = {sample_name: allele_obj.profile}
         with open(os.path.join(outdir,"profile.json"),"w") as out:

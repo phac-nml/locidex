@@ -138,7 +138,7 @@ class locidex_format:
             i = 1
 
         seq = six_frame_translation[i][k]
-        return {'offset': offset, 'revcomp': r, 'frame': s, 'seq': seq, 'count_int_stops': min_int_stop}
+        return {'offset': offset, 'revcomp': r, 'frame': s, 'seq': seq.lower(), 'count_int_stops': min_int_stop}
 
 
     def create_row(self):
@@ -160,7 +160,7 @@ class locidex_format:
                 dna_seq = str(record.seq).lower().replace('-','')
                 if self.is_protein_coding:
                     t = self.pick_frame(six_frame_translation(dna_seq, trans_table=self.translation_table))
-                    aa_seq = t['seq']
+                    aa_seq = t['seq'].lower()
                     dna_seq = dna_seq[t['offset']:]
                     if t['revcomp']:
                         dna_seq = revcomp(dna_seq)

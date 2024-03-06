@@ -64,7 +64,7 @@ class seq_intake:
             if dna_len >= 6:
                 start_codon = dna_seq[0:3]
                 stop_codon = dna_seq[-3:]
-                count_internal_stop = record['aa_seq'].count('*')
+                count_internal_stop = record['aa_seq'][:-1].count('*')
             record['start_codon'] = start_codon
             record['stop_codon'] = stop_codon
             record['count_internal_stop'] = count_internal_stop
@@ -106,7 +106,7 @@ class seq_intake:
         ids = obj.get_seqids()
         for id in ids:
             features = obj.get_seq_by_id(id)
-            seq = features['seq']
+            seq = features['seq'].lower().replace('-','')
             dtype = guess_alphabet(seq)
             dna_seq = ''
             dna_hash = ''
@@ -115,7 +115,7 @@ class seq_intake:
             aa_hash = ''
             aa_len = 0
             if dtype == 'dna':
-                dna_seq = seq.lower().replace('-','')
+                dna_seq = seq
                 for char in DNA_IUPAC_CHARS:
                     dna_seq = dna_seq.replace(char,"n")
                 dna_hash = calc_md5([seq])[0]
@@ -124,10 +124,11 @@ class seq_intake:
                     aa_seq = ''
                 else:
                     aa_seq = six_frame_translation(dna_seq,self.translation_table)[0][0]
+
                 aa_hash = calc_md5([aa_seq])[0]
                 aa_len = len(aa_seq)
             else:
-                aa_seq = seq.lower().replace('-','')
+                aa_seq = seq
                 aa_hash = calc_md5([aa_seq])[0]
                 aa_len = len(aa_seq)
 
@@ -159,7 +160,7 @@ class seq_intake:
             aa_len = 0
             if dtype == 'dna':
                 dna_seq = seq.lower().replace('-','')
-                for char in self.DNA_IUPAC_CHARS:
+                for char in DNA_IUPAC_CHARS:
                     dna_seq = dna_seq.replace(char,"n")
                 dna_hash = calc_md5([seq])[0]
                 dna_len = len(seq)
@@ -297,7 +298,7 @@ class seq_store:
                         else:
                             max_len = hinfo["dna_max_len"]
                         if "min_dna_match_cov" not in hinfo:
-                            min_cov = self.filters["dna_min_cov"]
+                            min_cov = self.filters['min_dna_match_cov']
                         else:
                             min_cov = hinfo["min_dna_match_cov"]
                         if "dna_min_ident" not in hinfo:
