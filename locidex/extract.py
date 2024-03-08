@@ -8,7 +8,7 @@ from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescript
 from datetime import datetime
 import numpy as np
 import pandas as pd
-
+from locidex.classes.mafft import mafft, apply_variants
 from locidex.classes.blast import blast_search, parse_blast
 from locidex.classes.db import search_db_conf, db_config
 from locidex.classes.seq_intake import seq_intake, seq_store
@@ -183,7 +183,7 @@ class extractor:
         for locus_name in loci_data:
             for row in loci_data[locus_name]:
                 start = row['start']
-                end = row['end']+1
+                end = row['end'] + 1
                 seqid = row['seqid']
                 is_reverse = row['reverse']
                 is_complement = row['complement']
@@ -192,6 +192,8 @@ class extractor:
 
                 if is_reverse and not is_complement:
                     start+=1
+                #if not is_reverse and is_complement:
+                #    end-=1
                 if seqid in seq_data:
 
                     seq = seq_data[seqid]['seq'][start:end]
@@ -229,9 +231,20 @@ class extractor:
         if len(trunc_records) == 0:
             return df
 
+        print(df[df['locus_name'] == 'SALM_11279'])
+
+        is_extended = []
+        five_p_ext = []
+        three_p_ext = []
         #Extend truncated sequences
         for idx, row in df.iterrows():
+            e = False
+            fivep_e = False
+            threep_e = False
             if row['is_complete']:
+                is_extended.append(e)
+                five_p_ext.append(fivep_e)
+                three_p_ext.append(threep_e)
                 continue
 
             qstart = int(row[qstart_col])
@@ -249,6 +262,8 @@ class extractor:
 
 
             if not five_p_complete:
+                e = True
+                fivep_e = True
                 if is_rev:
                     sstart += five_p_delta
                 else:
@@ -258,13 +273,19 @@ class extractor:
                 sstart = 0
 
             if not three_p_complete:
+                e = True
+                threep_e = True
                 if is_rev:
                     send -= three_p_delta
                 else:
                     send += three_p_delta
 
             if send >= slen:
-                send = slen -1
+                send = slen - 1
+
+            is_extended.append(e)
+            five_p_ext.append(fivep_e)
+            three_p_ext.append(threep_e)
 
             row[qstart_col] = qstart
             row[qend_col] = qend
@@ -273,8 +294,10 @@ class extractor:
             row[send_col] = send
             row[slen_col] = slen
             df.loc[idx] = row
-
-
+        df['is_extended'] = is_extended
+        df['is_5p_extended'] = five_p_ext
+        df['is_3p_extended'] = three_p_ext
+        print(df[df['locus_name'] == 'SALM_11279'])
         return df
 
 
@@ -356,6 +379,9 @@ class extractor:
 
 
 
+
+
+
 def run_extract(config):
     # Input Parameters
     input_fasta = config['in_fasta']
@@ -409,10 +435,15 @@ def run_extract(config):
         print(f'Error {outdir} exists, if you would like to overwrite, then specify --force')
         sys.exit()
 
+    db_path = os.path.join(outdir, 'blast_db')
+
     if not os.path.isdir(outdir):
         os.makedirs(outdir, 0o755)
+    else:
+        if os.path.isdir(db_path):
+            shutil.rmtree(db_path)
 
-    db_path = os.path.join(outdir, 'blast_db')
+
     if not os.path.isdir(db_path):
         os.makedirs(db_path, 0o755)
 
@@ -458,8 +489,9 @@ def run_extract(config):
         loci.append(metadata_obj.config['meta'][qid]['locus_name'])
 
     hit_df['locus_name'] = loci
+    print(hit_df[hit_df['locus_name'] == 'SALM_11279'])
 
-    #print(hit_df)
+
     exobj = extractor(hit_df,seq_data,sseqid_col='sseqid',queryid_col='qseqid',qstart_col='qstart',qend_col='qend',qlen_col='qlen',sstart_col='sstart',send_col='send',slen_col='slen',sstrand_col='sstrand',bitscore_col='bitscore')
 
     exobj.df.to_csv(os.path.join(outdir,'filtered.hsps.txt'),header=True,sep="\t",index=False)

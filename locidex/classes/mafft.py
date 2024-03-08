@@ -59,7 +59,34 @@ class apply_variants:
     def __init__(self,alignment,ref_id,query_id,fill_gap=False):
         self.call_seq(alignment,ref_id,query_id,fill_gap)
 
-    def call_seq(self,alignment,ref_id,query_id,fill_gap=False):
+    def trim_ends(self,seq1,seq2):
+        seq = []
+        is_end = True
+        length = len(seq1)
+        for i in range(0,length):
+            base = seq1[i]
+            if is_end and base == '-':
+                seq.append('-')
+            else:
+                is_end = False
+                seq.append(seq2[i])
+
+        is_end = True
+        length = len(seq1)
+        for i in reversed(range(0,length)):
+            base = seq1[i]
+            if is_end and base == '-':
+                seq.append('-')
+            else:
+                is_end = False
+                seq.append(seq2[i])
+
+        return seq
+
+    def extend(self, seq1, seq2):
+        pass
+
+    def call_seq(self,alignment,ref_id,query_id,fill_gap=False,):
         ref_seq = alignment[ref_id]
         query_seq = alignment[query_id]
         seq = []
