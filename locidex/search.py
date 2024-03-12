@@ -48,7 +48,7 @@ def parse_args():
                         default=80.0)
     parser.add_argument('--max_target_seqs', type=int, required=False, help='Maximum number of hit seqs per query',
                         default=10)
-    parser.add_argument('--n_threads','-t', type=str, required=False,
+    parser.add_argument('--n_threads','-t', type=int, required=False,
                         help='CPU Threads to use', default=1)
     parser.add_argument('--format', type=str, required=False,
                         help='Format of query file [genbank,fasta]')

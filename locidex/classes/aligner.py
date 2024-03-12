@@ -79,6 +79,7 @@ def perform_alignment(seq_data,work_dir,num_threads=1):
             r.append(x)
         else:
             r.append(x.get())
+
     ids = list(seq_data.keys())
     for i in range(0, len(r)):
         id = ids[i]

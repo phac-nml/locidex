@@ -36,8 +36,6 @@ def parse_args():
                         default=1)
     parser.add_argument('--max_dna_len', type=int, required=False, help='Global maximum query length dna',
                         default=10000000)
-    parser.add_argument('--max_aa_len', type=int, required=False, help='Global maximum query length aa',
-                        default=10000000)
     parser.add_argument('--min_dna_ident', type=float, required=False, help='Global minumum DNA percent identity required for match',
                         default=80.0)
     parser.add_argument('--min_aa_ident', type=float, required=False, help='Global minumum AA percent identity required for match',
@@ -50,9 +48,9 @@ def parse_args():
                         default=10)
     parser.add_argument('--keep_truncated', required=False, help='Keep sequences where match is broken at the end of a sequence',
                         action='store_true')
-    parser.add_argument('--mode', type=str, required=False, help='(raw, trim, snps)',
-                        default=1)
-    parser.add_argument('--n_threads','-t', type=str, required=False,
+    parser.add_argument('--mode', type=str, required=False, help='(raw, trim, snps, extend)',
+                        default='trim')
+    parser.add_argument('--n_threads','-t', type=int, required=False,
                         help='CPU Threads to use', default=1)
     parser.add_argument('--format', type=str, required=False,
                         help='Format of query file [genbank,fasta]')
@@ -82,6 +80,11 @@ def run_extract(config):
     keep_truncated = config['keep_truncated']
     sample_name = config['name']
     max_target_seqs = config['max_target_seqs']
+    mode = config['mode'].lower()
+
+    if not mode in ['snps','trim','raw','extend']:
+        print(f'Provided mode for allele extraction is not valid: {mode}, needs to be one of (snps, trim, extend, raw)')
+        sys.exit()
 
     if sample_name == None:
         sample_name = os.path.basename(input_fasta)
@@ -210,27 +213,32 @@ def run_extract(config):
                                 'ref_seq':nt_db_seq_data[record['query_id']],
                                 'ext_seq':record['seq']}
     mode = 'trim'
-    align_dir = os.path.join(outdir,'fastas')
-    if not os.path.isdir(align_dir):
-        os.makedirs(align_dir, 0o755)
-    perform_alignment(ext_seq_data, align_dir, n_threads)
     if mode == 'trim':
         aln_obj = aligner(trim_fwd=True,trim_rev=True,ext_fwd=False, ext_rev=False,fill=False)
     elif mode == 'snps':
         aln_obj = aligner(trim_fwd=True, trim_rev=True, ext_fwd=True, ext_rev=True, fill=True)
-    else:
-        aln_obj = aligner(trim_fwd=True, trim_rev=True, ext_fwd=True, ext_rev=True, fill=True)
+    elif mode == 'extend':
+        aln_obj = aligner(trim_fwd=True, trim_rev=True, ext_fwd=True, ext_rev=True, fill=False)
 
-    with open(os.path.join(outdir, 'processed.extracted.seqs.fasta'), 'w') as oh:
-        for seq_id in ext_seq_data:
-            record = ext_seq_data[seq_id]
-            if not 'alignment' in record:
-                continue
-            ref_id = record['ref_id']
-            alignment = record['alignment']
-            variants = aln_obj.call_seq(seq_id,alignment[ref_id],record[seq_id])
-            oh.write(">{}\n{}\n".format(seq_id, variants['seq']))
+    if mode != 'raw':
+        align_dir = os.path.join(outdir, 'fastas')
+        if not os.path.isdir(align_dir):
+            os.makedirs(align_dir, 0o755)
+        perform_alignment(ext_seq_data, align_dir, n_threads)
 
+        with open(os.path.join(outdir, 'processed.extracted.seqs.fasta'), 'w') as oh:
+            for seq_id in ext_seq_data:
+                record = ext_seq_data[seq_id]
+                print(record)
+                if not 'alignment' in record:
+                    continue
+                ref_id = record['ref_id']
+                alignment = record['alignment']
+                print(alignment)
+                variants = aln_obj.call_seq(seq_id,alignment[ref_id],record[seq_id])
+                oh.write(">{}\n{}\n".format(seq_id, variants['seq']))
+
+        shutil.rmtree(align_dir)
 
 def run():
     cmd_args = parse_args()
