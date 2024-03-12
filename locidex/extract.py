@@ -82,6 +82,7 @@ def run_extract(config):
     max_target_seqs = config['max_target_seqs']
     mode = config['mode'].lower()
 
+
     if not mode in ['snps','trim','raw','extend']:
         print(f'Provided mode for allele extraction is not valid: {mode}, needs to be one of (snps, trim, extend, raw)')
         sys.exit()
@@ -214,11 +215,11 @@ def run_extract(config):
                                 'ext_seq':record['seq']}
     mode = 'trim'
     if mode == 'trim':
-        aln_obj = aligner(trim_fwd=True,trim_rev=True,ext_fwd=False, ext_rev=False,fill=False)
+        aln_obj = aligner(trim_fwd=True,trim_rev=True,ext_fwd=False, ext_rev=False,fill=False, snps_only=False)
     elif mode == 'snps':
-        aln_obj = aligner(trim_fwd=True, trim_rev=True, ext_fwd=True, ext_rev=True, fill=True)
+        aln_obj = aligner(trim_fwd=True, trim_rev=True, ext_fwd=True, ext_rev=True, fill=True, snps_only=True)
     elif mode == 'extend':
-        aln_obj = aligner(trim_fwd=True, trim_rev=True, ext_fwd=True, ext_rev=True, fill=False)
+        aln_obj = aligner(trim_fwd=True, trim_rev=True, ext_fwd=True, ext_rev=True, fill=False, snps_only=False)
 
     if mode != 'raw':
         align_dir = os.path.join(outdir, 'fastas')
@@ -229,16 +230,20 @@ def run_extract(config):
         with open(os.path.join(outdir, 'processed.extracted.seqs.fasta'), 'w') as oh:
             for seq_id in ext_seq_data:
                 record = ext_seq_data[seq_id]
-                print(record)
                 if not 'alignment' in record:
                     continue
                 ref_id = record['ref_id']
                 alignment = record['alignment']
-                print(alignment)
-                variants = aln_obj.call_seq(seq_id,alignment[ref_id],record[seq_id])
-                oh.write(">{}\n{}\n".format(seq_id, variants['seq']))
+                if not seq_id in alignment or not ref_id in alignment:
+                    continue
+                variants = aln_obj.call_seq(seq_id,alignment[ref_id],alignment[seq_id])
+                oh.write(">{}\n{}\n".format(seq_id, variants['seq'].replace('-','')))
 
         shutil.rmtree(align_dir)
+
+
+
+
 
 def run():
     cmd_args = parse_args()

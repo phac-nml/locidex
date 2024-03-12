@@ -1,3 +1,5 @@
+import sys
+
 from locidex.classes.mafft import mafft
 from multiprocessing import Pool, cpu_count
 import os
@@ -37,7 +39,6 @@ def align(input_fasta,params={'globalpair':''}):
 
 
 def parse_align(align):
-    print(align)
     align = align.split('\n')
     seqs = {}
     for row in align:
@@ -91,60 +92,78 @@ def perform_alignment(seq_data,work_dir,num_threads=1):
 
 
 class aligner:
-    def __init__(self,trim_fwd=True,trim_rev=True,ext_fwd=True, ext_rev=True,fill=True):
+    def __init__(self,trim_fwd=True,trim_rev=True,ext_fwd=True, ext_rev=True,fill=True,snps_only=False):
         self.trim_fwd = trim_fwd
         self.trim_rev = trim_rev
         self.ext_fwd = ext_fwd
         self.ext_rev = ext_rev
         self.fill = fill
+        self.snps_only = snps_only
 
 
-    def transform_seq(self,seq1,seq2,trim_fwd=True,trim_rev=True,ext_fwd=True, ext_rev=True,gap_fill=True):
-        tseq = self.trim_ends(seq1,seq2,trim_fwd,trim_rev)
-        tseq = self.extend(seq1, tseq,ext_fwd, ext_rev)
-        if gap_fill:
-            tseq = self.gap_fill(seq1, tseq)
+    def transform_seq(self,seq1,seq2,trim_fwd=True,trim_rev=True,ext_fwd=True, ext_rev=True,gap_fill=True,snps_only=False):
+        if snps_only:
+            length = len(seq1)
+            tseq = list(seq1)
+            for i in range(0,length):
+                b1 = seq1[i]
+                b2 = seq2[i]
+                if b1 != '-' and b2 != '-':
+                    tseq[i] = b2
+
+            tseq = "".join([str(x) for x in tseq])
+        else:
+            tseq = self.trim_ends(seq1,seq2,trim_fwd,trim_rev)
+            tseq = self.extend(seq1, tseq, ext_fwd, ext_rev)
+            if gap_fill:
+                tseq = self.gap_fill(seq1, tseq)
         return tseq
 
 
     def trim_ends(self,seq1,seq2,trim_fwd=True,trim_rev=True):
-        seq = []
-        is_end = True
+        seq = list(seq2)
+        is_end = False
         length = len(seq1)
         if trim_fwd:
             for i in range(0,length):
-                base = seq1[i]
-                if is_end and base == '-':
-                    seq.append('-')
+                b1 = seq1[i]
+                if b1 == '-':
+                    is_end = True
+                if is_end and b1 == '-':
+                    seq[i] = '-'
                 else:
                     is_end = False
-                    seq.append(seq2[i])
+                    break
 
-        is_end = True
+        is_end = False
         length = len(seq1)
         if trim_rev:
             for i in reversed(range(0,length)):
-                base = seq1[i]
-                if is_end and base == '-':
-                    base = '-'
-                seq[i] = base
+                b1 = seq1[i]
+                if b1 == '-':
+                    is_end = True
+                if is_end and b1 == '-':
+                    seq[i] = '-'
+                else:
+                    break
         return "".join([str(x) for x in seq])
 
 
 
     def extend(self, seq1, seq2,ext_fwd=True, ext_rev=True):
-        seq = []
+        seq = list(seq2)
         is_end = True
         length = len(seq1)
+
         if ext_fwd:
             for i in range(0, length):
                 b1 = seq1[i]
                 b2 = seq2[i]
                 if b1 == '-':
                     is_end = False
-                if is_end and b2 == '-':
-                    b2 = b1
-                seq.append(b2)
+                if is_end and b1 != '-' and b2 == '-':
+                    seq[i] = b1
+
 
         is_end = True
         length = len(seq1)
@@ -154,9 +173,10 @@ class aligner:
                 b2 = seq2[i]
                 if b1 == '-':
                     is_end = False
-                if is_end and b2 == '-':
-                    b2 = b1
-                seq[i] = b2
+
+                if is_end and b1 != '-'  and b2 == '-':
+                    seq[i] = b1
+
         return "".join([str(x) for x in seq])
 
     def gap_fill(self, seq1, seq2):
@@ -198,19 +218,12 @@ class aligner:
         }
         if self.trim_fwd or self.trim_rev or self.ext_fwd or self.ext_rev or self.gap_fill:
             query_seq = self.transform_seq(ref_seq,query_seq,self.trim_fwd,self.trim_rev,
-                                      self.ext_fwd, self.ext_rev,self.gap_fill)
-
-        seq = []
-        for idx,base in enumerate(ref_seq):
-            if base == '-':
-                seq.append('-')
-            else:
-                seq.append(query_seq[idx])
-        seq = "".join([str(x) for x in seq])
-        (match, diff ) = self.count_identity(ref_seq,seq)
+                                      self.ext_fwd, self.ext_rev,self.fill,self.snps_only)
+        (match, diff ) = self.count_identity(ref_seq,query_seq)
         seq_record['matched_bases'] = match
         seq_record['num_diff'] = diff
-        seq_record['seq'] = seq
+        seq_record['seq'] = query_seq
+        return seq_record
 
     def count_identity(self,seq1,seq2):
         match = 0
