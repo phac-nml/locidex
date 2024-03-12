@@ -8,13 +8,13 @@ from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescript
 from datetime import datetime
 import numpy as np
 import pandas as pd
-from locidex.classes.mafft import mafft, apply_variants
+from locidex.classes.extractor import extractor
 from locidex.classes.blast import blast_search, parse_blast
 from locidex.classes.db import search_db_conf, db_config
 from locidex.classes.seq_intake import seq_intake, seq_store
 from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BLAST_TABLE_COLS, DB_CONFIG_FIELDS, DB_EXPECTED_FILES, NT_SUB
 from locidex.version import __version__
-
+from locidex.classes.aligner import perform_alignment, aligner
 
 def parse_args():
     class CustomFormatter(ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter):
@@ -48,6 +48,10 @@ def parse_args():
                         default=80.0)
     parser.add_argument('--max_target_seqs', type=int, required=False, help='Maximum number of hit seqs per query',
                         default=10)
+    parser.add_argument('--keep_truncated', required=False, help='Keep sequences where match is broken at the end of a sequence',
+                        action='store_true')
+    parser.add_argument('--mode', type=str, required=False, help='(raw, trim, snps)',
+                        default=1)
     parser.add_argument('--n_threads','-t', type=str, required=False,
                         help='CPU Threads to use', default=1)
     parser.add_argument('--format', type=str, required=False,
@@ -62,325 +66,6 @@ def parse_args():
 
     return parser.parse_args()
 
-class extractor:
-    seqs = {}
-    df = pd.DataFrame()
-    def __init__(self,df,seq_data,sseqid_col,queryid_col,qstart_col,qend_col,qlen_col,sstart_col,send_col,slen_col,sstrand_col,bitscore_col,overlap_thresh=1,extend_threshold_ratio = 0.2):
-        self.is_complete(df,qstart_col,qend_col,qlen_col)
-        self.is_contig_boundary(df,sstart_col,send_col,slen_col)
-        self.set_revcomp(df,sstart_col,send_col,sstrand_col)
-        self.set_extraction_pos(df,sstart_col,send_col)
-        pcols = [qstart_col,qend_col,sstart_col,send_col]
-        for c in pcols:
-            df[c] = df[c].apply(lambda x: x - 1)
-        sort_cols = [sseqid_col, queryid_col, sstart_col, send_col, bitscore_col]
-        ascending_cols = [True, True, True, True, False]
-        self.df = self.recursive_filter_overlap_records(df, sseqid_col, bitscore_col, sort_cols, ascending_cols, overlap_threshold=overlap_thresh)
-        self.df = self.extend(self.df,sseqid_col, queryid_col, qstart_col, qend_col, sstart_col,send_col,slen_col, qlen_col, bitscore_col, overlap_threshold=1)
-        self.df = self.recursive_filter_overlap_records(self.df, sseqid_col, bitscore_col, sort_cols, ascending_cols,
-                                                        overlap_threshold=overlap_thresh)
-        self.df = self.set_extraction_pos(self.df, sstart_col, send_col)
-        loci_ranges = self.group_by_locus(self.df,sseqid_col, queryid_col,qlen_col,extend_threshold_ratio)
-        self.seqs = self.extract_seq(loci_ranges, seq_data)
-        pass
-
-    def is_5prime_complete(self,df,qstart_col):
-        df['is_5prime_complete'] = np.where(df[qstart_col] == 1, True, False)
-
-    def is_3prime_complete(self,df,qend_col,qlen_col):
-        df['is_3prime_complete'] = np.where(df[qend_col] == df[qlen_col] , True, False)
-
-    def is_complete(self,df,qstart_col,qend_col,qlen_col):
-        self.is_5prime_complete(df,qstart_col)
-        self.is_3prime_complete(df,qend_col,qlen_col)
-        df['is_complete'] = np.where(((df['is_5prime_complete'] == True) &  (df['is_3prime_complete'] == True)), True, False)
-
-    def is_contig_boundary(self,df,sstart_col,send_col,slen_col):
-        df['is_5prime_boundary'] = np.where(df[sstart_col] == 1, True, False)
-        df['is_3prime_boundary'] = np.where(df[send_col] == df[slen_col], True, False)
-        df['is_on_boundary'] = np.where(((df['is_5prime_boundary'] == True) & (df['is_3prime_boundary'] == True)), True, False)
-
-    def set_revcomp(self,df,sstart_col,send_col,strand_col):
-        df['reverse'] = np.where(df[sstart_col] > df[send_col], True, False)
-        df['complement'] = np.where(df[strand_col] == 'plus', True, False)
-
-    def set_extraction_pos(self,df,start_col,end_col):
-        df['ext_start'] = df[start_col]
-        df['ext_end'] = df[end_col]
-        for idx, row in df.iterrows():
-            if row['reverse'] == True:
-                tmp = row['ext_end']
-                end = row['ext_start']
-                start = tmp
-                df.loc[idx, 'ext_start'] = start
-                df.loc[idx, 'ext_end'] = end
-        return df
-    def remove_redundant_hits(self,df,seqid_col, bitscore_col, overlap_threshold=1):
-        seq_id_list = list(df[seqid_col].unique())
-        filter_df = []
-        for seqid in seq_id_list:
-            subset = df[df[seqid_col] == seqid]
-            prev_contig_id = ''
-            prev_index = -1
-            prev_contig_start = -1
-            prev_contig_end = -1
-            prev_score = 0
-            filter_rows = []
-            for idx, row in subset.iterrows():
-                contig_id = row[seqid_col]
-                contig_start = row['ext_start']
-                contig_end = row['ext_end']
-                score = float(row[bitscore_col])
-
-                if prev_contig_id == '':
-                    prev_index = idx
-                    prev_contig_id = contig_id
-                    prev_contig_start = contig_start
-                    prev_contig_end = contig_end
-                    prev_score = score
-                    continue
-
-                if (contig_start >= prev_contig_start and contig_start <= prev_contig_end) or (
-                        contig_end >= prev_contig_start and contig_end <= prev_contig_end):
-                    overlap = abs(contig_start - prev_contig_end)
-
-                    if overlap > overlap_threshold:
-                        if prev_score < score:
-                            filter_rows.append(prev_index)
-                        else:
-                            filter_rows.append(idx)
-
-                prev_index = idx
-                prev_contig_id = contig_id
-                prev_contig_start = contig_start
-                prev_contig_end = contig_end
-                prev_score = score
-
-
-            valid_ids = list( set(subset.index) - set(filter_rows)  )
-
-            filter_df.append(subset.filter(valid_ids, axis=0))
-
-
-        return pd.concat(filter_df, ignore_index=True)
-
-
-    def recursive_filter_overlap_records(self,df, seqid_col, bitscore_col, sort_cols, ascending_cols, overlap_threshold=1):
-        size = len(df)
-        prev_size = 0
-        while size != prev_size:
-            df = df.sort_values(sort_cols,
-                                ascending=ascending_cols).reset_index(drop=True)
-            df = self.remove_redundant_hits(df, seqid_col, bitscore_col, overlap_threshold=overlap_threshold)
-            prev_size = size
-            size = len(df)
-
-        return df.sort_values(sort_cols,ascending=ascending_cols).reset_index(drop=True)
-
-    def extract_seq(self,loci_data,seq_data):
-        seqs = []
-        id = 0
-        for locus_name in loci_data:
-            for row in loci_data[locus_name]:
-                start = row['start']
-                end = row['end'] + 1
-                seqid = row['seqid']
-                is_reverse = row['reverse']
-                is_complement = row['complement']
-                is_complete = row['is_complete']
-
-
-                if is_reverse and not is_complement:
-                    start+=1
-                #if not is_reverse and is_complement:
-                #    end-=1
-                if seqid in seq_data:
-
-                    seq = seq_data[seqid]['seq'][start:end]
-                    if is_reverse and not is_complement:
-                        seq = seq[::-1].translate(NT_SUB)
-
-                    seqs.append({'seqid':seqid, 'id':str(id),'locus_name':locus_name,
-                                 'start':start, 'end':end, 'reverse':is_reverse,'complement':is_complement,
-                                 'seq':seq})
-                    id+=1
-        return seqs
-
-    def extend(self,df,seqid_col, queryid_col, qstart_col, qend_col, sstart_col,send_col,slen_col, qlen_col, bitscore_col, overlap_threshold=1):
-        sort_cols = [seqid_col,'ext_start', 'ext_end', bitscore_col]
-        ascending_cols = [True, True, True, False]
-        df = self.recursive_filter_overlap_records(df, seqid_col, bitscore_col, sort_cols, ascending_cols, overlap_threshold)
-        df = df.sort_values(sort_cols,
-                            ascending=ascending_cols).reset_index(drop=True)
-
-        queries = df[queryid_col].to_list()
-
-        #Remove incomplete hits when complete ones are present
-        filtered = []
-        for query in queries:
-            subset = df[df[queryid_col] == query]
-            complete = subset[subset['is_complete'] == True]
-            num_complete = len(complete)
-            if num_complete > 0:
-                filtered.append(complete)
-            else:
-                filtered.append(subset)
-        df = pd.concat(filtered, ignore_index=True)
-
-        trunc_records = df[df['is_complete'] == False]
-        if len(trunc_records) == 0:
-            return df
-
-        print(df[df['locus_name'] == 'SALM_11279'])
-
-        is_extended = []
-        five_p_ext = []
-        three_p_ext = []
-        #Extend truncated sequences
-        for idx, row in df.iterrows():
-            e = False
-            fivep_e = False
-            threep_e = False
-            if row['is_complete']:
-                is_extended.append(e)
-                five_p_ext.append(fivep_e)
-                three_p_ext.append(threep_e)
-                continue
-
-            qstart = int(row[qstart_col])
-            qend = int(row[qend_col])
-            qlen = int(row[qlen_col])
-            sstart = int(row[sstart_col])
-            send = int(row[send_col])
-            slen = int(row[slen_col])
-            is_rev = row['reverse']
-
-            five_p_complete = row['is_5prime_complete']
-            five_p_delta = qstart
-            three_p_complete = row['is_3prime_complete']
-            three_p_delta = qlen - qend
-
-
-            if not five_p_complete:
-                e = True
-                fivep_e = True
-                if is_rev:
-                    sstart += five_p_delta
-                else:
-                    sstart -= five_p_delta
-
-            if sstart < 1:
-                sstart = 0
-
-            if not three_p_complete:
-                e = True
-                threep_e = True
-                if is_rev:
-                    send -= three_p_delta
-                else:
-                    send += three_p_delta
-
-            if send >= slen:
-                send = slen - 1
-
-            is_extended.append(e)
-            five_p_ext.append(fivep_e)
-            three_p_ext.append(threep_e)
-
-            row[qstart_col] = qstart
-            row[qend_col] = qend
-            row[qlen_col] = qlen
-            row[sstart_col] = sstart
-            row[send_col] = send
-            row[slen_col] = slen
-            df.loc[idx] = row
-        df['is_extended'] = is_extended
-        df['is_5p_extended'] = five_p_ext
-        df['is_3p_extended'] = three_p_ext
-        print(df[df['locus_name'] == 'SALM_11279'])
-        return df
-
-
-    def group_by_locus(self,df,seqid_col,query_col,qlen_col,extend_threshold_ratio = 0.2):
-        sort_cols = ['locus_name',query_col,'ext_start', 'ext_end']
-        ascending_cols = [True, True, True, True]
-        df = df.sort_values(sort_cols,
-                            ascending=ascending_cols).reset_index(drop=True)
-
-        queries = df['qseqid'].to_list()
-
-        #Remove incomplete hits when complete ones are present
-        filtered = []
-        for query in queries:
-            subset = df[df['qseqid'] == query]
-            complete = subset[subset['is_complete'] == True]
-            num_complete = len(complete)
-            if num_complete > 0:
-                filtered.append(complete)
-            else:
-                filtered.append(subset)
-        df = pd.concat(filtered, ignore_index=True)
-
-        sort_cols = ['locus_name',seqid_col,'ext_start', 'ext_end']
-        ascending_cols = [True, True, True, True]
-        df = df.sort_values(sort_cols,
-                            ascending=ascending_cols).reset_index(drop=True)
-
-        loci = {}
-        for idx, row in df.iterrows():
-            locus_name = row['locus_name']
-            start = row['ext_start']
-            end = row['ext_end']
-            qlen = row[qlen_col]
-            seqid = row[seqid_col]
-            is_reverse = row['reverse']
-            is_complement = row['complement']
-            is_complete = row['is_complete']
-            if not is_complement and is_reverse:
-                start-=1
-
-
-            if locus_name in loci:
-                found = False
-                for i in range(0,len(loci[locus_name])):
-                    s = loci[locus_name][i]['start']
-                    e = loci[locus_name][i]['end']
-                    sid = loci[locus_name][i]['seqid']
-                    if sid != seqid:
-                        continue
-                    if (s >= start and s <= end) or (e >= start and e<= end):
-                        found = True
-                        if end > e:
-                            loci[locus_name][i]['end'] = end
-                            break
-                    if s >= end:
-                        gap = s - end
-                        max_gap = qlen * extend_threshold_ratio
-                        if gap <= max_gap:
-                            loci[locus_name][i]['end'] = end
-                            found = True
-                            break
-                if found:
-                    continue
-            else:
-                loci[locus_name] = []
-
-            loci[locus_name].append({
-                'seqid':seqid,
-                'start':start,
-                'end':end,
-                'reverse':is_reverse,
-                'complement':is_complement,
-                'is_complete':is_complete
-            })
-
-        return loci
-
-
-
-
-
-
 
 def run_extract(config):
     # Input Parameters
@@ -394,6 +79,7 @@ def run_extract(config):
     translation_table = config['translation_table']
     force = config['force']
     min_dna_len = config['min_dna_len']
+    keep_truncated = config['keep_truncated']
     sample_name = config['name']
     max_target_seqs = config['max_target_seqs']
 
@@ -460,17 +146,23 @@ def run_extract(config):
         os.makedirs(blast_dir_base, 0o755)
 
     blast_database_paths = db_database_config.blast_paths
+
     blast_params = {
         'evalue': min_evalue,
         'max_target_seqs': max_target_seqs,
         'num_threads': n_threads,
     }
-
+    nt_db = "{}.fasta".format(blast_database_paths['nucleotide'])
     hit_file = os.path.join(blast_dir_base, "hsps.txt")
 
-    obj = blast_search(input_db_path=db_path, input_query_path="{}.fasta".format(blast_database_paths['nucleotide']),
+    obj = blast_search(input_db_path=db_path, input_query_path=nt_db,
                        output_results=hit_file, blast_params=blast_params, blast_method='blastn',
                        blast_columns=BLAST_TABLE_COLS,create_db=True)
+
+    if obj.status == False:
+        print(obj.messages)
+        print("Error something went wrong, please check error messages above")
+        sys.exit()
 
     filter_options = {
         'evalue': {'min': None, 'max': min_evalue, 'include': None},
@@ -489,16 +181,56 @@ def run_extract(config):
         loci.append(metadata_obj.config['meta'][qid]['locus_name'])
 
     hit_df['locus_name'] = loci
-    print(hit_df[hit_df['locus_name'] == 'SALM_11279'])
 
+    filt_trunc = True
+    if keep_truncated:
+        filt_trunc = False
 
-    exobj = extractor(hit_df,seq_data,sseqid_col='sseqid',queryid_col='qseqid',qstart_col='qstart',qend_col='qend',qlen_col='qlen',sstart_col='sstart',send_col='send',slen_col='slen',sstrand_col='sstrand',bitscore_col='bitscore')
+    exobj = extractor(hit_df,seq_data,sseqid_col='sseqid',queryid_col='qseqid',qstart_col='qstart',qend_col='qend',
+                      qlen_col='qlen',sstart_col='sstart',send_col='send',slen_col='slen',sstrand_col='sstrand',
+                      bitscore_col='bitscore',filter_contig_breaks=filt_trunc)
 
     exobj.df.to_csv(os.path.join(outdir,'filtered.hsps.txt'),header=True,sep="\t",index=False)
 
-    with open(os.path.join(outdir,'extracted.seqs.fasta'), 'w') as oh:
+    nt_db_seq_obj = seq_intake(nt_db, 'fasta', 'source', translation_table, perform_annotation=False, skip_trans=True)
+    nt_db_seq_data = {}
+    for idx, seq in enumerate(nt_db_seq_obj.seq_data):
+        nt_db_seq_data[str(seq['seq_id'])] =  seq['dna_seq']
+
+    del(nt_db_seq_obj)
+
+    ext_seq_data = {}
+    with open(os.path.join(outdir,'raw.extracted.seqs.fasta'), 'w') as oh:
         for idx,record in enumerate(exobj.seqs):
-            oh.write(">{}:{}:{}\n{}\n".format(record['locus_name'],record['id'],record['seqid'],record['seq']))
+            if min_dna_len > len(record['seq']):
+                continue
+            seq_id = "{}:{}:{}:{}".format(record['locus_name'],record['query_id'],record['seqid'],record['id'])
+            oh.write(">{}\n{}\n".format(seq_id,record['seq']))
+            ext_seq_data[seq_id] = {'locus_name':record['locus_name'],
+                                'ref_id':record['query_id'],
+                                'ref_seq':nt_db_seq_data[record['query_id']],
+                                'ext_seq':record['seq']}
+    mode = 'trim'
+    align_dir = os.path.join(outdir,'fastas')
+    if not os.path.isdir(align_dir):
+        os.makedirs(align_dir, 0o755)
+    perform_alignment(ext_seq_data, align_dir, n_threads)
+    if mode == 'trim':
+        aln_obj = aligner(trim_fwd=True,trim_rev=True,ext_fwd=False, ext_rev=False,fill=False)
+    elif mode == 'snps':
+        aln_obj = aligner(trim_fwd=True, trim_rev=True, ext_fwd=True, ext_rev=True, fill=True)
+    else:
+        aln_obj = aligner(trim_fwd=True, trim_rev=True, ext_fwd=True, ext_rev=True, fill=True)
+
+    with open(os.path.join(outdir, 'processed.extracted.seqs.fasta'), 'w') as oh:
+        for seq_id in ext_seq_data:
+            record = ext_seq_data[seq_id]
+            if not 'alignment' in record:
+                continue
+            ref_id = record['ref_id']
+            alignment = record['alignment']
+            variants = aln_obj.call_seq(seq_id,alignment[ref_id],record[seq_id])
+            oh.write(">{}\n{}\n".format(seq_id, variants['seq']))
 
 
 def run():
