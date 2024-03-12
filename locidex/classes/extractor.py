@@ -165,8 +165,7 @@ class extractor:
                 is_complement = row['complement']
                 is_extended = row['is_extended']
 
-                if locus_name == 'SALM_1495':
-                    print(f'{start} {end}')
+
                 is_complete = row['is_complete']
                 fivep_trunc = row['is_5prime_boundary']
                 threep_trunc = row['is_3prime_boundary']

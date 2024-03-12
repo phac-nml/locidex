@@ -160,7 +160,6 @@ def run_extract(config):
                        blast_columns=BLAST_TABLE_COLS,create_db=True)
 
     if obj.status == False:
-        print(obj.messages)
         print("Error something went wrong, please check error messages above")
         sys.exit()
 
