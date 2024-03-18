@@ -140,6 +140,9 @@ from the assembly with no further processing and processed modes involve pairwis
 with its best blast hit in the database which is used to perform the other three modes. 2) trim: any leading or trailing bases
 which are not present in the db match are trimmed from the sequence. 3) snp: This will apply only nucleotide variants to the reference allele which can be very useful for nanopore assemblies where indels are common and unlikely to be real. 4) extend : This mode will fill in any terminal sequence missing from the sequence based on the matched reference allele.
 
+![alt text](https://github.com/phac-nml/locidex/blob/main/LocidexExtract.png?raw=true)
+
+
 Input Data Formats: Fasta (contigs)
 
 Gene annotation is notoriously inconsistent between different software, and so we implemented the extract
