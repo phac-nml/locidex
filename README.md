@@ -131,6 +131,7 @@ Locidex is designed to be very modular so that developers and users can mix and 
 Each tool is designed so that it can be imported as a python library to extend and implement custom behaviour. A description of each tool and 
 its inputs/outputs is provided below.
 
+
 **Extract**
 
 The extract module is meant to use locidex formatted database directories to get sequences of individual loci bases on a
@@ -145,7 +146,7 @@ Gene annotation is notoriously inconsistent between different software, and so w
 module to enable consistent selection of loci sequences from an input genome. 
 
 
- locidex extract --mode raw -i ./example/search/NC_003198.1.fasta -d .example/build_db_mlst_out -o ./example/search/NC_003198_fasta -n 8 
+    locidex extract --mode raw -i ./example/search/NC_003198.1.fasta -d .example/build_db_mlst_out -o ./example/search/NC_003198_fasta -n 8 
 
 -- This will skip post processing of extracted sequences and just report the extracted sequences
 
