@@ -58,10 +58,10 @@ such as: gene-by-gene (mlst, cgMLST, wgMLST, rmlst), in silico serotyping, gene-
 (amr, virulence, pathotype, toxin typing), marker-based typing (16S).  The tool needs to provide custom criteria filtering 
 by loci, and ability to produce multiple formats for different downstream applications to use. The tool needs to be 
 compatible with an HSP environment and not encounter any locking issues where multiple processes may try to change the 
-data at the same time.  The logic for allele calling is greatly simplified by leveraging existing annotations from tools 
+data at the same time.  Locidex provides flexibility in terms of identification of loci with support for The logic for allele calling is greatly simplified by leveraging existing annotations from tools 
 such as [prodigal](https://github.com/hyattpd/Prodigal), [prokka](https://github.com/tseemann/prokka), 
 [bakta](https://github.com/oschwengers/bakta) to delinate the boundaries of the sequences to be queried and hashed to produce allele 
-identifiers. A common issue in matching applications is that ranges of identity and coverage for a match will vary by locus 
+identifiers. Additionally, an extraction module was built in order to specifically select sequences from assemblies for use in allele calling since differences in annotations are known and will inflate genetic distances.  A common issue in matching applications is that ranges of identity and coverage for a match will vary by locus 
 and so locidex builds into its database structure control over these attributes at a locus level which allows for 
 high variability databases to be used without building custom logic downstream. This is particularly important when lengths 
 of loci can exhibit considerable variability as is the case for genes of interest for typing applications. 
@@ -116,6 +116,7 @@ If you run ``locidex``, you should see the following usage statement:
     Available commands:
     
     search  Query set of ORFs, Genes against a database to produce a sequence store for downstream processing
+    extract Extract loci from a genome based on a locidex database
     report  Filter a sequence store and produce and extract of blast results and gene profile (allele calling)
     merge   Merge a set of gene profiles into a standard "allele" profile format 
     format  Format fasta files from other MLST databases for use with locidex build
