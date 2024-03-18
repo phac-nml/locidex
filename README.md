@@ -131,9 +131,45 @@ Locidex is designed to be very modular so that developers and users can mix and 
 Each tool is designed so that it can be imported as a python library to extend and implement custom behaviour. A description of each tool and 
 its inputs/outputs is provided below.
 
+**Extract**
+
+The extract module is meant to use locidex formatted datbase directories to get sequences of individual loci bases on a
+locidex formatted database. The extract module opperates in four different modes. 1) raw: sequences are directely extracted
+from the assembly with no further processing and processed modes involve pairwise mafft alignment of the extracted sequence
+with its best blast hit in the database which is used to perform the other three modes. 2) trim: any leading or trailing bases
+which are not present in the db match are trimmed from the sequence. 3)
+
+Input Data Formats: Fasta (contigs)
+
+Gene annotation is notoriously inconsistent between different software, and so we implemented the extract
+module to enable consistent selection of loci sequences from an input genome. 
+
+
+ locidex extract -i ./example/search/NC_003198.1.fasta -d .example/build_db_mlst_out -o ./example/search/NC_003198_fasta -n 8 
+
+**Output**:
+```
+{out folder name}
+├── blast
+    ├── hsps.txt        
+├── blast_db
+    ├── contigs.fasta.ndb  
+    ├── contigs.fasta.nhr
+    ├── contigs.fasta.nin 
+    ├── contigs.fasta.njs
+    ├── contigs.fasta.not
+    ├── contigs.fasta.nsq
+    ├── contigs.fasta.ntf
+    └──contigs.fasta.nto
+├── filtered.hsps.txt
+├── processed.extracted.seqs.fasta #optional sequences with trimming, gapp filling an snp only based on options selected
+├── raw.extracted.seqs.fasta #exact extracted sequences
+└── results.json  
+```
+
 **Search**
 
-The search module is meant to use locidex formated datbase directories
+The search module is meant to use locidex formatted datbase directories
 Input Data Formats: GenBank, Fasta (of individual loci sequences)
 - DNA and protein blast searches
 - Md5 hashing of alleles 
@@ -142,12 +178,13 @@ Input Data Formats: GenBank, Fasta (of individual loci sequences)
 Gene annotation is notoriously inconsistent between different software and so it is **STRONGLY** recommended to use the same method
 for annotation of your database and what you will use to search. ie. if using prodigal for searching, use prodigal for constructing the database.
 
- 
+     locidex search -q ./example/search/extracted.sequences.fasta -d .example/build_db_mlst_out -o ./example/search/NC_003198_fasta -n 8
+    
+-run with extracted sequences as input
 
     locidex search -q ./example/search/NC_003198.1.fasta -d .example/build_db_mlst_out -o ./example/search/NC_003198_fasta -n 8 --annotate
     
 -run in annotation mode with a fasta input
-
 
     locidex search -q ./example/search/NC_003198.1.gbk -d .example/build_db_mlst_out -o ./example/search/NC_003198_fasta -n 8
 
