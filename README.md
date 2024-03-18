@@ -60,7 +60,7 @@ by loci, and ability to produce multiple formats for different downstream applic
 compatible with an HSP environment and not encounter any locking issues where multiple processes may try to change the 
 data at the same time.  Locidex provides flexibility in terms of identification of loci with support for The logic for allele calling is greatly simplified by leveraging existing annotations from tools 
 such as [prodigal](https://github.com/hyattpd/Prodigal), [prokka](https://github.com/tseemann/prokka), 
-[bakta](https://github.com/oschwengers/bakta) to delinate the boundaries of the sequences to be queried and hashed to produce allele 
+[bakta](https://github.com/oschwengers/bakta) to delineate the boundaries of the sequences to be queried and hashed to produce allele 
 identifiers. Additionally, an extraction module was built in order to specifically select sequences from assemblies for use in allele calling since differences in annotations are known and will inflate genetic distances.  A common issue in matching applications is that ranges of identity and coverage for a match will vary by locus 
 and so locidex builds into its database structure control over these attributes at a locus level which allows for 
 high variability databases to be used without building custom logic downstream. This is particularly important when lengths 
@@ -70,18 +70,18 @@ However, these values can be overridden using the report module filtering parame
 within the database. 
 
 Locidex is meant to be optimized for routine operation level searching where it is useful to have 
-default parameters that are set for the user to have reproducibility, which is combined with flexibility to  apply 
-multiple filtering parameters on the sequence store after the fact. This allows exploring different thresholds 
+default parameters that are set for the user to have reproducibility, which is combined with flexibility to apply 
+multiple filtering parameters on the sequence store after the fact. Furthermore, it is designed to be deployable in HPC/cloud environments where updating databases is not desireable and can cause collisions. This allows exploring different thresholds 
 without the need to recompute blast searches each time and allows for different use cases of data from a common data store. 
 Frequently there is a desire to include additional information about given locus such as different identifiers, 
 functional properties, and phenotypic effects.  The database format of locidex allows inclusion of any number of fields 
 that allow the user to describe their data which is bundled into the search result object for convenience to downstream analyses.
 [Chewbbaca](https://github.com/B-UMMI/chewBBACA) is an excellent choice for an open source allele caller and provides many advanced features 
-for developing, curating and using gene-by-gene schemes.  It provides a great deat of additional information regarding partial gene sequences. 
+for developing, curating and using gene-by-gene schemes.  It provides a great deal of additional information regarding partial gene sequences. 
 For R&D applications, this functionality can be extremely useful. However, for some operational contexts, the design of [Chewbbaca](https://github.com/B-UMMI/chewBBACA)
 provides information that is not desireable and at present it has issues with multiple instances using the same database at once with 
 novel allele detection enabled (https://github.com/B-UMMI/chewBBACA/issues/168). Locidex does not have the full features for a gene-by-gene software package like [Chewbbaca](https://github.com/B-UMMI/chewBBACA)
-but can be used to acheive similar results while being a more generic tool kit for blast searches such as [abricate](https://github.com/tseemann/abricate)
+but can be used to achieve similar results while being a more generic tool kit for blast searches such as [abricate](https://github.com/tseemann/abricate)
 
 
 ## Installation
@@ -133,11 +133,11 @@ its inputs/outputs is provided below.
 
 **Extract**
 
-The extract module is meant to use locidex formatted datbase directories to get sequences of individual loci bases on a
+The extract module is meant to use locidex formatted database directories to get sequences of individual loci bases on a
 locidex formatted database. The extract module opperates in four different modes. 1) raw: sequences are directely extracted
 from the assembly with no further processing and processed modes involve pairwise mafft alignment of the extracted sequence
 with its best blast hit in the database which is used to perform the other three modes. 2) trim: any leading or trailing bases
-which are not present in the db match are trimmed from the sequence. 3)
+which are not present in the db match are trimmed from the sequence. 3) snp: This will apply only nucleotide variants to the reference allele which can be very useful for nanopore assemblies where indels are common and unlikely to be real. 4) extend : This mode will fill in any terminal sequence missing from the sequence based on the matched reference allele.
 
 Input Data Formats: Fasta (contigs)
 
@@ -145,7 +145,12 @@ Gene annotation is notoriously inconsistent between different software, and so w
 module to enable consistent selection of loci sequences from an input genome. 
 
 
- locidex extract -i ./example/search/NC_003198.1.fasta -d .example/build_db_mlst_out -o ./example/search/NC_003198_fasta -n 8 
+ locidex extract --mode raw -i ./example/search/NC_003198.1.fasta -d .example/build_db_mlst_out -o ./example/search/NC_003198_fasta -n 8 
+
+-- This will skip post processing of extracted sequences and just report the extracted sequences
+
+
+
 
 **Output**:
 ```
