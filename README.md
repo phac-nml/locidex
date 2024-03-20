@@ -115,6 +115,8 @@ The extract module is meant to use locidex formatted database directories to get
 > [!Note]
 > Modes involving processing (trim, snp and extend) involve pairwise mafft alignment of the extracted sequence with its best blast hit in the database.
 
+![extract command options](https://github.com/phac-nml/locidex/blob/main/assets/LocidexExtract.png?raw=true)
+
 #### Input
 
 Input Data Formats: Fasta (contigs)
