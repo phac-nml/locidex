@@ -6,6 +6,33 @@
 <img src="https://github.com/phac-nml/locidex/blob/dev/assets/logo.png" width = "180" height="140">
 
 # Locidex
+
+- [Introduction](#introduction)
+  * [Citation](#citation)
+  * [Contact](#contact)
+- [Install](#install)
+    + [Compatibility](#compatibility)
+- [Getting Started](#getting-started)
+  * [Usage](#usage)
+  * [Configuration and Settings](#configuration-and-settings)
+    + [Search](#search)
+    + [Extract](#extract)
+    + [Report](#report)
+    + [Merge](#merge)
+    + [Format](#format)
+    + [Build](#build)
+  * [Example workflow](#example-workflow)
+  * [Database structure](#database-structure)
+    + [config.json](#configjson)
+    + [meta.json](#metajson)
+    + [blast datbases](#blast-datbases)
+- [Troubleshooting and FAQs](#troubleshooting-and-faqs)
+- [Benchmarking](#benchmarking)
+- [Legal and Compliance Information](#legal-and-compliance-information)
+- [Updates and Release Notes](#updates-and-release-notes)
+
+<small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
+
 # Introduction
 A common function for many tools in bacterial typing is performing similarity searching using NCBI [blast](https://blast.ncbi.nlm.nih.gov/Blast.cgi). Blast provides a robust command line interface for constructing and using databases for similarity searching and is ubiquitous. There are many typing applications where custom code is written around the blast command line interface to perform searches for a variety of downstream applications. For instance, identification of specific target sequences within an assembly to perform gene-by-gene phylogenetic analysis (MLST, cgMLST, wgMLST), antimicrobial resistance gene detection, virulence gene detection, and in silico predictions of phenotypes such as serotype is a major application within public health. The typical approach is to bundle the search-based logic with additional specialized logic for performing the desired analysis.
 
@@ -59,7 +86,7 @@ Locidex uses the following commands:
 5. **format** - format fasta files from other MLST databases for use with locidex build
 6. **build** - builds a locidex databse
 
-## Configuration and Settings:
+## Configuration and Settings
 
 Locidex is designed to be very modular so that developers and users can mix and match different components for their individual goals. Each tool is designed so that it can be imported as a python library to extend and implement custom behaviour. A description of each tool and its inputs/outputs is provided below.
 
@@ -88,7 +115,7 @@ EXAMPLE: Run search with existing annotations in GenBank format:
 
 Accepted input Data Formats: GenBank, Fasta (of individual loci sequences)
 
-#### Output:
+#### Output
 
 ```
 {out folder name}
@@ -195,6 +222,7 @@ EXAMPLE: merging files provided through a list of paths to report files
 ### Format
 
 Takes common formats of gene-by-gene databases and formats them for use with locidex build module.
+
 #### Input
 
 Accepts two formats common with most of the major MLST databases:
@@ -356,7 +384,7 @@ Frequently, there is a desire to encode contextual metadata with sequence data f
 
 The blast folder must be present for a locidex database to be valid with nucleotide and/or protein subfolders present. For each folder present, it must contain the fasta file used to generate the database (nucleotide.fasta|protein.fasta) and a corresponding blast database with the folder name without ".fasta" present. The structure is designed to allow for the inclusion of other sequence similarity search tools at a later date with minimal modifications. Protein searching via HMMs and other tools such as [diamond](https://github.com/bbuchfink/diamond) may be included in later releases.
 
-# Troubleshooting and FAQs:
+# Troubleshooting and FAQs
 
 ## FAQ
 
@@ -383,7 +411,7 @@ The most conservative approach is to not interpret that column by blanking it in
 
 Coming soon.
 
-# Legal and Compliance Information:
+# Legal and Compliance Information
 
 Copyright Government of Canada 2023
 
