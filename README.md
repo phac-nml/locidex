@@ -64,7 +64,7 @@ Locidex uses the following commands:
 Locidex is designed to be very modular so that developers and users can mix and match different components for their individual goals. Each tool is designed so that it can be imported as a python library to extend and implement custom behaviour. A description of each tool and its inputs/outputs is provided below.
 
 The below figure shows a general workflow for each of the locidex commands:
-![img1](https://github.com/phac-nml/locidex/blob/dev/assets/locidex_workflow_mermaid-20240318.png)
+![locidex workflows](/assets/locidex_workflow_mermaid-20240318.png)
 
 ### Search
 
@@ -117,7 +117,7 @@ The extract module is meant to use locidex formatted database directories to get
 > [!Note]
 > Modes involving processing (trim, snp and extend) involve pairwise mafft alignment of the extracted sequence with its best blast hit in the database.
 
-![extract command options](https://github.com/phac-nml/locidex/blob/main/assets/LocidexExtract.png?raw=true)
+![extract command options](/assets/LocidexExtract.png)
 
 #### Input
 
