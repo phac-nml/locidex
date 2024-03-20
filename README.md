@@ -3,7 +3,7 @@
 [![Conda](https://img.shields.io/conda/dn/bioconda/locidex?color=green)](https://anaconda.org/bioconda/locidex)
 [![License: Apache-2.0](https://img.shields.io/github/license/phac-nml/locidex)](https://www.apache.org/licenses/LICENSE-2.0)
 
-<img src="https://github.com/phac-nml/locidex/blob/main/assets/logo.png?raw=true" width = "180" height="140">
+<img src="https://github.com/phac-nml/locidex/blob/dev/assets/logo.png" width = "180" height="140">
 
 # Locidex
 # Introduction
@@ -63,7 +63,9 @@ Locidex uses the following commands:
 
 Locidex is designed to be very modular so that developers and users can mix and match different components for their individual goals. Each tool is designed so that it can be imported as a python library to extend and implement custom behaviour. A description of each tool and its inputs/outputs is provided below.
 
-[INSERT WORKFLOW MERMAID DIAG]
+The below figure shows a general workflow for each of the locidex commands:
+![img1](https://github.com/phac-nml/locidex/blob/dev/assets/locidex_workflow_mermaid-20240318.png)
+
 ### Search
 
 The search module is meant to use locidex formatted database directories. 
