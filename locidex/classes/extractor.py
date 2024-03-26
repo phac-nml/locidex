@@ -4,7 +4,8 @@ from locidex.constants import NT_SUB, STOP_CODONS, START_CODONS
 class extractor:
     seqs = {}
     df = pd.DataFrame()
-    def __init__(self,df,seq_data,sseqid_col,queryid_col,qstart_col,qend_col,qlen_col,sstart_col,send_col,slen_col,sstrand_col,bitscore_col,overlap_thresh=1,extend_threshold_ratio = 0.2,filter_contig_breaks=True):
+    def __init__(self,df,seq_data,sseqid_col,queryid_col,qstart_col,qend_col,qlen_col,sstart_col,send_col,slen_col,sstrand_col,bitscore_col,overlap_thresh=100,extend_threshold_ratio = 0.2,filter_contig_breaks=True):
+        print('hi')
         self.filter_contig_breaks = filter_contig_breaks
         self.df = self.set_extraction_pos(df, sstart_col, send_col)
         self.is_complete(self.df,qstart_col,qend_col,qlen_col)
@@ -18,10 +19,14 @@ class extractor:
             self.df[c] = self.df[c].apply(lambda x: x - 1)
         #self.df = self.fix_postioning(self.df)
 
-        sort_cols = [sseqid_col, queryid_col, sstart_col, send_col, bitscore_col]
+        sort_cols = ['locus_name', sseqid_col, sstart_col, send_col, bitscore_col]
         ascending_cols = [True, True, True, True, False]
+        self.df = self.df.sort_values(sort_cols,ascending=ascending_cols).reset_index(drop=True)
+        self.df = self.recursive_filter_redundant_queries(self.df, 'locus_name', sseqid_col, bitscore_col, 
+                                                          sort_cols, ascending_cols, overlap_threshold=1)
+
         #self.df = self.recursive_filter_overlap_records(self.df, sseqid_col, bitscore_col, sort_cols, ascending_cols, overlap_threshold=overlap_thresh)
-        self.df = self.extend(self.df,sseqid_col, queryid_col, qstart_col, qend_col, sstart_col,send_col,slen_col, qlen_col, bitscore_col, overlap_threshold=1)
+        self.df = self.extend(self.df,sseqid_col, queryid_col, qstart_col, qend_col, sstart_col,send_col,slen_col, qlen_col, bitscore_col, overlap_threshold=overlap_thresh)
 
         #self.df = self.recursive_filter_overlap_records(self.df, sseqid_col, bitscore_col, sort_cols, ascending_cols,
         #                                                overlap_threshold=overlap_thresh)
@@ -63,6 +68,72 @@ class extractor:
                 df.loc[idx, 'ext_start'] = start
                 df.loc[idx, 'ext_end'] = end
         return df
+
+    def recursive_filter_redundant_queries(self,df, locus_col, sseqid_col, bitscore_col, sort_cols, ascending_cols, overlap_threshold=1):
+        size = len(df)
+        prev_size = 0
+        while size != prev_size:
+            df = df.sort_values(sort_cols,
+                                ascending=ascending_cols).reset_index(drop=True)
+            df = self.remove_redundant_queries(df, locus_col, sseqid_col, bitscore_col, overlap_threshold=overlap_threshold)
+            prev_size = size
+            size = len(df)
+
+        return df.sort_values(sort_cols,ascending=ascending_cols).reset_index(drop=True)
+
+    def remove_redundant_queries(self,df,locus_col,sseqid_col, bitscore_col, overlap_threshold=1):
+        seq_id_list = list(df[sseqid_col].unique())
+        filter_df = []
+        for seqid in seq_id_list:
+            subset = df[df[sseqid_col] == seqid]
+            prev_locus_id = ''
+            prev_contig_id = ''
+            prev_index = -1
+            prev_contig_start = -1
+            prev_contig_end = -1
+            prev_score = 0
+            filter_rows = []
+            for idx, row in subset.iterrows():
+                contig_id = row[sseqid_col]
+                contig_start = row['ext_start']
+                contig_end = row['ext_end']
+                score = float(row[bitscore_col])
+                locus_id = row[locus_col]
+
+                if prev_contig_id == '':
+                    prev_index = idx
+                    prev_contig_id = contig_id
+                    prev_contig_start = contig_start
+                    prev_contig_end = contig_end
+                    prev_score = score
+                    prev_locus_id = locus_id
+                    continue
+
+                if locus_id == prev_locus_id:
+                    if (contig_start >= prev_contig_start and contig_start <= prev_contig_end) or (
+                            contig_end >= prev_contig_start and contig_end <= prev_contig_end):
+                        overlap = abs(contig_start - prev_contig_end)
+
+                        if overlap > overlap_threshold:
+                            if prev_score < score:
+                                filter_rows.append(prev_index)
+                            else:
+                                filter_rows.append(idx)
+
+                prev_index = idx
+                prev_contig_id = contig_id
+                prev_contig_start = contig_start
+                prev_contig_end = contig_end
+                prev_score = score
+                prev_locus_id = locus_id
+
+
+            valid_ids = list( set(subset.index) - set(filter_rows)  )
+
+            filter_df.append(subset.filter(valid_ids, axis=0))
+
+
+        return pd.concat(filter_df, ignore_index=True)
 
     def fix_postioning(self,df):
         for idx, row in df.iterrows():
@@ -212,9 +283,10 @@ class extractor:
         return seqs
 
     def extend(self,df,seqid_col, queryid_col, qstart_col, qend_col, sstart_col,send_col,slen_col, qlen_col, bitscore_col, overlap_threshold=1):
-        sort_cols = [seqid_col,'ext_start', 'ext_end', bitscore_col]
-        ascending_cols = [True, True, True, False]
-        df = self.recursive_filter_overlap_records(df, seqid_col, bitscore_col, sort_cols, ascending_cols, overlap_threshold)
+        sort_cols = ['locus_name',seqid_col,'ext_start', 'ext_end', bitscore_col]
+        ascending_cols = [True, True, True, True, False]
+
+        df = self.recursive_filter_overlap_records(df, 'locus_name', bitscore_col, sort_cols, ascending_cols, overlap_threshold)
         df = df.sort_values(sort_cols,
                             ascending=ascending_cols).reset_index(drop=True)
 
@@ -308,6 +380,7 @@ class extractor:
         return df
 
     def group_by_locus(self,df,seqid_col,query_col,qlen_col,extend_threshold_ratio = 0.2):
+        print(self.df.columns)
         sort_cols = ['locus_name',query_col,'ext_start', 'ext_end']
         ascending_cols = [True, True, True, True]
         df = df.sort_values(sort_cols,
