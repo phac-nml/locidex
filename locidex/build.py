@@ -73,9 +73,6 @@ class locidex_build:
         if not os.path.isdir(d):
             os.makedirs(d, 0o755)
 
-        if not os.path.isdir(d):
-            os.makedirs(d, 0o755)
-
         return True
 
     def read_data(self,f):
@@ -138,18 +135,6 @@ class locidex_build:
             "meta": subset.to_dict(orient='index')
         }
 
-
-
-
-
-
-
-
-
-
-
-
-
 def add_args(parser):
 
 
@@ -195,7 +180,8 @@ def run(cmd_args):
         print(f'Error {input_file} does not exist, please check path and try again')
         sys.exit()
 
-    run_data['result_file'] = os.path.join(outdir)
+    
+    #run_data['result_file'] = os.path.join(outdir)
     obj = locidex_build(input_file, outdir,config=config,seq_columns={'nucleotide':'dna_seq','protein':'aa_seq'},force=force)
     if obj.status == False:
         print(f'Error something went wrong building the db, check error messages {obj.messages}')

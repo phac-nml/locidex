@@ -226,7 +226,7 @@ def run_search(config):
 
     store_obj.filter_hits()
     store_obj.convert_profile_to_list()
-    run_data['result_file'] = os.path.join(outdir, "seq_store.json")
+    run_data['result_file'] = "seq_store.json"
     del (filtered_df)
 
     with open(os.path.join(outdir, run_data['result_file']), "w") as fh:
