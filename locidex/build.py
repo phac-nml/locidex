@@ -150,13 +150,11 @@ class locidex_build:
 
 
 
-def parse_args():
-    class CustomFormatter(ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter):
-        pass
+def add_args(parser):
 
-    parser = ArgumentParser(
-        description="Locidex: Build a locidex database",
-        formatter_class=CustomFormatter)
+
+    #parser = ArgumentParser(
+    #    description="Locidex: Build a locidex database",)
     parser.add_argument('-i','--input_file', type=str, required=True,help='Input tsv formated for locidex')
     parser.add_argument('-o', '--outdir', type=str, required=True, help='Output directory to put results')
     parser.add_argument('-n', '--name', type=str, required=False, help='DB name',default='Locidex Database')
@@ -171,11 +169,10 @@ def parse_args():
     parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
                         action='store_true')
 
-    return parser.parse_args()
 
 
-def run():
-    cmd_args = parse_args()
+def run(cmd_args):
+    #cmd_args = parse_args()
     input_file = cmd_args.input_file
     outdir = cmd_args.outdir
     force = cmd_args.force
@@ -221,8 +218,8 @@ def run():
 
 
 # call main function
-if __name__ == '__main__':
-    run()
+#if __name__ == '__main__':
+#    run()
 
 
 

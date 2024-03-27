@@ -13,20 +13,15 @@ import pandas as pd
 from locidex.version import __version__
 
 
-def parse_args():
-    class CustomFormatter(ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter):
-        pass
+def add_args(sub_parser):
+    #parser = ArgumentParser(
+    #    description="Locidex merge: Concatonate set of input profile.json files into  a tsv table")
 
-    parser = ArgumentParser(
-        description="Locidex merge: Concatonate set of input profile.json files into  a tsv table",
-        formatter_class=CustomFormatter)
-    parser.add_argument('-i','--input', type=str, required=True,help='Input file to report', action='append', nargs='+')
-    parser.add_argument('-o', '--outdir', type=str, required=True, help='Output file to put results')
-    parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
-    parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
+    sub_parser.add_argument('-i','--input', type=str, required=True,help='Input file to report', action='append', nargs='+')
+    sub_parser.add_argument('-o', '--outdir', type=str, required=True, help='Output file to put results')
+    sub_parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
+    sub_parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
                         action='store_true')
-
-    return parser.parse_args()
 
 
 def get_file_list(input_files):
@@ -58,10 +53,8 @@ def read_file_list(file_list):
 
 
 
-def run():
-    cmd_args = parse_args()
+def run(cmd_args):
     analysis_parameters = vars(cmd_args)
-
     #Input Parameters
     input_files = cmd_args.input[0]
     outdir = cmd_args.outdir
@@ -91,7 +84,7 @@ def run():
 
 
 # call main function
-if __name__ == '__main__':
-    run()
+#if __name__ == '__main__':
+#    run()
 
 

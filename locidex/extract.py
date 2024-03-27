@@ -16,13 +16,12 @@ from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BLAST_TABLE_COLS, DB_
 from locidex.version import __version__
 from locidex.classes.aligner import perform_alignment, aligner
 
-def parse_args():
-    class CustomFormatter(ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter):
-        pass
+def add_args(parser):
 
-    parser = ArgumentParser(
-        description="Locidex: Extract sequence features from an assembly using a locidex database",
-        formatter_class=CustomFormatter)
+
+    #parser = ArgumentParser(
+    #    description="Locidex: Extract sequence features from an assembly using a locidex database",
+    #    formatter_class=CustomFormatter)
     parser.add_argument('-i','--in_fasta', type=str, required=True,help='Query assembly sequence file (fasta)')
     parser.add_argument('-o', '--outdir', type=str, required=True, help='Output directory to put results')
     parser.add_argument('-n', '--name', type=str, required=False, help='Sample name to include default=filename')
@@ -61,8 +60,6 @@ def parse_args():
     parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
     parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
                         action='store_true')
-
-    return parser.parse_args()
 
 
 def run_extract(config):
@@ -244,8 +241,8 @@ def run_extract(config):
 
 
 
-def run():
-    cmd_args = parse_args()
+def run(cmd_args):
+    #cmd_args = parse_args()
     analysis_parameters = vars(cmd_args)
     config_file = cmd_args.config
 
@@ -262,6 +259,6 @@ def run():
 
 
 # call main function
-if __name__ == '__main__':
-    run()
+#if __name__ == '__main__':
+#    run()
 
