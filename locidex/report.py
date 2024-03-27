@@ -22,13 +22,14 @@ def parse_args():
     parser.add_argument('-i','--input', type=str, required=True,help='Input file to report')
     parser.add_argument('-o', '--outdir', type=str, required=True, help='Output file to put results')
     parser.add_argument('-n', '--name', type=str, required=False, help='Sample name to include default=filename')
-    parser.add_argument('-m', '--mode', type=str, required=False, help='Allele profile assignment [normal,conservative]',default='normal')
+    parser.add_argument('-m', '--mode', type=str, required=False, help='Allele profile assignment [normal,conservative,fuzzy]',default='normal')
     parser.add_argument('-p', '--prop', type=str, required=False, help='Metadata label to use for aggregation',default='locus_name')
     parser.add_argument('-a', '--max_ambig', type=int, required=False, help='Maximum number of ambiguous characters allowed in a sequence',default=0)
     parser.add_argument('-s', '--max_stop', type=int, required=False, help='Maximum number of internal stop codons allowed in a sequence',default=0)
     parser.add_argument('--report_format', type=str, required=False,
                         help='Report format of parsed results [profile]',default='profile')
-
+    parser.add_argument('-r', '--match_ident', type=float, required=False, 
+                        help='Report match allele if percent difference is less than this value',default=100)
     parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
     parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
                         action='store_true')
@@ -43,12 +44,13 @@ class seq_reporter:
     db_seq_info = {}
     failed_seqids = set()
 
-    def __init__(self,data_dict,method='nucleotide',mode='normal',label='locus_name',filters={},max_ambig=0,max_int_stop=0):
+    def __init__(self,data_dict,method='nucleotide',mode='normal',label='locus_name',filters={},max_ambig=0,max_int_stop=0,match_ident=0):
         self.max_ambig_count = max_ambig
         self.max_int_stop_count = max_int_stop
         self.label = label
         self.method = method
         self.mode = mode
+        self.match_ident = match_ident
         self.data_dict = data_dict
         self.db_seq_info = self.data_dict["db_seq_info"]
         self.query_seq_data = self.data_dict["query_data"]['query_seq_data']
@@ -142,7 +144,7 @@ class seq_reporter:
         for qid in self.query_hits:
             best_hits[qid] = {}
             for dbtype in self.query_hits[qid]:
-                best_hits[dbtype] = []
+                best_hits[qid][dbtype] = []
                 hit_ids = []
                 hit_bit = []
                 for hit in self.query_hits[qid][dbtype]:
@@ -153,9 +155,10 @@ class seq_reporter:
                 max_bit = max(hit_bit)
                 top_ids = []
                 for idx, value in enumerate(hit_bit):
-                    if value == max_bit:
+                    if value >= max_bit:
                         top_ids.append(idx)
-                best_hits[dbtype] = top_ids
+                best_hits[qid][dbtype] = top_ids
+
         return best_hits
 
     def get_hit_locinames(self):
@@ -183,7 +186,8 @@ class seq_reporter:
         return loci_lookup
 
     def allele_assignment(self,dbtype):
-        query_best_hits = self.calc_query_best_hit()
+        self.query_best_hits = self.calc_query_best_hit()
+
         hit_loci_names = self.get_hit_locinames()
         loci_lookup = self.get_loci_to_query_map(hit_loci_names,dbtype)
 
@@ -217,11 +221,12 @@ class seq_reporter:
                 continue
 
             for qid in matches:
-                if not dbtype in query_best_hits[qid]:
+                if not dbtype in self.query_best_hits[qid]:
                     continue
-                best_hits = query_best_hits[qid][dbtype]
+                best_hits = self.query_best_hits[qid][dbtype]
                 best_hit_names = set()
                 for l in best_hits:
+                    l = str(l)
                     hinfo = self.db_seq_info[l]
                     best_hit_names.add(hinfo['locus_name'])
                 if len(best_hit_names) == 1:
@@ -233,6 +238,18 @@ class seq_reporter:
         self.locus_profile = profile
         self.populate_profile()
 
+
+    def get_matching_ref_seq_info(self,qid, dbtype):
+        for hit in self.query_hits[qid][dbtype]:
+            hit_id = str(hit['sseqid'])
+            pident = hit['pident']
+            if pident < self.match_ident:
+                    continue
+            hinfo = self.db_seq_info[hit_id]
+            hit_name = hinfo['locus_name']
+            return hinfo
+        return {}
+    
     def populate_profile(self):
         for locus_name in self.profile:
             values = set()
@@ -244,7 +261,16 @@ class seq_reporter:
                     key = "dna_hash"
                 elif self.method == 'protein':
                     key = "aa_hash"
-                allele_hashes.append(self.query_seq_data[seq_id][key])
+                hash_value = self.query_seq_data[seq_id][key]
+                if self.mode == 'fuzzy':
+                    ref_seq_hitinfo = self.get_matching_ref_seq_info(seq_id, self.method)
+                    if len(ref_seq_hitinfo) > 0:
+                        if self.method == 'nucleotide':
+                            hash_value = ref_seq_hitinfo['dna_seq_hash']  
+                        elif self.method == 'protein':
+                            hash_value = ref_seq_hitinfo['aa_seq_hash'] 
+                            
+                allele_hashes.append(hash_value)
 
             num_alleles = len(allele_hashes)
             if num_alleles > 1 and self.mode == 'conservative':
@@ -253,7 +279,10 @@ class seq_reporter:
                 allele_hashes = calc_md5(["".join([str(x) for x in sorted(allele_hashes)])])
             elif num_alleles == 0:
                 allele_hashes = ['-']
+            elif self.mode == 'fuzzy':
+                allele_hashes = calc_md5(["".join([str(x) for x in sorted(allele_hashes)])])
             self.profile[locus_name] = ",".join(list(set([str(x) for x in allele_hashes])))
+        
 
 
     def extract_hit_data(self,dbtype):
@@ -287,6 +316,7 @@ def run():
     mode = cmd_args.mode
     max_ambig = cmd_args.max_ambig
     max_int_stop = cmd_args.max_stop
+    match_ident = cmd_args.match_ident
 
 
     if sample_name is None:
@@ -310,7 +340,7 @@ def run():
     if len(seq_store_dict) == 0:
         sys.exit()
 
-    allele_obj = seq_reporter(seq_store_dict, method='nucleotide', mode=mode, label=label, filters={},max_ambig=max_ambig,max_int_stop=max_int_stop)
+    allele_obj = seq_reporter(seq_store_dict, method='nucleotide', mode=mode, label=label, filters={},max_ambig=max_ambig,max_int_stop=max_int_stop,match_ident=match_ident)
 
 
     if report_format == 'profile':
