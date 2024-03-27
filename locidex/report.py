@@ -12,13 +12,11 @@ from locidex.utils import calc_md5
 from locidex.version import __version__
 
 
-def parse_args():
-    class CustomFormatter(ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter):
-        pass
+def add_args(parser):
 
-    parser = ArgumentParser(
-        description="Locidex: Advanced searching and filtering of sequence databases using query sequences",
-        formatter_class=CustomFormatter)
+    #parser = ArgumentParser(
+    #    description="Locidex: Advanced searching and filtering of sequence databases using query sequences",
+    #    formatter_class=CustomFormatter)
     parser.add_argument('-i','--input', type=str, required=True,help='Input file to report')
     parser.add_argument('-o', '--outdir', type=str, required=True, help='Output file to put results')
     parser.add_argument('-n', '--name', type=str, required=False, help='Sample name to include default=filename')
@@ -33,7 +31,6 @@ def parse_args():
     parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
                         action='store_true')
 
-    return parser.parse_args()
 
 
 class seq_reporter:
@@ -273,8 +270,8 @@ class seq_reporter:
         return pd.DataFrame.from_dict(data)
 
 
-def run():
-    cmd_args = parse_args()
+def run(cmd_args):
+    #cmd_args = parse_args()
     analysis_parameters = vars(cmd_args)
 
     #Input Parameters
@@ -327,8 +324,8 @@ def run():
 
 
 # call main function
-if __name__ == '__main__':
-    run()
+#if __name__ == '__main__':
+#    run()
 
 
 

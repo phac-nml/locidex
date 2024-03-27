@@ -73,9 +73,6 @@ class locidex_build:
         if not os.path.isdir(d):
             os.makedirs(d, 0o755)
 
-        if not os.path.isdir(d):
-            os.makedirs(d, 0o755)
-
         return True
 
     def read_data(self,f):
@@ -138,25 +135,11 @@ class locidex_build:
             "meta": subset.to_dict(orient='index')
         }
 
+def add_args(parser):
 
 
-
-
-
-
-
-
-
-
-
-
-def parse_args():
-    class CustomFormatter(ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter):
-        pass
-
-    parser = ArgumentParser(
-        description="Locidex: Build a locidex database",
-        formatter_class=CustomFormatter)
+    #parser = ArgumentParser(
+    #    description="Locidex: Build a locidex database",)
     parser.add_argument('-i','--input_file', type=str, required=True,help='Input tsv formated for locidex')
     parser.add_argument('-o', '--outdir', type=str, required=True, help='Output directory to put results')
     parser.add_argument('-n', '--name', type=str, required=False, help='DB name',default='Locidex Database')
@@ -171,11 +154,10 @@ def parse_args():
     parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
                         action='store_true')
 
-    return parser.parse_args()
 
 
-def run():
-    cmd_args = parse_args()
+def run(cmd_args):
+    #cmd_args = parse_args()
     input_file = cmd_args.input_file
     outdir = cmd_args.outdir
     force = cmd_args.force
@@ -198,7 +180,8 @@ def run():
         print(f'Error {input_file} does not exist, please check path and try again')
         sys.exit()
 
-    run_data['result_file'] = os.path.join(outdir)
+    
+    #run_data['result_file'] = os.path.join(outdir)
     obj = locidex_build(input_file, outdir,config=config,seq_columns={'nucleotide':'dna_seq','protein':'aa_seq'},force=force)
     if obj.status == False:
         print(f'Error something went wrong building the db, check error messages {obj.messages}')
@@ -221,8 +204,8 @@ def run():
 
 
 # call main function
-if __name__ == '__main__':
-    run()
+#if __name__ == '__main__':
+#    run()
 
 
 

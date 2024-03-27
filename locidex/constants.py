@@ -57,6 +57,8 @@ SCHEME_HEADER = [
     'stop_codon'
 ]
 
+EXTRACT_MODES = ['snps','trim','raw','extend']
+
 DB_CONFIG_FIELDS = [
     "db_name",
     "db_version",
