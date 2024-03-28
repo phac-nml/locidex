@@ -199,13 +199,10 @@ class locidex_format:
                 self.seq_idx += 1
 
 
-def parse_args():
-    class CustomFormatter(ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter):
-        pass
-
-    parser = ArgumentParser(
-        description="Locidex: Format an existing allele database into Locidex build tsv format",
-        formatter_class=CustomFormatter)
+def add_args(parser=None):
+    if parser is None:
+        parser = ArgumentParser(
+            description="Locidex: Format sequences for a database.",)
     parser.add_argument('-i','--input', type=str, required=True,help='Input directory of fasta files or input fasta')
     parser.add_argument('-o', '--outdir', type=str, required=True, help='Output directory to put results')
     parser.add_argument('--min_len_frac', type=int, required=False, help='Used to calculate individual sequence minimum acceptable length (0 - 1)',
@@ -223,12 +220,13 @@ def parse_args():
     parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
     parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
                         action='store_true')
+    return parser
 
-    return parser.parse_args()
+def run(cmd_args=None):
+    if cmd_args is None:
+        parser = add_args()
+        cmd_args = parser.parse_args()
 
-
-def run():
-    cmd_args = parse_args()
     input = cmd_args.input
     outdir = cmd_args.outdir
     min_len_frac = cmd_args.min_len_frac

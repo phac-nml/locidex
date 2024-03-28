@@ -16,13 +16,10 @@ from locidex.utils import write_seq_dict
 from locidex.version import __version__
 
 
-def parse_args():
-    class CustomFormatter(ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter):
-        pass
-
-    parser = ArgumentParser(
-        description="Locidex: Advanced searching and filtering of sequence databases using query sequences",
-        formatter_class=CustomFormatter)
+def add_args(parser=None):
+    if parser is None:
+        parser = ArgumentParser(
+            description="Locidex: Advanced searching and filtering of sequence databases using query sequences",)
     parser.add_argument('-q','--query', type=str, required=True,help='Query sequence file')
     parser.add_argument('-o', '--outdir', type=str, required=True, help='Output directory to put results')
     parser.add_argument('-n', '--name', type=str, required=False, help='Sample name to include default=filename')
@@ -59,8 +56,9 @@ def parse_args():
     parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
     parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
                         action='store_true')
+    return parser
 
-    return parser.parse_args()
+
 
 
 def perform_search(query_file,results_file,db_path,blast_prog,blast_params,columns):
@@ -228,7 +226,7 @@ def run_search(config):
 
     store_obj.filter_hits()
     store_obj.convert_profile_to_list()
-    run_data['result_file'] = os.path.join(outdir, "seq_store.json")
+    run_data['result_file'] = "seq_store.json"
     del (filtered_df)
 
     with open(os.path.join(outdir, run_data['result_file']), "w") as fh:
@@ -241,8 +239,11 @@ def run_search(config):
 
 
 
-def run():
-    cmd_args = parse_args()
+def run(cmd_args=None):
+    #cmd_args = parse_args()
+    if cmd_args is None:
+        parser = add_args()
+        cmd_args = parser.parse_args()
     analysis_parameters = vars(cmd_args)
     config_file = cmd_args.config
 

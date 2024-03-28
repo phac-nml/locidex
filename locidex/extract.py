@@ -12,17 +12,15 @@ from locidex.classes.extractor import extractor
 from locidex.classes.blast import blast_search, parse_blast
 from locidex.classes.db import search_db_conf, db_config
 from locidex.classes.seq_intake import seq_intake, seq_store
-from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BLAST_TABLE_COLS, DB_CONFIG_FIELDS, DB_EXPECTED_FILES, NT_SUB
+from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BLAST_TABLE_COLS, DB_CONFIG_FIELDS, DB_EXPECTED_FILES, NT_SUB, EXTRACT_MODES
 from locidex.version import __version__
 from locidex.classes.aligner import perform_alignment, aligner
 
-def parse_args():
-    class CustomFormatter(ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter):
-        pass
+def add_args(parser=None):
+    if parser is None:
+        parser = ArgumentParser(
+            description="Locidex: Extract",)
 
-    parser = ArgumentParser(
-        description="Locidex: Extract sequence features from an assembly using a locidex database",
-        formatter_class=CustomFormatter)
     parser.add_argument('-i','--in_fasta', type=str, required=True,help='Query assembly sequence file (fasta)')
     parser.add_argument('-o', '--outdir', type=str, required=True, help='Output directory to put results')
     parser.add_argument('-n', '--name', type=str, required=False, help='Sample name to include default=filename')
@@ -48,8 +46,8 @@ def parse_args():
                         default=10)
     parser.add_argument('--keep_truncated', required=False, help='Keep sequences where match is broken at the end of a sequence',
                         action='store_true')
-    parser.add_argument('--mode', type=str, required=False, help='(raw, trim, snps, extend)',
-                        default='trim')
+    parser.add_argument('--mode', type=str, required=False, help='Select from the options provided',
+                        default='trim', choices=EXTRACT_MODES)
     parser.add_argument('--n_threads','-t', type=int, required=False,
                         help='CPU Threads to use', default=1)
     parser.add_argument('--format', type=str, required=False,
@@ -61,9 +59,7 @@ def parse_args():
     parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
     parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
                         action='store_true')
-
-    return parser.parse_args()
-
+    return parser
 
 def run_extract(config):
     # Input Parameters
@@ -83,7 +79,7 @@ def run_extract(config):
     mode = config['mode'].lower()
 
 
-    if not mode in ['snps','trim','raw','extend']:
+    if not mode in EXTRACT_MODES:
         print(f'Provided mode for allele extraction is not valid: {mode}, needs to be one of (snps, trim, extend, raw)')
         sys.exit()
 
@@ -244,8 +240,11 @@ def run_extract(config):
 
 
 
-def run():
-    cmd_args = parse_args()
+def run(cmd_args=None):
+    if cmd_args is None:
+        parser = add_args()
+        cmd_args = parser.parser_args()
+    #cmd_args = parse_args()
     analysis_parameters = vars(cmd_args)
     config_file = cmd_args.config
 
