@@ -135,11 +135,11 @@ class locidex_build:
             "meta": subset.to_dict(orient='index')
         }
 
-def add_args(parser):
+def add_args(parser=None):
 
-
-    #parser = ArgumentParser(
-    #    description="Locidex: Build a locidex database",)
+    if parser is None:
+        parser = ArgumentParser(
+            description="Locidex: Build a locidex database",)
     parser.add_argument('-i','--input_file', type=str, required=True,help='Input tsv formated for locidex')
     parser.add_argument('-o', '--outdir', type=str, required=True, help='Output directory to put results')
     parser.add_argument('-n', '--name', type=str, required=False, help='DB name',default='Locidex Database')
@@ -153,10 +153,15 @@ def add_args(parser):
     parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
     parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
                         action='store_true')
+    return parser
+    
 
 
 
-def run(cmd_args):
+def run(cmd_args=None):
+    if cmd_args is None:
+        parser = add_args()
+        cmd_args = parser.parse_args()
     #cmd_args = parse_args()
     input_file = cmd_args.input_file
     outdir = cmd_args.outdir
@@ -199,13 +204,9 @@ def run(cmd_args):
         oh.write(json.dumps(run_data,indent=4))
 
 
-
-
-
-
 # call main function
-#if __name__ == '__main__':
-#    run()
+if __name__ == '__main__':
+    run()
 
 
 

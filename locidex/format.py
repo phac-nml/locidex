@@ -199,29 +199,34 @@ class locidex_format:
                 self.seq_idx += 1
 
 
-def add_args(sub_parser):
-
-    sub_parser.add_argument('-i','--input', type=str, required=True,help='Input directory of fasta files or input fasta')
-    sub_parser.add_argument('-o', '--outdir', type=str, required=True, help='Output directory to put results')
-    sub_parser.add_argument('--min_len_frac', type=int, required=False, help='Used to calculate individual sequence minimum acceptable length (0 - 1)',
+def add_args(parser=None):
+    if parser is None:
+        parser = ArgumentParser(
+            description="Locidex: Format sequences for a database.",)
+    parser.add_argument('-i','--input', type=str, required=True,help='Input directory of fasta files or input fasta')
+    parser.add_argument('-o', '--outdir', type=str, required=True, help='Output directory to put results')
+    parser.add_argument('--min_len_frac', type=int, required=False, help='Used to calculate individual sequence minimum acceptable length (0 - 1)',
                         default=0.7)
-    sub_parser.add_argument('--max_len_frac', type=int, required=False, help='Used to calculate individual sequence maximimum acceptable length (1 - n)',
+    parser.add_argument('--max_len_frac', type=int, required=False, help='Used to calculate individual sequence maximimum acceptable length (1 - n)',
                         default=1.3)
-    sub_parser.add_argument('--min_ident', type=float, required=False, help='Global minumum percent identity required for match',
+    parser.add_argument('--min_ident', type=float, required=False, help='Global minumum percent identity required for match',
                         default=80.0)
-    sub_parser.add_argument('--min_match_cov', type=float, required=False, help='Global minumum percent hit coverage identity required for match',
+    parser.add_argument('--min_match_cov', type=float, required=False, help='Global minumum percent hit coverage identity required for match',
                         default=80.0)
-    sub_parser.add_argument('--translation_table', type=int, required=False,
+    parser.add_argument('--translation_table', type=int, required=False,
                         help='output directory', default=11)
-    sub_parser.add_argument('-n', '--not_coding', required=False, help='Skip translation',
+    parser.add_argument('-n', '--not_coding', required=False, help='Skip translation',
                         action='store_true')
-    sub_parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
-    sub_parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
+    parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
+    parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
                         action='store_true')
+    return parser
 
+def run(cmd_args=None):
+    if cmd_args is None:
+        parser = add_args()
+        cmd_args = parser.parse_args()
 
-def run(args):
-    cmd_args = args
     input = cmd_args.input
     outdir = cmd_args.outdir
     min_len_frac = cmd_args.min_len_frac
@@ -267,8 +272,8 @@ def run(args):
 
 
 # call main function
-#if __name__ == '__main__':
-#    run()
+if __name__ == '__main__':
+    run()
 
 
 

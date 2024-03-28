@@ -13,15 +13,17 @@ import pandas as pd
 from locidex.version import __version__
 
 
-def add_args(sub_parser):
-    #parser = ArgumentParser(
-    #    description="Locidex merge: Concatonate set of input profile.json files into  a tsv table")
+def add_args(parser=None):
+    if parser is None:
+        parser = ArgumentParser(
+            description="Locidex merge: Concatonate set of input profile.json files into  a tsv table")
 
-    sub_parser.add_argument('-i','--input', type=str, required=True,help='Input file to report', action='append', nargs='+')
-    sub_parser.add_argument('-o', '--outdir', type=str, required=True, help='Output file to put results')
-    sub_parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
-    sub_parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
+    parser.add_argument('-i','--input', type=str, required=True,help='Input file to report', action='append', nargs='+')
+    parser.add_argument('-o', '--outdir', type=str, required=True, help='Output file to put results')
+    parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
+    parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
                         action='store_true')
+    return parser
 
 
 def get_file_list(input_files):
@@ -53,7 +55,10 @@ def read_file_list(file_list):
 
 
 
-def run(cmd_args):
+def run(cmd_args=None):
+    if cmd_args is None:
+        parser = add_args()
+        cmd_args = parser.parse_args()
     analysis_parameters = vars(cmd_args)
     #Input Parameters
     input_files = cmd_args.input[0]
@@ -84,7 +89,7 @@ def run(cmd_args):
 
 
 # call main function
-#if __name__ == '__main__':
-#    run()
+if __name__ == '__main__':
+    run()
 
 

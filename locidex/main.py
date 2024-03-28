@@ -10,7 +10,7 @@ tasks = {
     'report': (report, 'Filter a sequence store and produce and extract of blast results and gene profile'),
     'merge':  (merge, 'Merge a set of gene profiles into a standard profile format'),
     'format': (format, 'Format fasta files from other MLST databases for use with locidex build'),
-    'build': (build, 'Builds locidex db'),
+    'build': (build, 'Build a locidex database'),
 }
 
 

@@ -16,8 +16,10 @@ from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BLAST_TABLE_COLS, DB_
 from locidex.version import __version__
 from locidex.classes.aligner import perform_alignment, aligner
 
-def add_args(parser):
-
+def add_args(parser=None):
+    if parser is None:
+        parser = ArgumentParser(
+            description="Locidex: Extract",)
 
     parser.add_argument('-i','--in_fasta', type=str, required=True,help='Query assembly sequence file (fasta)')
     parser.add_argument('-o', '--outdir', type=str, required=True, help='Output directory to put results')
@@ -57,7 +59,7 @@ def add_args(parser):
     parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
     parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
                         action='store_true')
-
+    return parser
 
 def run_extract(config):
     # Input Parameters
@@ -238,7 +240,10 @@ def run_extract(config):
 
 
 
-def run(cmd_args):
+def run(cmd_args=None):
+    if cmd_args is None:
+        parser = add_args()
+        cmd_args = parser.parser_args()
     #cmd_args = parse_args()
     analysis_parameters = vars(cmd_args)
     config_file = cmd_args.config
@@ -256,6 +261,6 @@ def run(cmd_args):
 
 
 # call main function
-#if __name__ == '__main__':
-#    run()
+if __name__ == '__main__':
+    run()
 
