@@ -188,6 +188,7 @@ def run(cmd_args=None):
     
     #run_data['result_file'] = os.path.join(outdir)
     obj = locidex_build(input_file, outdir,config=config,seq_columns={'nucleotide':'dna_seq','protein':'aa_seq'},force=force)
+    print(outdir)
     if obj.status == False:
         print(f'Error something went wrong building the db, check error messages {obj.messages}')
         sys.exit()
