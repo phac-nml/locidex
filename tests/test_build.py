@@ -118,7 +118,7 @@ def test_validate_field_continuity(output_directory):
 
 
     
-#@pytest.mark.skip(reason="BLAST versions provide different database structure and output results. Need to fix version to 2.15.0 and try to find better testing logic")
+@pytest.mark.skip(reason="BLAST versions provide different database structure and output results. Need to fix version to 2.15.0 and try to find better testing logic")
 def test_file_outputs(output_directory):
     """
     Make sure all required blast outputs are created
@@ -129,7 +129,6 @@ def test_file_outputs(output_directory):
     expected_data = get_all_file_paths(EXPECTED_DATA_OUT)
     output_files = [i[1] for i in output_data]
     expected_files = [i[1] for i in expected_data]
-    print(output_files)
     assert set(output_files) == set(expected_files)
 
     outputs_sorted = sorted(output_data, key=lambda x: x[1])
