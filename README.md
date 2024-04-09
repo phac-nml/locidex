@@ -182,7 +182,7 @@ EXAMPLE: to extract loci sequences from an input genome, reporting just extracte
 
 ### Report
 
-Produce loci hash profiles in multiple formats (json, tsv, parquet)
+Produce loci hash profiles in multiple formats (json, tsv)
 
 - Filter results based on user criteria
 - Multi-copy loci handling
@@ -196,7 +196,12 @@ A Sequence store (`seq_store.json`) object produced by the 'search' function.
 
 #### Output
 
-[INSERT REPORT OUTPUT]
+```
+{out folder name}
+├── nucleotide.hits.txt
+├── profile.json
+└── protein.hits.txt  
+```
 
 ### Merge
 
