@@ -1,0 +1,7 @@
+numba>=0.57.1
+numpy>=1.24.4
+tables>=3.8.0
+six>=1.16.0
+pandas>=2.0.2
+biopython>=1.83
+pyrodigal>=3.0.0
