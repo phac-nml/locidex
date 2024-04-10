@@ -66,7 +66,6 @@ class blast_search:
             command.append('-parse_seqids')
         if self.output_db_path != None:
             command +=['-out', self.output_db_path]
-
         return run_command(" ".join([str(x) for x in command]))
 
     def is_blast_db_valid(self):
@@ -92,7 +91,7 @@ class blast_search:
             if p == 'parse_seqids':
                 command.append(f'-{p}')
             else:
-                command += [f'-{p}', f'{self.blast_params[p]}']
+                command += [f'-{p}', f'{self.blast_params[p]}']        
         return run_command(" ".join([str(x) for x in command]))
 
 
