@@ -208,7 +208,6 @@ class extractor:
     def remove_redundant_hits_dual_key(self,df,locus_col, seqid_col, bitscore_col, overlap_threshold=1):
         seq_id_list = list(df[seqid_col].unique())
         filter_df = []
-        df.to_csv("/home/jarobert/tmp.txt",sep="\t",header=True)
         for seqid in seq_id_list:
             subset = df[df[seqid_col] == seqid]
             prev_contig_id = ''
