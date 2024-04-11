@@ -205,6 +205,61 @@ class extractor:
 
         return pd.concat(filter_df, ignore_index=True)
 
+    def remove_redundant_hits_dual_key(self,df,locus_col, seqid_col, bitscore_col, overlap_threshold=1):
+        seq_id_list = list(df[seqid_col].unique())
+        filter_df = []
+        df.to_csv("/home/jarobert/tmp.txt",sep="\t",header=True)
+        for seqid in seq_id_list:
+            subset = df[df[seqid_col] == seqid]
+            prev_contig_id = ''
+            prev_locus_id = ''
+            prev_index = -1
+            prev_contig_start = -1
+            prev_contig_end = -1
+            prev_score = 0
+            filter_rows = []
+            for idx, row in subset.iterrows():
+                contig_id = row[seqid_col]
+                contig_start = row['ext_start']
+                contig_end = row['ext_end']
+                score = float(row[bitscore_col])
+                locus_id = row[locus_col]
+
+                if prev_contig_id == '':
+                    prev_index = idx
+                    prev_contig_id = contig_id
+                    prev_contig_start = contig_start
+                    prev_contig_end = contig_end
+                    prev_score = score
+                    prev_locus_id = locus_id
+                    continue
+
+                if locus_id == prev_locus_id and contig_id == prev_contig_id: 
+                    if (contig_start >= prev_contig_start and contig_start <= prev_contig_end) or (
+                            contig_end >= prev_contig_start and contig_end <= prev_contig_end):
+                        
+                        overlap = abs(contig_start - prev_contig_end)
+
+                        if overlap > overlap_threshold:
+                            if prev_score < score:
+                                filter_rows.append(prev_index)
+                            else:
+                                filter_rows.append(idx)
+
+                prev_index = idx
+                prev_contig_id = contig_id
+                prev_contig_start = contig_start
+                prev_contig_end = contig_end
+                prev_score = score
+                prev_locus_id = locus_id
+
+
+            valid_ids = list( set(subset.index) - set(filter_rows)  )
+
+            filter_df.append(subset.filter(valid_ids, axis=0))
+
+
+        return pd.concat(filter_df, ignore_index=True)
 
     def recursive_filter_overlap_records(self,df, seqid_col, bitscore_col, sort_cols, ascending_cols, overlap_threshold=1):
         size = len(df)
@@ -215,7 +270,17 @@ class extractor:
             df = self.remove_redundant_hits(df, seqid_col, bitscore_col, overlap_threshold=overlap_threshold)
             prev_size = size
             size = len(df)
-
+        return df.sort_values(sort_cols,ascending=ascending_cols).reset_index(drop=True)
+    
+    def recursive_filter_overlap_records_dual_key(self,df, locus_col, seqid_col, bitscore_col, sort_cols, ascending_cols, overlap_threshold=1):
+        size = len(df)
+        prev_size = 0
+        while size != prev_size:
+            df = df.sort_values(sort_cols,
+                                ascending=ascending_cols).reset_index(drop=True)
+            df = self.remove_redundant_hits_dual_key(df, locus_col, seqid_col, bitscore_col, overlap_threshold=overlap_threshold)
+            prev_size = size
+            size = len(df)
         return df.sort_values(sort_cols,ascending=ascending_cols).reset_index(drop=True)
 
     def extract_seq(self,loci_data,seq_data):
@@ -278,12 +343,13 @@ class extractor:
         return seqs
 
     def extend(self,df,seqid_col, queryid_col, qstart_col, qend_col, sstart_col,send_col,slen_col, qlen_col, bitscore_col, overlap_threshold=1):
-        #sort_cols = [seqid_col, 'locus_name','ext_start', 'ext_end', bitscore_col]
-        #ascending_cols = [True, True, True, True, False]
-        #df = self.recursive_filter_overlap_records(df, 'sseqid', bitscore_col, sort_cols, ascending_cols, overlap_threshold)
-        #df = df.sort_values(sort_cols,
-        #                    ascending=ascending_cols).reset_index(drop=True)
+        sort_cols = [seqid_col, 'locus_name','ext_start', 'ext_end', bitscore_col]
+        ascending_cols = [True, True, True, True, False]
+        df = df.sort_values(sort_cols, ascending=ascending_cols).reset_index(drop=True)
+        df = self.recursive_filter_overlap_records_dual_key(df, 'locus_name','sseqid', bitscore_col, sort_cols, ascending_cols, overlap_threshold)
+        df = df.sort_values(sort_cols, ascending=ascending_cols).reset_index(drop=True)
         queries = df[queryid_col].to_list()
+
 
         #Remove incomplete hits when complete ones are present
         filtered = []
