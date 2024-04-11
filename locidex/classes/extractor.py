@@ -5,9 +5,9 @@ class extractor:
     seqs = {}
     df = pd.DataFrame()
     def __init__(self,df,seq_data,sseqid_col,queryid_col,qstart_col,qend_col,qlen_col,sstart_col,send_col,slen_col,sstrand_col,bitscore_col,overlap_thresh=100,extend_threshold_ratio = 0.2,filter_contig_breaks=True):
-        print('hi')
         self.filter_contig_breaks = filter_contig_breaks
         self.df = self.set_extraction_pos(df, sstart_col, send_col)
+
         self.is_complete(self.df,qstart_col,qend_col,qlen_col)
         self.is_contig_boundary(self.df,'ext_start','ext_end',slen_col)
         if filter_contig_breaks:
@@ -17,19 +17,14 @@ class extractor:
         pcols = [qstart_col,qend_col,sstart_col,send_col]
         for c in pcols:
             self.df[c] = self.df[c].apply(lambda x: x - 1)
-        #self.df = self.fix_postioning(self.df)
-
-        sort_cols = ['locus_name', sseqid_col, sstart_col, send_col, bitscore_col]
+        sort_cols = [sseqid_col, 'locus_name', sstart_col, send_col, bitscore_col]
         ascending_cols = [True, True, True, True, False]
         self.df = self.df.sort_values(sort_cols,ascending=ascending_cols).reset_index(drop=True)
         self.df = self.recursive_filter_redundant_queries(self.df, 'locus_name', sseqid_col, bitscore_col, 
                                                           sort_cols, ascending_cols, overlap_threshold=1)
 
-        #self.df = self.recursive_filter_overlap_records(self.df, sseqid_col, bitscore_col, sort_cols, ascending_cols, overlap_threshold=overlap_thresh)
-        self.df = self.extend(self.df,sseqid_col, queryid_col, qstart_col, qend_col, sstart_col,send_col,slen_col, qlen_col, bitscore_col, overlap_threshold=overlap_thresh)
 
-        #self.df = self.recursive_filter_overlap_records(self.df, sseqid_col, bitscore_col, sort_cols, ascending_cols,
-        #                                                overlap_threshold=overlap_thresh)
+        self.df = self.extend(self.df,sseqid_col, queryid_col, qstart_col, qend_col, sstart_col,send_col,slen_col, qlen_col, bitscore_col, overlap_threshold=overlap_thresh)
         self.df = self.set_extraction_pos(self.df, sstart_col, send_col)
         loci_ranges = self.group_by_locus(self.df,sseqid_col, queryid_col,qlen_col,extend_threshold_ratio)
         self.seqs = self.extract_seq(loci_ranges, seq_data)
@@ -283,13 +278,11 @@ class extractor:
         return seqs
 
     def extend(self,df,seqid_col, queryid_col, qstart_col, qend_col, sstart_col,send_col,slen_col, qlen_col, bitscore_col, overlap_threshold=1):
-        sort_cols = ['locus_name',seqid_col,'ext_start', 'ext_end', bitscore_col]
-        ascending_cols = [True, True, True, True, False]
-
-        df = self.recursive_filter_overlap_records(df, 'locus_name', bitscore_col, sort_cols, ascending_cols, overlap_threshold)
-        df = df.sort_values(sort_cols,
-                            ascending=ascending_cols).reset_index(drop=True)
-
+        #sort_cols = [seqid_col, 'locus_name','ext_start', 'ext_end', bitscore_col]
+        #ascending_cols = [True, True, True, True, False]
+        #df = self.recursive_filter_overlap_records(df, 'sseqid', bitscore_col, sort_cols, ascending_cols, overlap_threshold)
+        #df = df.sort_values(sort_cols,
+        #                    ascending=ascending_cols).reset_index(drop=True)
         queries = df[queryid_col].to_list()
 
         #Remove incomplete hits when complete ones are present
@@ -303,7 +296,6 @@ class extractor:
             else:
                 filtered.append(subset)
         df = pd.concat(filtered, ignore_index=True)
-
         trunc_records = df[df['is_complete'] == False]
         if len(trunc_records) == 0:
             return df
@@ -377,10 +369,10 @@ class extractor:
         df['is_extended'] = is_extended
         df['is_5p_extended'] = five_p_ext
         df['is_3p_extended'] = three_p_ext
+
         return df
 
     def group_by_locus(self,df,seqid_col,query_col,qlen_col,extend_threshold_ratio = 0.2):
-        print(self.df.columns)
         sort_cols = ['locus_name',query_col,'ext_start', 'ext_end']
         ascending_cols = [True, True, True, True]
         df = df.sort_values(sort_cols,
@@ -464,7 +456,6 @@ class extractor:
                 'is_3prime_boundary':is_3prime_boundary
 
             })
-
         return loci
 
 
