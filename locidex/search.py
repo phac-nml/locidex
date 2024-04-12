@@ -231,7 +231,7 @@ def run_search(config):
     run_data['result_file'] = os.path.join(outdir, "seq_store.json")
     del (filtered_df)
 
-    with open(os.path.join(outdir, run_data['result_file']), "w") as fh:
+    with open(run_data['result_file'], "w") as fh:
         fh.write(json.dumps(store_obj.record, indent=4))
 
     run_data['analysis_end_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")

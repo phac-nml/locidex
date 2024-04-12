@@ -65,6 +65,14 @@ def parse_args():
     return parser.parse_args()
 
 
+def write_seq_info(seq_data,out_file):
+    data = {}
+    for idx,entry in enumerate(seq_data):
+        data[idx] = entry
+    pd.DataFrame.from_dict(data,orient='index').to_csv(out_file,sep="\t",header=True,index=False)
+
+
+
 def run_extract(config):
     # Input Parameters
     input_fasta = config['in_fasta']
@@ -155,6 +163,7 @@ def run_extract(config):
         'evalue': min_evalue,
         'max_target_seqs': max_target_seqs,
         'num_threads': n_threads,
+        'word_size':11
     }
     nt_db = "{}.fasta".format(blast_database_paths['nucleotide'])
     hit_file = os.path.join(blast_dir_base, "hsps.txt")
@@ -170,7 +179,8 @@ def run_extract(config):
     filter_options = {
         'evalue': {'min': None, 'max': min_evalue, 'include': None},
         'pident': {'min': min_dna_ident, 'max': None, 'include': None},
-        'qcovs': {'min': min_dna_match_cov, 'max': None, 'include': None}
+        'qcovs': {'min': min_dna_match_cov, 'max': None, 'include': None},
+        'qcovhsp': {'min': min_dna_match_cov, 'max': None, 'include': None},
     }
 
     hit_df = parse_blast(hit_file, BLAST_TABLE_COLS, filter_options).df
@@ -193,6 +203,7 @@ def run_extract(config):
                       qlen_col='qlen',sstart_col='sstart',send_col='send',slen_col='slen',sstrand_col='sstrand',
                       bitscore_col='bitscore',filter_contig_breaks=filt_trunc)
 
+    write_seq_info(exobj.seqs,os.path.join(outdir,'seq_data.txt'))
     exobj.df.to_csv(os.path.join(outdir,'filtered.hsps.txt'),header=True,sep="\t",index=False)
 
     nt_db_seq_obj = seq_intake(nt_db, 'fasta', 'source', translation_table, perform_annotation=False, skip_trans=True)

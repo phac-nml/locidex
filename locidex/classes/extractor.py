@@ -17,8 +17,10 @@ class extractor:
         pcols = [qstart_col,qend_col,sstart_col,send_col]
         for c in pcols:
             self.df[c] = self.df[c].apply(lambda x: x - 1)
-        sort_cols = [sseqid_col, 'locus_name', sstart_col, send_col, bitscore_col]
-        ascending_cols = [True, True, True, True, False]
+        
+        self.df = self.get_best_hit_query(self.df)
+        sort_cols = [sseqid_col, 'locus_name', sstart_col, bitscore_col, send_col]
+        ascending_cols = [True, True, True, False, False]
         self.df = self.df.sort_values(sort_cols,ascending=ascending_cols).reset_index(drop=True)
         self.df = self.recursive_filter_redundant_queries(self.df, 'locus_name', sseqid_col, bitscore_col, 
                                                           sort_cols, ascending_cols, overlap_threshold=1)
@@ -63,6 +65,55 @@ class extractor:
                 df.loc[idx, 'ext_start'] = start
                 df.loc[idx, 'ext_end'] = end
         return df
+
+    def get_best_hit_query(self,df):
+        sort_cols = ['sseqid', 'locus_name', 'bitscore','qlen','qcovhsp','ext_start','ext_end']
+        ascending_cols = [True, True, False, False, False,True, False]
+        df = df.sort_values(sort_cols,
+                                ascending=ascending_cols).reset_index(drop=True)
+        loci = list(df['locus_name'].unique())
+        filter_df = []
+        for locus_name in loci:
+            subset = df[df['locus_name'] == locus_name]
+            if len(subset) == 1:
+                filter_df.append(subset)
+                continue
+            
+            prev_index  = 0
+            prev_contig_id = ''
+            prev_contig_start = -1
+            prev_contig_end = -1
+            prev_score = 0
+            filter_rows = []
+            for idx, row in subset.iterrows():
+                contig_id = row['sseqid']
+                contig_start = row['ext_start']
+                contig_end = row['ext_end']
+                score = float(row['bitscore'])
+
+                if contig_id == prev_contig_id:
+                    if (contig_start >= prev_contig_start and contig_start <= prev_contig_end) or (
+                            contig_end >= prev_contig_start and contig_end <= prev_contig_end):
+                        overlap = abs(contig_start - prev_contig_end)
+
+                        if overlap > 1:
+                            if prev_score < score:
+                                filter_rows.append(prev_index)
+                            else:
+                                filter_rows.append(idx)
+                                continue
+
+                
+                prev_index = idx
+                prev_contig_id = contig_id
+                prev_contig_start = contig_start
+                prev_contig_end = contig_end
+                prev_score = score
+            valid_ids = list( set(subset.index) - set(filter_rows)  )
+            filter_df.append(subset.filter(valid_ids, axis=0))
+
+        return pd.concat(filter_df, ignore_index=True)
+
 
     def recursive_filter_redundant_queries(self,df, locus_col, sseqid_col, bitscore_col, sort_cols, ascending_cols, overlap_threshold=1):
         size = len(df)
@@ -294,6 +345,13 @@ class extractor:
                 is_reverse = row['reverse']
                 is_complement = row['complement']
                 is_extended = row['is_extended']
+                is_5p_extended = row['is_5p_extended']
+                is_3p_extended = row['is_3p_extended']
+                if is_reverse and is_3p_extended:
+                    start+=1
+                if is_complement and is_3p_extended:
+                    end-=1
+
 
 
                 is_complete = row['is_complete']
@@ -326,15 +384,23 @@ class extractor:
                         cds_valid = False
 
 
-                    seqs.append({'seqid':seqid, 'id':str(id),
-                                 'locus_name':locus_name,'query_id':query_id,
+                    seqs.append({ 'id':str(id),'seqid':seqid,
+                                 'locus_name':locus_name,'query_id':query_id,'qlen':row['qlen'],
                                  'start':start, 'end':end,
+                                 'sub_start':row['sub_start'],
+                                 'sub_ent':row['sub_end'],
+                                 'ident':row['ident'],
+                                 'qcovs':row['qcovs'],
+                                 'bitscore':row['bitscore'],
                                  'reverse':is_reverse,
                                  'complement':is_complement,
                                  'is_complete':is_complete,
                                  'is_trunc':is_trunc,
                                  'fivep_trunc':fivep_trunc,
                                  'threep_trunc':threep_trunc,
+                                 'is_extended':is_extended,
+                                 'is_5p_extended':is_5p_extended,
+                                 'is_3p_extended':is_3p_extended,
                                  'seq':seq,'start_codon':start_codon,'stop_codon':stop_codon,
                                  'is_stop_valid':is_stop_valid,'is_start_valid':is_start_valid,
                                  'is_cds_valid':cds_valid})
@@ -342,8 +408,8 @@ class extractor:
         return seqs
 
     def extend(self,df,seqid_col, queryid_col, qstart_col, qend_col, sstart_col,send_col,slen_col, qlen_col, bitscore_col, overlap_threshold=1):
-        sort_cols = [seqid_col, 'locus_name','ext_start', 'ext_end', bitscore_col]
-        ascending_cols = [True, True, True, True, False]
+        sort_cols = [seqid_col, 'locus_name','ext_start', bitscore_col, 'ext_end', ]
+        ascending_cols = [True, True, True, False, False]
         df = df.sort_values(sort_cols, ascending=ascending_cols).reset_index(drop=True)
         df = self.recursive_filter_overlap_records_dual_key(df, 'locus_name','sseqid', bitscore_col, sort_cols, ascending_cols, overlap_threshold)
         df = df.sort_values(sort_cols, ascending=ascending_cols).reset_index(drop=True)
@@ -466,6 +532,10 @@ class extractor:
         for idx, row in df.iterrows():
             query_id = row[query_col]
             locus_name = row['locus_name']
+            ident = row['pident']
+            cov = row['qcovs']
+            sub_start = row['sstart']
+            sub_end = row['send']
             start = row['ext_start']
             end = row['ext_end']
             qlen = row[qlen_col]
@@ -509,8 +579,14 @@ class extractor:
             loci[locus_name].append({
                 'seqid':seqid,
                 'query_id':query_id,
+                'qlen':row['qlen'],
+                'bitscore':row['bitscore'],
                 'start':start,
                 'end':end,
+                'sub_start':sub_start,
+                'sub_end':sub_end,
+                'ident':ident,
+                'qcovs':cov,
                 'reverse':is_reverse,
                 'complement':is_complement,
                 'is_complete':is_complete,

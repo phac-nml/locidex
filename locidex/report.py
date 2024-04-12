@@ -7,7 +7,7 @@ from datetime import datetime
 
 import pandas as pd
 
-from locidex.constants import SEARCH_RUN_DATA
+from locidex.constants import SEARCH_RUN_DATA, START_CODONS, STOP_CODONS
 from locidex.utils import calc_md5
 from locidex.version import __version__
 
@@ -60,6 +60,8 @@ class seq_reporter:
         self.build_profile()
 
 
+
+
     def filter_queries(self):
         failed_seqids = set()
         for seq_id in self.query_seq_data:
@@ -68,10 +70,14 @@ class seq_reporter:
                 stop_count = int(self.query_seq_data[seq_id]['count_internal_stop'])
             else:
                 stop_count = 0
-
             if ambig_count > self.max_ambig_count or stop_count > self.max_int_stop_count:
                 failed_seqids.add(seq_id)
-
+            if self.mode == 'conservative':
+                start_codon = self.query_seq_data[seq_id]["start_codon"]
+                stop_codon = self.query_seq_data[seq_id]["stop_codon"]
+                if start_codon not in START_CODONS or stop_codon not in STOP_CODONS:
+                    failed_seqids.add(seq_id)
+                
         self.failed_seqids =  failed_seqids
 
     def build_profile(self):
