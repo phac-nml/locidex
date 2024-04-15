@@ -2,7 +2,7 @@ import pytest, os
 import pandas as pd
 import locidex.classes.blast
 from locidex.constants import BLAST_TABLE_COLS
-from locidex.classes import run_command
+
 
 
 PACKAGE_ROOT = os.path.dirname(locidex.__file__)
