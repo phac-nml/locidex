@@ -198,12 +198,13 @@ class seq_reporter:
         hit_loci_names = self.get_hit_locinames()
         loci_lookup = self.get_loci_to_query_map(hit_loci_names,dbtype)
 
+
         for locus in loci_lookup:
             loci_lookup[locus] = list(set(loci_lookup[locus]) - self.failed_seqids)
 
-
         
         self.populate_profile()
+
 
         loci_names_to_assign = set(self.profile.keys())
         assigned_loci = set()
@@ -211,11 +212,12 @@ class seq_reporter:
         #Fix the values of any loci where there is a single matching query or no matching queries
         for locus_name in self.profile:
             query_hashes = self.profile[locus_name].split(',')
-            num_queries = len(query_hashes)
+            num_queries = len(loci_lookup[locus])
             if num_queries == 1 and query_hashes[0] != '-':
                 assigned_loci.add(locus_name )
             elif locus_name not in loci_lookup or len(loci_lookup[locus_name]) == 0:
                 assigned_loci.add(locus_name)
+                self.profile[locus_name] = '-'
 
         loci_names_to_assign = loci_names_to_assign - assigned_loci
 
@@ -243,7 +245,7 @@ class seq_reporter:
                         del(profile[locus_name][qid])
 
         self.locus_profile = profile
-        self.populate_profile()
+
 
 
     def get_matching_ref_seq_info(self,qid, dbtype):
@@ -356,8 +358,6 @@ def run():
         profile = {sample_name: allele_obj.profile}
         with open(os.path.join(outdir,"profile.json"),"w") as out:
             json.dump(profile,out,indent=4)
-
-    if report_format == 'profile':
         allele_obj.extract_hit_data('nucleotide').to_csv(os.path.join(outdir,"nucleotide.hits.txt"),header=True,sep="\t", index=False)
         allele_obj.extract_hit_data('protein').to_csv(os.path.join(outdir, "protein.hits.txt"), header=True, sep="\t", index=False)
 
