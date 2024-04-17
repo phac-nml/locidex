@@ -184,7 +184,23 @@ Produce loci hash profiles in multiple formats (json, tsv, parquet)
 - Filter results based on user criteria
 - Multi-copy loci handling
 
-**Optional:** (Not required for MVP) Produce concatenated fasta sequences based on allele profiles
+QA Modes:
+
+Conservative:
+A locus is reported with an allele call only if all of the following are true. (Only works with protein coding schemes)
+1) Match identity >= threshold
+2) Match coverage >= threshold
+3) Valid start codon present
+4) Valid stop codon present
+5) No internal stop codons
+6) Only a single hit meets the criteria above
+
+Normal
+A locus is reported with an allele call only if all of the following are true. 
+1) Match identity >= threshold
+2) Match coverage >= threshold
+3) Multiple matches to a single locus are hashed to produce an allele call which is the hash of the (n) match hashes found
+
 #### Input
 
 A Sequence store (`seq_store.json`) object produced by the 'search' function.
@@ -193,7 +209,14 @@ A Sequence store (`seq_store.json`) object produced by the 'search' function.
 
 #### Output
 
-[INSERT REPORT OUTPUT]
+```
+{out folder name}
+├── profile.json   
+└── results.json  
+```
+
+
+
 
 ### Merge
 
