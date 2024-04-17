@@ -208,6 +208,7 @@ def run_extract(config):
                                 'ref_id':record['query_id'],
                                 'ref_seq':nt_db_seq_data[record['query_id']],
                                 'ext_seq':record['seq']}
+                    
     if mode == 'trim':
         aln_obj = aligner(trim_fwd=True,trim_rev=True,ext_fwd=False, ext_rev=False,fill=False, snps_only=False)
     elif mode == 'snps':

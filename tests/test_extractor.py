@@ -1,11 +1,10 @@
 import pytest
 import os
-import pandas as pd
 import locidex.classes.blast
 from locidex.constants import BLAST_TABLE_COLS
 from locidex.classes.extractor import extractor
 from locidex.classes.seq_intake import seq_intake
-from locidex.classes.db import db_config, search_db_conf
+from locidex.classes.db import db_config
 
 
 #could be tested via locidex extract -i ./locidex/example/search/NC_003198.1.fasta -d ./locidex/example/build_db_mlst_out/  -o tmp --force
@@ -26,8 +25,6 @@ def blast_db_and_search(tmpdir,input_db_path):
                                                         blast_columns = BLAST_TABLE_COLS,
                                                         filter_options={'bitscore':{'min':600, 'max':None, 'include':None}})
     return parse_blast_obj
-    ## you need to run through db, then blast, then seq intake, then you can test extractor. 
-    ## pass
 
 @pytest.fixture
 def seq_intake_fixture():
