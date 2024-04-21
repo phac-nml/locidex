@@ -12,17 +12,15 @@ from locidex.classes.extractor import extractor
 from locidex.classes.blast import blast_search, parse_blast
 from locidex.classes.db import search_db_conf, db_config
 from locidex.classes.seq_intake import seq_intake, seq_store
-from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BLAST_TABLE_COLS, DB_CONFIG_FIELDS, DB_EXPECTED_FILES, NT_SUB
+from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BLAST_TABLE_COLS, DB_CONFIG_FIELDS, DB_EXPECTED_FILES, NT_SUB, EXTRACT_MODES
 from locidex.version import __version__
 from locidex.classes.aligner import perform_alignment, aligner
 
-def parse_args():
-    class CustomFormatter(ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter):
-        pass
+def add_args(parser=None):
+    if parser is None:
+        parser = ArgumentParser(
+            description="Locidex: Extract",)
 
-    parser = ArgumentParser(
-        description="Locidex: Extract sequence features from an assembly using a locidex database",
-        formatter_class=CustomFormatter)
     parser.add_argument('-i','--in_fasta', type=str, required=True,help='Query assembly sequence file (fasta)')
     parser.add_argument('-o', '--outdir', type=str, required=True, help='Output directory to put results')
     parser.add_argument('-n', '--name', type=str, required=False, help='Sample name to include default=filename')
@@ -48,8 +46,8 @@ def parse_args():
                         default=10)
     parser.add_argument('--keep_truncated', required=False, help='Keep sequences where match is broken at the end of a sequence',
                         action='store_true')
-    parser.add_argument('--mode', type=str, required=False, help='(raw, trim, snps, extend)',
-                        default='trim')
+    parser.add_argument('--mode', type=str, required=False, help='Select from the options provided',
+                        default='trim', choices=EXTRACT_MODES)
     parser.add_argument('--n_threads','-t', type=int, required=False,
                         help='CPU Threads to use', default=1)
     parser.add_argument('--format', type=str, required=False,
@@ -61,9 +59,7 @@ def parse_args():
     parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
     parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
                         action='store_true')
-
-    return parser.parse_args()
-
+    return parser
 
 def write_seq_info(seq_data,out_file):
     data = {}
@@ -91,7 +87,7 @@ def run_extract(config):
     mode = config['mode'].lower()
 
 
-    if not mode in ['snps','trim','raw','extend']:
+    if not mode in EXTRACT_MODES:
         print(f'Provided mode for allele extraction is not valid: {mode}, needs to be one of (snps, trim, extend, raw)')
         sys.exit()
 
@@ -167,7 +163,6 @@ def run_extract(config):
     }
     nt_db = "{}.fasta".format(blast_database_paths['nucleotide'])
     hit_file = os.path.join(blast_dir_base, "hsps.txt")
-
     obj = blast_search(input_db_path=db_path, input_query_path=nt_db,
                        output_results=hit_file, blast_params=blast_params, blast_method='blastn',
                        blast_columns=BLAST_TABLE_COLS,create_db=True)
@@ -224,6 +219,7 @@ def run_extract(config):
                                 'ref_id':record['query_id'],
                                 'ref_seq':nt_db_seq_data[record['query_id']],
                                 'ext_seq':record['seq']}
+                    
     if mode == 'trim':
         aln_obj = aligner(trim_fwd=True,trim_rev=True,ext_fwd=False, ext_rev=False,fill=False, snps_only=False)
     elif mode == 'snps':
@@ -255,8 +251,11 @@ def run_extract(config):
 
 
 
-def run():
-    cmd_args = parse_args()
+def run(cmd_args=None):
+    if cmd_args is None:
+        parser = add_args()
+        cmd_args = parser.parser_args()
+    #cmd_args = parse_args()
     analysis_parameters = vars(cmd_args)
     config_file = cmd_args.config
 

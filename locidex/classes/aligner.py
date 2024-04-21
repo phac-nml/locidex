@@ -219,9 +219,10 @@ class aligner:
         if self.trim_fwd or self.trim_rev or self.ext_fwd or self.ext_rev or self.gap_fill:
             query_seq = self.transform_seq(ref_seq,query_seq,self.trim_fwd,self.trim_rev,
                                       self.ext_fwd, self.ext_rev,self.fill,self.snps_only)
-        (match, diff ) = self.count_identity(ref_seq,query_seq)
+        (match, diff) = self.count_identity(ref_seq,query_seq)
         seq_record['matched_bases'] = match
         seq_record['num_diff'] = diff
+        seq_record['coverage'] = self.calc_coverage(ref_seq,query_seq)
         seq_record['seq'] = query_seq
         return seq_record
 

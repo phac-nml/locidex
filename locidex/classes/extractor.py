@@ -338,10 +338,10 @@ class extractor:
         id = 0
         for locus_name in loci_data:
             for row in loci_data[locus_name]:
-                query_id = row['query_id']
+                query_id = str(row['query_id'])
                 start = row['start']
                 end = row['end'] + 1
-                seqid = row['seqid']
+                seqid = str(row['seqid'])
                 is_reverse = row['reverse']
                 is_complement = row['complement']
                 is_extended = row['is_extended']
@@ -359,10 +359,8 @@ class extractor:
                 threep_trunc = row['is_3prime_boundary']
                 is_trunc = False
                 if fivep_trunc or threep_trunc:
-                    is_trunc = True
-
+                    is_trunc = True        
                 if seqid in seq_data:
-
                     seq = seq_data[seqid]['seq'][start:end]
                     if is_reverse and not is_complement:
                         seq = seq[::-1].translate(NT_SUB)

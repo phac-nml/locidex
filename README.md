@@ -67,7 +67,10 @@ Install the latest master branch version directly from Github:
 
 ### Compatibility
 
-[List out Dependencies and/or packages as appropriate]
+The following list of dependencies also need to be installed in the environment:
+
+- [mafft](https://mafft.cbrc.jp/alignment/software/source.html)
+- [blast](https://www.metagenomics.wiki/tools/blast/install) (requires version 2.15.0)
 
 # Getting Started
 
