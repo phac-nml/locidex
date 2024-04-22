@@ -18,7 +18,8 @@ def add_args(parser=None):
         parser = ArgumentParser(
             description="Locidex Report: Generate a report from search results")
     parser.add_argument('-i','--input', type=str, required=True,help='Input seq_store file to report')
-    parser.add_argument('-f','--fasta', type=str, required=False,help='Optional: Query fasta file used to generate search results')
+    parser.add_argument('--fasta', type=str, required=False,help='Optional: Query fasta file used to generate search results')
+    parser.add_argument('-c', '--config', type=str, required=False, help='Locidex parameter config file (json)')
     parser.add_argument('-o', '--outdir', type=str, required=True, help='Output file to put results')
     parser.add_argument('-n', '--name', type=str, required=False, help='Sample name to include default=filename')
     parser.add_argument('-m', '--mode', type=str, required=False, help='Allele profile assignment [normal,conservative,fuzzy]',default='normal')
@@ -27,7 +28,7 @@ def add_args(parser=None):
     parser.add_argument('-s', '--max_stop', type=int, required=False, help='Maximum number of internal stop codons allowed in a sequence',default=0)
     parser.add_argument('-r', '--match_ident', type=float, required=False, 
                         help='Report match allele if percent difference is >= this value',default=100)
-    parser.add_argument('-r', '--match_cov', type=float, required=False, 
+    parser.add_argument('-l','--match_cov', type=float, required=False, 
                         help='Report match allele if percent coverage is >+ this value',default=100)
     parser.add_argument('--translation_table', type=int, required=False,
                         help='output directory', default=11)
@@ -312,27 +313,23 @@ class seq_reporter:
         return pd.DataFrame.from_dict(data)
 
 
-def run_report(cmd_args=None):
+def run_report(config):
     
-    if cmd_args is None:
-        parser = add_args()
-        cmd_args = parser.parse_args()
-
-    analysis_parameters = vars(cmd_args)
+    analysis_parameters = config
 
     #Input Parameters
-    input_file = cmd_args.input
-    outdir = cmd_args.outdir
-    label = cmd_args.prop
-    sample_name = cmd_args.name
-    force = cmd_args.force
-    mode = cmd_args.mode
-    fasta_file = cmd_args.fasta
-    max_ambig = cmd_args.max_ambig
-    max_int_stop = cmd_args.max_stop
-    match_ident = cmd_args.match_ident
-    match_cov = cmd_args.match_cov
-    translation_table = cmd_args.translation_table
+    input_file = config['input']
+    outdir = config['outdir']
+    label = config['prop']
+    sample_name = config['name']
+    force = config['force']
+    mode = config['mode']
+    fasta_file = config['fasta']
+    max_ambig = config['max_ambig']
+    max_int_stop = config['max_stop']
+    match_ident = config['match_ident']
+    match_cov = config['match_cov']
+    translation_table = config['translation_table']
 
 
     run_data = SEARCH_RUN_DATA
@@ -360,22 +357,23 @@ def run_report(cmd_args=None):
     seq_data = {}
     if fasta_file is not None:
         seq_info = seq_store_dict["query_data"]["query_seq_data"]
-        seq_obj = seq_intake(fasta_file, format, 'CDS', translation_table, perform_annotation=False)
+        seq_obj = seq_intake(fasta_file, 'fasta', 'CDS', translation_table, perform_annotation=False)
         if len(seq_info) != len(seq_obj.seq_data):
             print(f'Error the supplied fasta file: {fasta_file} ({len(seq_obj.seq_data)}) seq_store file: {input_file} ({len(seq_info)}) \
                    do not have the same number of sequences. These files must be matched')
             sys.exit()
-        
-        for id in seq_info:
-            if id not in seq_obj.seq_data:
-                print(f'Error {id} key from seq_store not found in fasta file')
+
+        for i in range(0,len(seq_obj.seq_data)):
+            id = str(i)
+            if id not in seq_info:
+                print(f'Error {id} key from fasta file not in seq_store')
                 sys.exit()
             pid_1 = seq_info[id]["seq_id"]
-            pid_2 = seq_obj.seq_data[id]["seq_id"]
+            pid_2 = seq_obj.seq_data[i]["seq_id"]
             if pid_1 != pid_2:
                 print(f'Error seq_store key for {id}: {pid_1} mismatched to input fasta {id}: {pid_2}. These files must be matched')
                 sys.exit()
-        seq_data = seq_obj.seq_data
+            seq_data[id] = seq_obj.seq_data[i]
 
     allele_obj = seq_reporter(seq_store_dict, method='nucleotide', mode=mode, label=label, filters={},max_ambig=max_ambig,max_int_stop=max_int_stop,match_ident=match_ident)
 
@@ -406,8 +404,9 @@ def run_report(cmd_args=None):
     if len(profile['data']['seq_data']) > 0:
         # add locus information to seq_data
         look_up = {}
-        for locus_name in profile['data']['profile']:
-            h = profile['data']['profile'][locus_name]
+        for locus_name in profile['data']['profile'][sample_name]:
+            h = profile['data']['profile'][sample_name][locus_name]
+            print(h)
             if h not in look_up:
                 look_up[h] = []
             look_up[h].append(locus_name)
