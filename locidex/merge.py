@@ -21,6 +21,8 @@ def add_args(parser=None):
     parser.add_argument('-o', '--outdir', type=str, required=True, help='Output file to put results')
     parser.add_argument('--n_threads','-t', type=int, required=False,
                         help='CPU Threads to use', default=1)
+    parser.add_argument('--linker','-l', type=str, required=False,
+                        help='Linker sequence for alignment', default='NNNNNNNNNNNNNNNNNNNN')
     parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
     parser.add_argument('-a', '--align', required=False, help='Perform alignment with individual loci to produce a concatenated alignment',
                         action='store_true')
@@ -100,6 +102,7 @@ def run_merge(config):
     input_files = config['input'][0]
     outdir = config['outdir']
     perform_align = config['align']
+    linker_seq = config['linker']
     n_threads = config['n_threads']
     force = config['force']
 
@@ -125,9 +128,12 @@ def run_merge(config):
               column='sample_id',
               value=df.index.tolist())
     df.to_csv(os.path.join(outdir,'profile.tsv'),index=False,header=True,sep="\t")
+    sample_names = list(df['sample_id'])
+    del(df)
+    run_data['result_file'] = os.path.join(outdir,"profile.tsv")
 
     #create alignment
-    if perform_align:
+    if perform_align and len(records) > 1:
         pass
         work_dir = os.path.join(outdir,"raw_gene_fastas")
         if not os.path.isdir(work_dir):
@@ -143,8 +149,28 @@ def run_merge(config):
 
         pool.close()
         pool.join()
-        for locus_name in gene_files:
-            parse_align(align)
+
+        loci_names = list(gene_files.keys())
+        alignment = {}
+        for i in range(0,len(results)):
+            alignment[loci_names[i]] = parse_align(results[i])
+            results[i] = None
+        del(results)
+
+        out_align = os.path.join(outdir,'loci_alignment.fas')
+        oh = open(out_align,'w')
+        for sample_id in sample_names:
+            seq = []
+            for locus_name in loci_names:
+                seq.append(alignment[locus_name][sample_id])
+                seq.append(linker_seq)
+            oh.write('>{}\n{}'.format(sample_id,"".join(seq)))
+        oh.close()
+        run_data['alignment_file'] = out_align
+        
+    run_data['analysis_end_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    with open(os.path.join(outdir,"run.json"),'w' ) as fh:
+        fh.write(json.dumps(run_data, indent=4))
 
 
 
