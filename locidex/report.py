@@ -6,7 +6,7 @@ from copy import deepcopy
 from datetime import datetime
 
 import pandas as pd
-
+from locidex.classes.seq_intake import seq_intake
 from locidex.constants import SEARCH_RUN_DATA, START_CODONS, STOP_CODONS
 from locidex.utils import calc_md5
 from locidex.version import __version__
@@ -16,18 +16,21 @@ def add_args(parser=None):
 
     if parser is None:
         parser = ArgumentParser(
-            description="Locidex: Advanced searching and filtering of sequence databases using query sequences")
-    parser.add_argument('-i','--input', type=str, required=True,help='Input file to report')
+            description="Locidex Report: Generate a report from search results")
+    parser.add_argument('-i','--input', type=str, required=True,help='Input seq_store file to report')
+    parser.add_argument('-f','--fasta', type=str, required=False,help='Optional: Query fasta file used to generate search results')
     parser.add_argument('-o', '--outdir', type=str, required=True, help='Output file to put results')
     parser.add_argument('-n', '--name', type=str, required=False, help='Sample name to include default=filename')
     parser.add_argument('-m', '--mode', type=str, required=False, help='Allele profile assignment [normal,conservative,fuzzy]',default='normal')
     parser.add_argument('-p', '--prop', type=str, required=False, help='Metadata label to use for aggregation',default='locus_name')
     parser.add_argument('-a', '--max_ambig', type=int, required=False, help='Maximum number of ambiguous characters allowed in a sequence',default=0)
     parser.add_argument('-s', '--max_stop', type=int, required=False, help='Maximum number of internal stop codons allowed in a sequence',default=0)
-    parser.add_argument('--report_format', type=str, required=False,
-                        help='Report format of parsed results [profile]',default='profile')
     parser.add_argument('-r', '--match_ident', type=float, required=False, 
-                        help='Report match allele if percent difference is less than this value',default=100)
+                        help='Report match allele if percent difference is >= this value',default=100)
+    parser.add_argument('-r', '--match_cov', type=float, required=False, 
+                        help='Report match allele if percent coverage is >+ this value',default=100)
+    parser.add_argument('--translation_table', type=int, required=False,
+                        help='output directory', default=11)
     parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
     parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
                         action='store_true')
@@ -321,21 +324,20 @@ def run(cmd_args=None):
     input_file = cmd_args.input
     outdir = cmd_args.outdir
     label = cmd_args.prop
-    report_format = cmd_args.report_format
     sample_name = cmd_args.name
     force = cmd_args.force
     mode = cmd_args.mode
+    fasta_file = cmd_args.fasta
     max_ambig = cmd_args.max_ambig
     max_int_stop = cmd_args.max_stop
     match_ident = cmd_args.match_ident
+    match_cov = cmd_args.match_cov
+    translation_table = cmd_args.translation_table
 
-
-    if sample_name is None:
-        sample_name = '.'.join(os.path.basename(input_file).split('.')[:-1])
 
     run_data = SEARCH_RUN_DATA
     run_data['analysis_start_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    run_data['parameters'] = vars(cmd_args)
+    run_data['parameters'] = analysis_parameters
 
     if os.path.isdir(outdir) and not force:
         print(f'Error {outdir} exists, if you would like to overwrite, then specify --force')
@@ -351,17 +353,63 @@ def run(cmd_args=None):
     if len(seq_store_dict) == 0:
         sys.exit()
 
+    if sample_name is None:
+        sample_name = seq_store_dict["query_data"]["sample_name"]
+
+    #validate the ids
+    seq_data = {}
+    if fasta_file is not None:
+        seq_info = seq_store_dict["query_data"]["query_seq_data"]
+        seq_obj = seq_intake(fasta_file, format, 'CDS', translation_table, perform_annotation=False)
+        if len(seq_info) != len(seq_obj.seq_data):
+            print(f'Error the supplied fasta file: {fasta_file} ({len(seq_obj.seq_data)}) seq_store file: {input_file} ({len(seq_info)}) \
+                   do not have the same number of sequences. These files must be matched')
+            sys.exit()
+        
+        for id in seq_info:
+            if id not in seq_obj.seq_data:
+                print(f'Error {id} key from seq_store not found in fasta file')
+                sys.exit()
+            pid_1 = seq_info[id]["seq_id"]
+            pid_2 = seq_obj.seq_data[id]["seq_id"]
+            if pid_1 != pid_2:
+                print(f'Error seq_store key for {id}: {pid_1} mismatched to input fasta {id}: {pid_2}. These files must be matched')
+                sys.exit()
+        seq_data = seq_obj.seq_data
+        
     allele_obj = seq_reporter(seq_store_dict, method='nucleotide', mode=mode, label=label, filters={},max_ambig=max_ambig,max_int_stop=max_int_stop,match_ident=match_ident)
 
 
-    if report_format == 'profile':
-        allele_obj.filter_queries()
-        allele_obj.allele_assignment('nucleotide')
-        profile = {sample_name: allele_obj.profile}
-        with open(os.path.join(outdir,"profile.json"),"w") as out:
-            json.dump(profile,out,indent=4)
-        allele_obj.extract_hit_data('nucleotide').to_csv(os.path.join(outdir,"nucleotide.hits.txt"),header=True,sep="\t", index=False)
-        allele_obj.extract_hit_data('protein').to_csv(os.path.join(outdir, "protein.hits.txt"), header=True, sep="\t", index=False)
+
+    allele_obj.filter_queries()
+    allele_obj.allele_assignment('nucleotide')
+    allele_obj.extract_hit_data('nucleotide').to_csv(os.path.join(outdir,"nucleotide.hits.txt"),header=True,sep="\t", index=False)
+    allele_obj.extract_hit_data('protein').to_csv(os.path.join(outdir, "protein.hits.txt"), header=True, sep="\t", index=False)
+
+
+    profile = {
+        "db_info":seq_store_dict["db_info"],
+        'parameters':{
+            'mode':mode,
+            'min_match_ident':match_ident,
+            'min_match_cov':match_cov,
+            'max_ambiguous':max_ambig,
+            'max_internal_stops':max_int_stop
+        },
+        'data':{
+            'sample_name':sample_name,
+            'profile':{sample_name: allele_obj.profile},
+            'seq_data':seq_data
+        }
+    }
+    with open(os.path.join(outdir,"report.json"),"w") as out:
+        json.dump(profile,out,indent=4)
+
+
+
+    run_data['analysis_end_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    with open(os.path.join(outdir,"run.json"),'w' ) as fh:
+        fh.write(json.dumps(run_data, indent=4))
 
 
 
