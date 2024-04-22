@@ -7,20 +7,23 @@ from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescript
 from datetime import datetime
 from functools import partial
 from mimetypes import guess_type
-
+from multiprocessing import Pool, cpu_count
 import pandas as pd
-
+from locidex.classes.aligner import align, parse_align
 from locidex.version import __version__
 
 
 def add_args(parser=None):
     if parser is None:
         parser = ArgumentParser(
-            description="Locidex merge: Concatonate set of input profile.json files into  a tsv table")
-
+            description="Locidex merge: Concatonate set of input profile.json files into  a tsv table or aligned fasta")
     parser.add_argument('-i','--input', type=str, required=True,help='Input file to report', action='append', nargs='+')
     parser.add_argument('-o', '--outdir', type=str, required=True, help='Output file to put results')
+    parser.add_argument('--n_threads','-t', type=int, required=False,
+                        help='CPU Threads to use', default=1)
     parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
+    parser.add_argument('-a', '--align', required=False, help='Perform alignment with individual loci to produce a concatenated alignment',
+                        action='store_true')
     parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
                         action='store_true')
     return parser
@@ -50,26 +53,60 @@ def read_file_list(file_list):
         _open = partial(gzip.open, mode='rt') if encoding == 'gzip' else open
         with _open(f) as fh:
             data = json.load(fh)
-            records = records | data
+            records[data['data']['sample_name']] = data
     return records
 
+def extract_profiles(records):
+    profile = {}
+    for id in records:
+        for sample_name in records[id]['data']['profile']:
+            profile[sample_name] = records[id]['data']['profile'][sample_name]
+    return profile
 
+def extract_seqs(records):
+    seqs = {}
+    for id in records:
+        if not 'seq_data' in records[id]['data']:
+            continue
+        seqs[id] = records[id]['data']['seq_data']
+    return seqs
 
-def run(cmd_args=None):
-    if cmd_args is None:
-        parser = add_args()
-        cmd_args = parser.parse_args()
-    analysis_parameters = vars(cmd_args)
+def write_gene_fastas(seq_data,work_dir):
+    d = 0
+    files = {}
+    for id in seq_data:
+        record = seq_data[id]
+        locus_name = record['locus_name']
+        if 'dna_seq' in record:
+            seq = record['dna_seq']
+        else:
+            seq = record['aa_seq']
+        out_file = os.path.join(work_dir, f"{locus_name}.fas")
+        if not os.path.isfile(out_file):
+            oh = open(out_file,'w')
+            files[locus_name] = {'file':out_file}
+        else:
+            oh = open(out_file,'a')
+        seq_name = f'{locus_name}|{id}|{d}'
+        oh.write(f'>{seq_name}\n{seq}\n')
+        oh.close()
+        d+=1
+    return files   
+
+def run_merge(config):
+    analysis_parameters = config
+
     #Input Parameters
-    input_files = cmd_args.input[0]
-    outdir = cmd_args.outdir
-    force = cmd_args.force
-
+    input_files = config['input'][0]
+    outdir = config['outdir']
+    perform_align = config['align']
+    n_threads = config['n_threads']
+    force = config['force']
 
 
     run_data = {}
     run_data['analysis_start_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    run_data['parameters'] = vars(cmd_args)
+    run_data['parameters'] = analysis_parameters
 
     if os.path.isdir(outdir) and not force:
         print(f'Error {outdir} exists, if you would like to overwrite, then specify --force')
@@ -78,14 +115,58 @@ def run(cmd_args=None):
     if not os.path.isdir(outdir):
         os.makedirs(outdir, 0o755)
 
+    #perform merge
     file_list = get_file_list(input_files)
     records = read_file_list(file_list)
 
-    df = pd.DataFrame.from_dict(records, orient='index')
+    #create profile
+    df = pd.DataFrame.from_dict(extract_profiles(records), orient='index')
     df.insert(loc=0,
               column='sample_id',
               value=df.index.tolist())
     df.to_csv(os.path.join(outdir,'profile.tsv'),index=False,header=True,sep="\t")
+
+    #create alignment
+    if perform_align:
+        pass
+        work_dir = os.path.join(outdir,"raw_gene_fastas")
+        if not os.path.isdir(work_dir):
+            os.makedirs(work_dir, 0o755)
+        
+        seq_data = extract_seqs(records)
+        gene_files = write_gene_fastas(seq_data,work_dir)
+        pool = Pool(processes=n_threads)
+
+        results = []
+        for locus_name in gene_files:
+            results.append(pool.apply_async(align, args=((gene_files[locus_name]['file'],))))
+
+        pool.close()
+        pool.join()
+        for locus_name in gene_files:
+            parse_align(align)
+
+
+
+
+def run(cmd_args=None):
+    #cmd_args = parse_args()
+    if cmd_args is None:
+        parser = add_args()
+        cmd_args = parser.parse_args()
+    analysis_parameters = vars(cmd_args)
+    config_file = cmd_args.config
+
+    config = {}
+    if config_file is not None:
+        with open(config_file) as fh:
+            config = json.loads(fh.read())
+
+    for p in analysis_parameters:
+        if not p in config:
+            config[p] = analysis_parameters[p]
+
+    run_merge(config)
 
 
 # call main function
