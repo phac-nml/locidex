@@ -423,7 +423,7 @@ def run_report(cmd_args=None):
     with open(os.path.join(outdir,"report.json"),"w") as out:
         json.dump(profile,out,indent=4)
 
-
+    run_data['result_file'] = os.path.join(outdir,"report.json")
     run_data['analysis_end_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     with open(os.path.join(outdir,"run.json"),'w' ) as fh:
         fh.write(json.dumps(run_data, indent=4))
