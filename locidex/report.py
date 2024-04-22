@@ -312,7 +312,7 @@ class seq_reporter:
         return pd.DataFrame.from_dict(data)
 
 
-def run(cmd_args=None):
+def run_report(cmd_args=None):
     
     if cmd_args is None:
         parser = add_args()
@@ -376,7 +376,7 @@ def run(cmd_args=None):
                 print(f'Error seq_store key for {id}: {pid_1} mismatched to input fasta {id}: {pid_2}. These files must be matched')
                 sys.exit()
         seq_data = seq_obj.seq_data
-        
+
     allele_obj = seq_reporter(seq_store_dict, method='nucleotide', mode=mode, label=label, filters={},max_ambig=max_ambig,max_int_stop=max_int_stop,match_ident=match_ident)
 
 
@@ -402,15 +402,51 @@ def run(cmd_args=None):
             'seq_data':seq_data
         }
     }
+    
+    if len(profile['data']['seq_data']) > 0:
+        # add locus information to seq_data
+        look_up = {}
+        for locus_name in profile['data']['profile']:
+            h = profile['data']['profile'][locus_name]
+            if h not in look_up:
+                look_up[h] = []
+            look_up[h].append(locus_name)
+        
+        for seq_id in profile['data']['seq_data']:
+            h = profile['data']['seq_data'][seq_id]['dna_hash']
+            if h in look_up:
+                profile['data']['seq_data'][seq_id]['locus_name'] = ",".join([str(x) for x in look_up[h]])
+            else:
+                profile['data']['seq_data'][seq_id]['locus_name'] = ''
+
+
     with open(os.path.join(outdir,"report.json"),"w") as out:
         json.dump(profile,out,indent=4)
-
 
 
     run_data['analysis_end_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     with open(os.path.join(outdir,"run.json"),'w' ) as fh:
         fh.write(json.dumps(run_data, indent=4))
 
+
+def run(cmd_args=None):
+    #cmd_args = parse_args()
+    if cmd_args is None:
+        parser = add_args()
+        cmd_args = parser.parse_args()
+    analysis_parameters = vars(cmd_args)
+    config_file = cmd_args.config
+
+    config = {}
+    if config_file is not None:
+        with open(config_file) as fh:
+            config = json.loads(fh.read())
+
+    for p in analysis_parameters:
+        if not p in config:
+            config[p] = analysis_parameters[p]
+
+    run_report(config)
 
 
 # call main function
