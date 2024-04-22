@@ -24,6 +24,8 @@ def add_args(parser=None):
     parser.add_argument('--linker','-l', type=str, required=False,
                         help='Linker sequence for alignment', default='NNNNNNNNNNNNNNNNNNNN')
     parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
+    parser.add_argument('-s', '--strict', required=False, help='Only merge data produces by the same db',
+                        action='store_true')
     parser.add_argument('-a', '--align', required=False, help='Perform alignment with individual loci to produce a concatenated alignment',
                         action='store_true')
     parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
@@ -53,8 +55,9 @@ def get_file_list(input_files):
                     file_list.append(line)
     return file_list
 
-def read_file_list(file_list):
+def read_file_list(file_list,perform_validation=False):
     records = {}
+    db_info = {}
     for f in file_list:
         if not os.path.isfile(f):
             continue
@@ -62,6 +65,16 @@ def read_file_list(file_list):
         _open = partial(gzip.open, mode='rt') if encoding == 'gzip' else open
         with _open(f) as fh:
             data = json.load(fh)
+            if 'db_info' not in data:
+                print("Error malformed or invalid input file {}, missing 'db_info'".format(f))
+                sys.exit()
+            if len(db_info) == 0:
+                db_info = data['db_info']
+            if db_info["db_name"] != data['db_info']["db_name"] or \
+                db_info["db_version"] != data['db_info']["db_version"]:
+                print("Error you are attempting to merge files generated with different databases {} vs. {}: {}".format(db_info,f,data['db_info']))
+                sys.exit()
+
             records[data['data']['sample_name']] = data
     return records
 
@@ -112,6 +125,9 @@ def run_merge(config):
     linker_seq = config['linker']
     n_threads = config['n_threads']
     force = config['force']
+    validate_db = config['strict']
+    if validate_db is None or validate_db == '':
+        validate_db = False
 
 
     run_data = {}
@@ -127,7 +143,7 @@ def run_merge(config):
 
     #perform merge
     file_list = get_file_list(input_files)
-    records = read_file_list(file_list)
+    records = read_file_list(file_list,perform_validation=validate_db)
 
     #create profile
     df = pd.DataFrame.from_dict(extract_profiles(records), orient='index')
