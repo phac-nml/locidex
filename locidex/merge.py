@@ -39,11 +39,18 @@ def get_file_list(input_files):
         if re.search(".json$", input_files[0]) or re.search(".json.gz$", input_files[0]):
             file_list = input_files
         else:
+            if not os.path.isfile(input_files[0]):
+                print(f'Error the supplied file {input_files[0]} does not exist')
+                sys.exit()
             encoding = guess_type(input_files[0])[1]
             _open = partial(gzip.open, mode='rt') if encoding == 'gzip' else open
             with _open(input_files[0]) as f:
                 for line in f:
-                    file_list.append(line.rstrip())
+                    line = line.rstrip()
+                    if not os.path.isfile(line):
+                        print(f'Error the supplied file {line} does not exist')
+                        sys.exit()
+                    file_list.append(line)
     return file_list
 
 def read_file_list(file_list):
@@ -167,7 +174,7 @@ def run_merge(config):
             oh.write('>{}\n{}'.format(sample_id,"".join(seq)))
         oh.close()
         run_data['alignment_file'] = out_align
-        
+
     run_data['analysis_end_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     with open(os.path.join(outdir,"run.json"),'w' ) as fh:
         fh.write(json.dumps(run_data, indent=4))
@@ -181,13 +188,9 @@ def run(cmd_args=None):
         parser = add_args()
         cmd_args = parser.parse_args()
     analysis_parameters = vars(cmd_args)
-    config_file = cmd_args.config
+
 
     config = {}
-    if config_file is not None:
-        with open(config_file) as fh:
-            config = json.loads(fh.read())
-
     for p in analysis_parameters:
         if not p in config:
             config[p] = analysis_parameters[p]
