@@ -60,7 +60,8 @@ def read_file_list(file_list,perform_validation=False):
     db_info = {}
     for f in file_list:
         if not os.path.isfile(f):
-            continue
+            print(f"Error cannot open input file {f}")
+            sys.exit
         encoding = guess_type(f)[1]
         _open = partial(gzip.open, mode='rt') if encoding == 'gzip' else open
         with _open(f) as fh:
@@ -74,7 +75,6 @@ def read_file_list(file_list,perform_validation=False):
                 db_info["db_version"] != data['db_info']["db_version"]:
                 print("Error you are attempting to merge files generated with different databases {} vs. {}: {}".format(db_info,f,data['db_info']))
                 sys.exit()
-
             records[data['data']['sample_name']] = data
     return records
 
@@ -90,6 +90,7 @@ def extract_seqs(records):
     for id in records:
         if not 'seq_data' in records[id]['data']:
             continue
+        
         seqs[id] = records[id]['data']['seq_data']
     return seqs
 
@@ -98,21 +99,30 @@ def write_gene_fastas(seq_data,work_dir):
     files = {}
     for id in seq_data:
         record = seq_data[id]
-        locus_name = record['locus_name']
-        if 'dna_seq' in record:
-            seq = record['dna_seq']
-        else:
-            seq = record['aa_seq']
-        out_file = os.path.join(work_dir, f"{locus_name}.fas")
-        if not os.path.isfile(out_file):
-            oh = open(out_file,'w')
-            files[locus_name] = {'file':out_file}
-        else:
-            oh = open(out_file,'a')
-        seq_name = f'{locus_name}|{id}|{d}'
-        oh.write(f'>{seq_name}\n{seq}\n')
-        oh.close()
-        d+=1
+        for seq_id in record:
+            if 'locus_name' not in record[seq_id]:
+                continue
+            locus_name = record[seq_id]['locus_name']
+            if locus_name == '':
+                continue
+            if 'dna_seq' in record[seq_id]:
+                seq = record[seq_id]['dna_seq']
+            else:
+                seq = record[seq_id]['aa_seq']
+            out_file = os.path.join(work_dir, f"{locus_name}.fas")
+            if not os.path.isfile(out_file):
+                oh = open(out_file,'w')
+                files[locus_name] = {'file':out_file}
+            else:
+                if not locus_name in files:
+                    oh = open(out_file,'w')
+                    files[locus_name] = {'file':out_file}
+                else:
+                    oh = open(out_file,'a')
+            seq_name = f'{id}'
+            oh.write(f'>{seq_name}\n{seq}\n')
+            oh.close()
+            d+=1
     return files   
 
 def run_merge(config):
@@ -164,6 +174,8 @@ def run_merge(config):
         
         seq_data = extract_seqs(records)
         gene_files = write_gene_fastas(seq_data,work_dir)
+        del(records)
+        del(seq_data)
         pool = Pool(processes=n_threads)
 
         results = []
@@ -173,24 +185,53 @@ def run_merge(config):
         pool.close()
         pool.join()
 
+        r = []
+        for x in results:
+            if isinstance(x, dict):
+                r.append(x)
+            else:
+                r.append(x.get())
+        results = r
         loci_names = list(gene_files.keys())
         alignment = {}
+        
+
         for i in range(0,len(results)):
-            alignment[loci_names[i]] = parse_align(results[i])
+            alignment[loci_names[i]] = parse_align(results[i][0])
             results[i] = None
         del(results)
 
+        loci_lengths = {}
+        for sample_id in sample_names:
+            for locus_name in loci_names:
+                if sample_id not in alignment[locus_name]:
+                    continue
+                loci_lengths[locus_name] = len(alignment[locus_name][sample_id])
+
+
         out_align = os.path.join(outdir,'loci_alignment.fas')
         oh = open(out_align,'w')
+        invalid_loci = set()
         for sample_id in sample_names:
             seq = []
             for locus_name in loci_names:
-                seq.append(alignment[locus_name][sample_id])
+                print(locus_name)
+                if locus_name not in loci_lengths:
+                    invalid_loci.add(locus_name)
+                    continue
+                if sample_id in alignment[locus_name]:
+                    seq.append(alignment[locus_name][sample_id])
+                else:
+                    seq.append(''.join(['-']*loci_lengths[locus_name]))
                 seq.append(linker_seq)
-            oh.write('>{}\n{}'.format(sample_id,"".join(seq)))
+            oh.write('>{}\n{}\n'.format(sample_id,"".join(seq)))
         oh.close()
         run_data['alignment_file'] = out_align
 
+    run_data['count_valid_loci'] = len(loci_lengths.keys())
+    run_data['count_invalid_loci'] = len(list(invalid_loci))
+    run_data['valid_loci'] = ",".join(list(loci_lengths.keys()))
+    run_data['invalid_loci'] = ",".join(list(invalid_loci))
     run_data['analysis_end_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     with open(os.path.join(outdir,"run.json"),'w' ) as fh:
         fh.write(json.dumps(run_data, indent=4))

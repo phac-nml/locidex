@@ -406,7 +406,6 @@ def run_report(config):
         look_up = {}
         for locus_name in profile['data']['profile'][sample_name]:
             h = profile['data']['profile'][sample_name][locus_name]
-            print(h)
             if h not in look_up:
                 look_up[h] = []
             look_up[h].append(locus_name)
