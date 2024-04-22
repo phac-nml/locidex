@@ -215,7 +215,6 @@ def run_merge(config):
         for sample_id in sample_names:
             seq = []
             for locus_name in loci_names:
-                print(locus_name)
                 if locus_name not in loci_lengths:
                     invalid_loci.add(locus_name)
                     continue
