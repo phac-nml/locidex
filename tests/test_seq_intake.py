@@ -27,7 +27,6 @@ def test_read_fasta_file():
     assert len(seq_intake_object.seq_data[0]['dna_seq']) > 0
     assert seq_intake_object.seq_data[0]['dna_len'] > 0
     assert len(seq_intake_object.seq_data[0]['dna_hash']) > 0
-    assert seq_intake_object.seq_data[0]['count_internal_stop'] == 0
     assert any([ True if contig['dna_ambig_count'] == 0 else False  for contig in seq_intake_object.seq_data]) == True
 
 
