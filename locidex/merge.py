@@ -236,8 +236,6 @@ def run_merge(config):
         fh.write(json.dumps(run_data, indent=4))
 
 
-
-
 def run(cmd_args=None):
     #cmd_args = parse_args()
     if cmd_args is None:
