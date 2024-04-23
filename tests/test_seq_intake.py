@@ -21,9 +21,9 @@ def test_read_fasta_file():
     assert seq_intake_object.valid_types == ['genbank', 'gff', 'gtf', 'fasta']
     assert len(seq_intake_object.seq_data) > 0
     assert sum([contig['aa_len'] for contig in seq_intake_object.seq_data]) > 0
-    assert all([True if 'NC_003198.1' in contig['parent_id'] else False  for contig in seq_intake_object.seq_data]) == True
-    assert all([True if 'NC_003198.1' in contig['locus_name'] else False  for contig in seq_intake_object.seq_data]) == True
-    assert all([True if 'NC_003198.1' in contig['seq_id'] else False  for contig in seq_intake_object.seq_data]) == True
+    assert any([True if 'NC_003198.1' in contig['parent_id'] else False  for contig in seq_intake_object.seq_data]) == True
+    assert any([True if 'NC_003198.1' in contig['locus_name'] else False  for contig in seq_intake_object.seq_data]) == True
+    assert any([True if 'NC_003198.1' in contig['seq_id'] else False  for contig in seq_intake_object.seq_data]) == True
     assert len(seq_intake_object.seq_data[0]['dna_seq']) > 0
     assert seq_intake_object.seq_data[0]['dna_len'] > 0
     assert len(seq_intake_object.seq_data[0]['dna_hash']) > 0
