@@ -284,7 +284,6 @@ def run_search(config):
     store_obj.convert_profile_to_list()
     run_data['result_file'] = os.path.join(outdir,"seq_store.json")
     del (filtered_df)
-    print(store_obj.record)
     with open(run_data['result_file'], "w") as fh:
         fh.write(json.dumps(store_obj.record, indent=4))
 
