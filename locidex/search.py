@@ -24,6 +24,8 @@ def add_args(parser=None):
     parser.add_argument('-n', '--name', type=str, required=False, help='Sample name to include default=filename')
     parser.add_argument('-d', '--db', type=str, required=False, help='Locidex database directory')
     parser.add_argument('-c', '--config', type=str, required=False, help='Locidex parameter config file (json)')
+    parser.add_argument('--db_name', type=str, required=False, help='Name of database to perform search, used when a manifest is specified as a db')
+    parser.add_argument('--db_version', type=str, required=False, help='Version of database to perform search, used when a manifest is specified as a db')
     parser.add_argument('--min_evalue', type=float, required=False, help='Minumum evalue required for match',
                         default=0.0001)
     parser.add_argument('--min_dna_len', type=int, required=False, help='Global minumum query length dna',
@@ -91,6 +93,8 @@ def run_search(config):
     sample_name = config['name']
     perform_annotation = config['annotate']
     max_target_seqs = config['max_target_seqs']
+    db_name = config['db_name']
+    db_version = config['db_version']
     if 'max_ambig_count' in config:
         max_ambig_count = config['max_ambig_count']
     else:
@@ -107,6 +111,60 @@ def run_search(config):
     run_data['analysis_start_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     run_data['parameters'] = config
 
+    #check if user supplied a manifest of different databases
+    if os.path.isfile(db_dir):
+        if db_name is None or db_name == '':
+            print(f'You specified a file as the locidex db but no db_name to run, please specify a valid --db_name: {db_dir}')
+            sys.exit()
+        
+        with open(db_dir ,'r') as fh:
+            manifest = json.load(fh)
+        
+        if db_name not in manifest:
+            print(f'You specified a db name "{db_name}" which does not exist in the manifest file:  {db_dir}')
+            print(f'list of keys in manifest:  {list(manifest.keys())}')
+            sys.exit()
+        
+        if db_version is not None and db_version != '':
+            if db_version not in manifest[db_name]:
+                print(f'You specified a db name "{db_name}" and db version but the db version "{db_version}"was not found in the manifest {list(manifest[db_name].keys())} ')
+                sys.exit()
+        else:
+            version_codes = list(manifest[db_name].keys())
+            if len(version_codes) == 1:
+                version_code = version_codes[0]
+            else:
+                latest_date = None
+                version_code = None
+
+                for code in version_codes:
+                    if not 'db_date' in manifest[db_name][code]:
+                        print(f'Error db_date field missing from manifest for {db_name}, this field is required if more than 1 db version exists')
+                        sys.exit()
+                    db_date = manifest[db_name][code]['db_date']
+                    db_date = datetime.strptime(db_date, '%Y/%d/%m')
+                    if version_code is None:
+                        version_code = code
+                        latest_date = db_date
+                        continue
+                    if db_date > latest_date:
+                        latest_date = db_date
+                        version_code = code
+            db_version = version_code
+        db_dir_prefix = str(os.path.dirname(db_dir)).split('/')
+        db_dir_rel_path = manifest[db_name][db_version]['db_relative_path_dir'].split('/')
+        if db_dir_prefix[-1] == db_dir_rel_path[0]:
+            db_dir_prefix = db_dir_prefix[0:-1]
+        db_dir_prefix = "/".join(db_dir_prefix)
+        db_dir_rel_path = "/".join(db_dir_rel_path )
+        db_dir = os.path.join(db_dir_prefix,db_dir_rel_path)
+                    
+    if not os.path.isdir(db_dir):
+        print(f'Error DB does not exist: {db_dir}')
+        sys.exit()
+
+        
+
     # Validate database is valid
     db_database_config = search_db_conf(db_dir, DB_EXPECTED_FILES, DB_CONFIG_FIELDS)
     if db_database_config.status == False:
@@ -116,7 +174,6 @@ def run_search(config):
     metadata_path = db_database_config.meta_file_path
     metadata_obj = db_config(metadata_path, ['meta', 'info'])
     blast_database_paths = db_database_config.blast_paths
-
     if os.path.isdir(outdir) and not force:
         print(f'Error {outdir} exists, if you would like to overwrite, then specify --force')
         sys.exit()
@@ -190,7 +247,7 @@ def run_search(config):
     }
     store_obj = seq_store(sample_name, db_database_config.config_obj.config, metadata_obj.config['meta'],
                           seq_obj.seq_data, BLAST_TABLE_COLS, hit_filters)
-
+    print(store_obj.record)
     for db_label in blast_database_paths:
         label_col = 'index'
         if db_label == 'nucleotide':
@@ -225,9 +282,9 @@ def run_search(config):
 
     store_obj.filter_hits()
     store_obj.convert_profile_to_list()
-    run_data['result_file'] = "seq_store.json"
+    run_data['result_file'] = os.path.join(outdir,"seq_store.json")
     del (filtered_df)
-
+    print(store_obj.record)
     with open(run_data['result_file'], "w") as fh:
         fh.write(json.dumps(store_obj.record, indent=4))
 
