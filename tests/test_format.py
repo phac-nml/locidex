@@ -7,7 +7,6 @@ from locidex import format
 
 import os
 import json
-import itertools
 from dataclasses import dataclass
 
 EXPECTED_DATA_OUT = "locidex/example/format_db_mlst_out"
@@ -60,8 +59,9 @@ def test_formatted_db_content(output_directory):
     actual_file = os.path.join(output_directory, formatted_file)
     expected_file = os.path.join(EXPECTED_DATA_OUT, formatted_file)
     with open(actual_file, 'r') as act, open(expected_file, 'r') as expc:
-        actual_text = sorted(itertools.chain(act.readlines()).split(delimiter), key=lambda x: x[0])
-        expected_text = sorted(itertools.chain(*expc.readlines()).split(delimiter), key=lambda x: x[0])
+        sort_key = lambda x: x.split(delimiter)[0]
+        actual_text = sorted(act.readlines(), key=sort_key)
+        expected_text = sorted(expc.readlines(), key=sort_key)
         assert hash(" ".join(actual_text)) == hash(" ".join(expected_text))
 
 def test_format_results(output_directory):
