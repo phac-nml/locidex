@@ -56,10 +56,11 @@ def test_outputs(output_directory):
 def test_formatted_db_content(output_directory):
     formatted_file = "locidex.txt"
     delimiter = "\t"
+    key_id_position = 2
     actual_file = os.path.join(output_directory, formatted_file)
     expected_file = os.path.join(EXPECTED_DATA_OUT, formatted_file)
     with open(actual_file, 'r') as act, open(expected_file, 'r') as expc:
-        sort_key = lambda x: x.split(delimiter)[0]
+        sort_key = lambda x: x.split(delimiter)[key_id_position]
         actual_text = sorted(act.readlines(), key=sort_key)
         expected_text = sorted(expc.readlines(), key=sort_key)
         for i, j in zip(actual_text, expected_text):
