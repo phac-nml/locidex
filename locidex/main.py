@@ -28,7 +28,6 @@ def main(argv=None):
     if args.command is None:
         parser.print_help()
         sys.exit()
-    #print("args", tasks[args.command][module_idx].run(args))
     tasks[args.command][module_idx].run(args)
 
 
