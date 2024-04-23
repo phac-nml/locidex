@@ -179,7 +179,7 @@ def run(cmd_args=None):
     config["db_desc"] = cmd_args.db_desc
     config["db_author"] = cmd_args.author
     if cmd_args.date == '':
-        config["db_date"] = datetime.now().strftime("%d/%m/%Y")
+        config["db_date"] = datetime.now().strftime("%Y/%d/%m")
 
     if not os.path.isfile(input_file):
         print(f'Error {input_file} does not exist, please check path and try again')
