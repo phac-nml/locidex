@@ -62,7 +62,8 @@ def test_formatted_db_content(output_directory):
         sort_key = lambda x: x.split(delimiter)[0]
         actual_text = sorted(act.readlines(), key=sort_key)
         expected_text = sorted(expc.readlines(), key=sort_key)
-        assert hash(" ".join(actual_text)) == hash(" ".join(expected_text))
+        for i, j in zip(actual_text, expected_text):
+            assert i == j
 
 def test_format_results(output_directory):
     """
