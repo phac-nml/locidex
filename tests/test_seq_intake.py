@@ -19,7 +19,7 @@ def test_read_fasta_file():
     assert seq_intake_object.status == True
     assert seq_intake_object.translation_table == 11
     assert seq_intake_object.valid_types == ['genbank', 'gff', 'gtf', 'fasta']
-    assert len(seq_intake_object.seq_data) == 4653
+    assert len(seq_intake_object.seq_data) == 4655
     assert sum([contig['aa_len'] for contig in seq_intake_object.seq_data]) == 2996811
     assert all([True if 'NC_003198.1' in contig['parent_id'] else False  for contig in seq_intake_object.seq_data]) == True
     assert all([True if 'NC_003198.1' in contig['locus_name'] else False  for contig in seq_intake_object.seq_data]) == True
