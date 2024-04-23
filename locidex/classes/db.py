@@ -85,8 +85,10 @@ class search_db_conf:
 
         p = self.get_file_path_by_name('blast','dir')
 
-        self.blast_paths['nucleotide'] = os.path.join(p,"nucleotide/nucleotide")
-        self.blast_paths['protein'] = os.path.join(p, "protein/protein")
+        if self.config_obj.config["is_nucl"]:
+            self.blast_paths['nucleotide'] = os.path.join(p,"nucleotide/nucleotide")
+        if self.config_obj.config["is_prot"]:
+            self.blast_paths['protein'] = os.path.join(p, "protein/protein")
 
 
         if len(self.blast_paths) == 0:
