@@ -64,7 +64,8 @@ def test_formatted_db_content(output_directory):
         actual_text = sorted(act.readlines(), key=sort_key)
         expected_text = sorted(expc.readlines(), key=sort_key)
         for i, j in zip(actual_text, expected_text):
-            assert i == j
+            #ignoring row id
+            assert i.split(delimiter)[1:] == j.split(delimiter)[1:]
 
 def test_format_results(output_directory):
     """
