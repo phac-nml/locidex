@@ -15,7 +15,6 @@ from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BLAST_TABLE_COLS, DB_
 from locidex.utils import write_seq_dict
 from locidex.version import __version__
 
-
 def add_args(parser=None):
     if parser is None:
         parser = ArgumentParser(

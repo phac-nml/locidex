@@ -154,7 +154,6 @@ def run_extract(config):
     }
     nt_db = "{}.fasta".format(blast_database_paths['nucleotide'])
     hit_file = os.path.join(blast_dir_base, "hsps.txt")
-
     obj = blast_search(input_db_path=db_path, input_query_path=nt_db,
                        output_results=hit_file, blast_params=blast_params, blast_method='blastn',
                        blast_columns=BLAST_TABLE_COLS,create_db=True)
@@ -209,6 +208,7 @@ def run_extract(config):
                                 'ref_id':record['query_id'],
                                 'ref_seq':nt_db_seq_data[record['query_id']],
                                 'ext_seq':record['seq']}
+                    
     if mode == 'trim':
         aln_obj = aligner(trim_fwd=True,trim_rev=True,ext_fwd=False, ext_rev=False,fill=False, snps_only=False)
     elif mode == 'snps':
