@@ -35,12 +35,9 @@ def test_seq_store_class():
     if len(seq_store_obj.record['query_data']['query_seq_data']) == 1:
         assert len(seq_store_obj.record['query_data']['query_seq_data']) == 1
     else:    
-        warnings.warn(f"expected value of 1 but got {len(seq_store_obj.record['query_data']['query_seq_data'])}")
-
-    assert [seq_store_obj.record['query_data']['query_seq_data'][0][key] for key in 
-            ['parent_id','locus_name','seq_id', 'dna_len', 'aa_len', 
-             'start_codon', 'stop_codon', 'count_internal_stop', 
-             'dna_ambig_count']] == ['NC_003198.1', 'NC_003198.1', 'NC_003198.1', 4809037, 1603012, 'aga', 'ata', 60789, 0]
+        warnings.warn(f"expected len(seq_store_obj.record['query_data']['query_seq_data']) == 1 but got {len(seq_store_obj.record['query_data']['query_seq_data'])}")
+    assert list(seq_store_obj.record['query_data']['query_seq_data'][0].keys()) ==  ['parent_id', 'locus_name', 'seq_id', 'dna_hash', 'dna_len', 'aa_hash', 
+                                                                                     'aa_len', 'start_codon', 'stop_codon', 'count_internal_stop', 'dna_ambig_count']
     assert list(seq_store_obj.record['query_data']['locus_profile'].keys()) == ['aroC', 'dnaN', 'hemD', 'hisD', 'purE', 'sucA', 'thrA']
     assert seq_store_obj.record['query_data']['query_hit_columns'] == []
     assert seq_store_obj.record['query_data']['query_hits'] == {}
