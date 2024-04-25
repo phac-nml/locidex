@@ -155,8 +155,8 @@ def run_search(config):
         db_dir_rel_path = manifest[db_name][db_version]['db_relative_path_dir'].split('/')
         if db_dir_prefix[-1] == db_dir_rel_path[0]:
             db_dir_prefix = db_dir_prefix[0:-1]
-        db_dir_prefix = "/".join(db_dir_prefix)
-        db_dir_rel_path = "/".join(db_dir_rel_path )
+        db_dir_prefix = os.path.join(db_dir_prefix)
+        db_dir_rel_path = os.path.join(db_dir_rel_path)
         db_dir = os.path.join(db_dir_prefix,db_dir_rel_path)
                     
     if not os.path.isdir(db_dir):

@@ -1,0 +1,8 @@
+{
+    "Locidex Database": {
+        "1.0.0": {
+            "db_relative_path_dir": "/build_db_mlst_out",
+            "db_relative_path_config": "/build_db_mlst_out/config.json"
+        }
+    }
+}

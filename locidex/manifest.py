@@ -22,6 +22,7 @@ def run_merge(config):
     #Input Parameters
     input_dir = config['input']
     in_dirname = input_dir.split('/')[-1]
+
     run_data = {}
     run_data['analysis_start_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     run_data['parameters'] = analysis_parameters
@@ -52,13 +53,13 @@ def run_merge(config):
             continue
         for field in db_keys:
             if not field in c:
-                print(f'Error db config: {fpath} is missing a needed field key for {field}, please set one')
-                sys.exit()
+                print(f'Error db config: {fpath} is missing a needed field key for {field}, please set one', file=sys.stderr)
+                raise KeyError
 
             v = c[field]
             if v == '':
-                print(f'Error db config: {fpath} is missing a needed field value for {field}, please set one')
-                sys.exit()
+                print(f'Error db config: {fpath} is missing a needed field value for {field}, please set one', file=sys.stderr)
+                raise KeyError
         
         db_name = str(c['db_name'])
         db_version = str(c['db_version'])
@@ -66,12 +67,14 @@ def run_merge(config):
             config_files[db_name] = {}
         if db_version in config_files[db_name]:
             print(f"Error you are trying to populate duplicate entries for db_name {db_name} and version {db_version}. \
-                  Manifest only supports distinct db_entries, please resolve duplicates")
+                  Manifest only supports distinct db_entries, please resolve duplicates", file=sys.stderr)
             sys.exit()
         
         config_files[db_name][db_version] = {
-            'db_relative_path_dir': f"{in_dirname}/{dirname}",
-            'db_relative_path_config': f"{in_dirname}/{dirname}/config.json",
+            #'db_relative_path_dir': f"{in_dirname}/{dirname}",
+            'db_relative_path_dir': os.path.join(in_dirname, dirname),
+            #'db_relative_path_config': f"{in_dirname}/{dirname}/config.json",
+            'db_relative_path_config': os.path.join(in_dirname, dirname, "config.json"),
         }
 
     with open(os.path.join(input_dir,"manifest.json"),'w' ) as fh:
