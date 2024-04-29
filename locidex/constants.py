@@ -1,3 +1,7 @@
+
+from dataclasses import dataclass, asdict, fields
+from typing import Any, Union
+
 DNA_AMBIG_CHARS = ['b', 'd', 'e', 'f', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 'u', 'v', 'w', 'x',
                    'y', 'z', '-']
 DNA_IUPAC_CHARS = ['b', 'd', 'e', 'f', 'h', 'i', 'j', 'k', 'l', 'm', 'o', 'p', 'q', 'r', 's', 'u', 'v', 'w', 'x', 'y',
@@ -59,18 +63,48 @@ SCHEME_HEADER = [
 
 EXTRACT_MODES = ['snps','trim','raw','extend']
 
-DB_CONFIG_FIELDS = [
-    "db_name",
-    "db_version",
-    "db_date",
-    "db_author",
-    "db_desc",
-    "db_num_seqs",
-    "is_nucl",
-    "is_prot",
-    "nucleotide_db_name",
-    "protein_db_name",
-]
+@dataclass
+class DBConfig:
+    db_name: Union[str, None] = None
+    db_version: Union[str, None] = None
+    db_date: Union[str, None] = None
+    db_author: Union[str, None] = None
+    db_desc: Union[str, None] = None
+    db_num_seqs: Union[str, int] = None
+    is_nucl: Union[bool, None] = None
+    is_prot: Union[bool, None] = None
+    nucleotide_db_name: Union[str, None] = None
+    protein_db_name: Union[str, None] = None
+
+    def __getitem__(self, name: str) -> Any:
+        return getattr(self, str(name))
+    
+    def __setitem__(self, key: str, value: str) -> None:
+        setattr(self, key, value)
+    
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+    @classmethod
+    def _keys(cls) -> list:
+        return [i.name for i in fields(cls)]
+
+    def keys(self) -> list:
+        return [i.name for i in fields(self)]
+
+
+#DB_CONFIG_FIELDS = [
+#    "db_name",
+#    "db_version",
+#    "db_date",
+#    "db_author",
+#    "db_desc",
+#    "db_num_seqs",
+#    "is_nucl",
+#    "is_prot",
+#    "nucleotide_db_name",
+#    "protein_db_name",
+#]
 
 SEARCH_RUN_DATA = {
 

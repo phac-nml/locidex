@@ -4,8 +4,9 @@ import pandas as pd
 import os, sys
 from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
 from locidex.version import __version__
-from locidex.constants import FORMAT_RUN_DATA, DB_CONFIG_FIELDS
+from locidex.constants import FORMAT_RUN_DATA
 from locidex.classes import run_command
+from locidex.constants import DBConfig
 
 class locidex_build:
     input_file = None
@@ -21,7 +22,7 @@ class locidex_build:
     messages = []
 
 
-    def __init__(self, input_file, outdir,config={},seq_columns={'nucleotide':'dna_seq','protein':'aa_seq'},force=False,parse_seqids=False):
+    def __init__(self, input_file: os.PathLike, outdir: os.PathLike, config: DBConfig,seq_columns={'nucleotide':'dna_seq','protein':'aa_seq'},force=False,parse_seqids=False):
         self.input_file = input_file
         self.outdir = outdir
         self.force = force
@@ -37,7 +38,7 @@ class locidex_build:
 
         self.df = self.read_data( self.input_file)
         self.config = config
-        self.config["db_num_seqs"] = len(self.df)
+        self.config.db_num_seqs = len(self.df)
 
         for t in seq_columns:
             col_name = seq_columns[t]
@@ -46,16 +47,16 @@ class locidex_build:
                 outfile  = os.path.join(self.blast_dir, t)
                 if t == 'nucleotide':
                     self.is_dna = True
-                    self.config["nucleotide_db_name"] = t
+                    self.config.nucleotide_db_name = t
                     blast_method = 'nucl'
                 elif t == 'protein':
 
                     self.is_protein  = True
-                    self.config["protein_db_name"] = t
+                    self.config.protein_db_name = t
                     blast_method = 'prot'
                 self.create_seq_db(t, col_name, outfile, blast_method)
-        self.config["is_nucl"] = self.is_dna
-        self.config["is_prot"] = self.is_protein
+        self.config.is_nucl = self.is_dna
+        self.config.is_prot = self.is_protein
         self.get_metadata(self.df,columns_to_exclude=list(seq_columns.values()))
 
     def create_seq_db(self,stype,col_name,outfile,blast_method='nucl'):
@@ -144,8 +145,6 @@ def add_args(parser=None):
     parser.add_argument('-o', '--outdir', type=str, required=True, help='Output directory to put results')
     parser.add_argument('-n', '--name', type=str, required=False, help='DB name',default='Locidex Database')
     parser.add_argument('-a', '--author', type=str, required=False, help='Author Name for Locidex Database',default='')
-    parser.add_argument('-d', '--date', type=str, required=False, help='Creation date for Locidex Database',
-                        default='')
     parser.add_argument('-c', '--db_ver', type=str, required=False, help='Version code for locidex db',
                         default='1.0.0')
     parser.add_argument('-e', '--db_desc',type=str, required=False, help='Version code for locidex db',
@@ -170,16 +169,25 @@ def run(cmd_args=None):
     run_data['analysis_start_time'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     run_data['parameters'] = vars(cmd_args)
 
-    config = {}
-    for f in DB_CONFIG_FIELDS:
-        config[f] = ''
+    #config = {}
+    #for f in DB_CONFIG_FIELDS:
+    #    config[f] = ''
 
-    config["db_name"] = cmd_args.name
-    config["db_version"] = cmd_args.db_ver
-    config["db_desc"] = cmd_args.db_desc
-    config["db_author"] = cmd_args.author
-    if cmd_args.date == '':
-        config["db_date"] = datetime.now().strftime("%Y/%d/%m")
+    #config["db_name"] = cmd_args.name
+    #config["db_version"] = cmd_args.db_ver
+    #config["db_desc"] = cmd_args.db_desc
+    #config["db_author"] = cmd_args.author
+    #if cmd_args.date == '':
+    #    config["db_date"] = datetime.now().strftime("%Y/%d/%m")
+
+    config = DBConfig(
+        db_name=cmd_args.name,
+        db_version =cmd_args.db_ver,
+        db_desc=cmd_args.db_desc,
+        db_author=cmd_args.author,
+        db_date=datetime.now().strftime("%Y/%d/%m"),
+
+    )
 
     if not os.path.isfile(input_file):
         print(f'Error {input_file} does not exist, please check path and try again')
@@ -188,14 +196,14 @@ def run(cmd_args=None):
     
     #run_data['result_file'] = os.path.join(outdir)
     obj = locidex_build(input_file, outdir,config=config,seq_columns={'nucleotide':'dna_seq','protein':'aa_seq'},force=force)
-    print(outdir)
+
     if obj.status == False:
         print(f'Error something went wrong building the db, check error messages {obj.messages}')
         sys.exit()
 
     run_data['analysis_end_time'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(os.path.join(outdir,"config.json"),"w") as oh:
-        oh.write(json.dumps(obj.config,indent=4))
+        oh.write(json.dumps(obj.config.to_dict(),indent=4))
 
     with open(os.path.join(outdir,"meta.json"),"w") as oh:
         oh.write(json.dumps(obj.meta,indent=4))

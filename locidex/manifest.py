@@ -6,6 +6,7 @@ import sys
 from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
 from datetime import datetime
 from locidex.version import __version__
+from locidex.constants import DBConfig
 
 
 def add_args(parser=None):
@@ -27,14 +28,7 @@ def run_merge(config):
     run_data['analysis_start_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     run_data['parameters'] = analysis_parameters
 
-    db_keys = [
-        "db_name",
-        "db_version",
-        "db_date",
-        "db_author",
-        "db_desc",
-        "db_num_seqs",
-    ]
+    db_keys = DBConfig.keys()
 
     d = pathlib.Path(input_dir).rglob('*')
     config_files = {}

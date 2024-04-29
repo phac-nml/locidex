@@ -97,7 +97,7 @@ def temp_db_dir(tmp_path):
     protein_dir.mkdir()
     
     # Create mock files
-    config_file.write_text(json.dumps({i: "value" for i in constants.DB_CONFIG_FIELDS}))
+    config_file.write_text(json.dumps({i: "value" for i in constants.DBConfig._keys()}))
     meta_file.write_text(json.dumps({"meta": "data"}))
     (nucleotide_dir / "nucleotide").touch()
     (protein_dir / "protein").touch()
@@ -112,7 +112,8 @@ def test_search_db_conf_initialization_and_blast_paths_setup(temp_db_dir):
         "meta": "db_meta.json"
     }
     #required_fields = ["key"]
-    required_fields = [*constants.DB_CONFIG_FIELDS]
+    #required_fields = [*constants.DB_CONFIG_FIELDS]
+    required_fields = [*constants.DBConfig._keys()]
     
     # Initialize search_db_conf
     search_conf = search_db_conf(str(temp_db_dir), db_basenames, required_fields)
