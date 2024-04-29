@@ -1,8 +1,0 @@
-{
-    "Locidex Database": {
-        "1.0.0": {
-            "db_relative_path_dir": "pass_one_db",
-            "db_relative_path_config": "pass_one_db/config.json"
-        }
-    }
-}

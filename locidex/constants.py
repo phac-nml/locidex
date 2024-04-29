@@ -1,6 +1,7 @@
 
 from dataclasses import dataclass, asdict, fields
-from typing import Any, Union
+import pathlib
+from typing import Any, Union, NamedTuple
 
 DNA_AMBIG_CHARS = ['b', 'd', 'e', 'f', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 'u', 'v', 'w', 'x',
                    'y', 'z', '-']
@@ -92,19 +93,21 @@ class DBConfig:
     def keys(self) -> list:
         return [i.name for i in fields(self)]
 
+@dataclass(frozen=True)
+class DBFiles:
+    meta_file: str = "meta.json"
+    config_file: str = "config.json"
+    results_file: str = "results.json"
+    blast_dir: str = "blast"
 
-#DB_CONFIG_FIELDS = [
-#    "db_name",
-#    "db_version",
-#    "db_date",
-#    "db_author",
-#    "db_desc",
-#    "db_num_seqs",
-#    "is_nucl",
-#    "is_prot",
-#    "nucleotide_db_name",
-#    "protein_db_name",
-#]
+    @classmethod
+    def items(cls):
+        return [(i.name, pathlib.Path(i.default)) for i in fields(cls)]
+
+@dataclass(frozen=True)
+class ManifestFields:
+    db_path: str = "path"
+    config_data: str = "config"
 
 SEARCH_RUN_DATA = {
 
