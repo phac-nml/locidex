@@ -1,6 +1,7 @@
 import pathlib
 import json
 from typing import List, Union, Tuple, Dict
+from dataclasses import dataclass
 import os
 import re
 import sys
@@ -9,6 +10,10 @@ from datetime import datetime
 from locidex.version import __version__
 from locidex.constants import DBConfig, DBFiles, ManifestFields
 
+
+@dataclass(frozen=True)
+class _Constants:
+    manifest_name: pathlib.Path = "manifest.json"
 
 def add_args(parser=None):
     if parser is None:
@@ -89,7 +94,7 @@ def write_manifest(file_in: pathlib.Path, manifest: Dict[str, Dict[str, Union[st
     manifest dict: data to write to the manifest
     """
 
-    manifest_file = "manifest.json"
+    manifest_file = _Constants.manifest_name
     path_out = file_in.joinpath(manifest_file)
     with open(path_out, 'w', encoding='utf8') as m_out:
         json.dump(manifest, m_out, indent=2)
@@ -105,6 +110,14 @@ def run(cmd_args):
     manifest = create_manifest(directory_in)
     return write_manifest(directory_in, manifest)
 
+def read_manifest(input_file: pathlib.Path) -> dict:
+    """
+    input_file Path: Manifest file to be parsed
+    """
+    manifest_file = input_file / _Constants.manifest_name
+    with open(manifest_file, 'r', encoding='utf8') as mani_in:
+        manifest = json.load(mani_in)
+    return manifest
 
 # call main function
 if __name__ == '__main__':

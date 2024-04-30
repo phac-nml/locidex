@@ -19,7 +19,7 @@ TEST_PASS_SINGLE = "locidex/example/manifest_in/passes/pass_single"
 
 @dataclass
 class CMDArgs:
-    input: os.PathLike
+    input: Path
 
 
 def test_db_list():
@@ -85,3 +85,20 @@ def test_write_manifest(tmpdir):
     file_out = manifest.run(cmd_args=cmd_args)
     assert file_out.exists()
 
+
+def test_read_manifest(tmpdir):
+    outdir = tmpdir / "build"
+    shutil.copytree(TEST_PASS_MULTIPLE, outdir)
+    cmd_args = CMDArgs(input=Path(TEST_PASS_MULTIPLE))
+    file_out = manifest.run(cmd_args=cmd_args)
+    assert file_out.exists()
+    output = {'Locidex Database 3': 
+                {'path': 'locidex/example/manifest_in/passes/pass_multiple/pass_three_db', 
+                'config': {'db_name': 'Locidex Database 3', 'db_version': '1.0.0', 'db_date': '04/04/2024', 'db_author': 'test1', 'db_desc': 'test1', 'db_num_seqs': 53, 'is_nucl': True, 'is_prot': True, 'nucleotide_db_name': 'nucleotide', 'protein_db_name': 'protein'}}, 
+            'Locidex Database 2': 
+                {'path': 'locidex/example/manifest_in/passes/pass_multiple/pass_two_db', 
+                'config': {'db_name': 'Locidex Database 2', 'db_version': '1.0.0', 'db_date': '04/04/2024', 'db_author': 'test1', 'db_desc': 'test1', 'db_num_seqs': 53, 'is_nucl': True, 'is_prot': True, 'nucleotide_db_name': 'nucleotide', 'protein_db_name': 'protein'}}, 
+            'Locidex Database 1': 
+                {'path': 'locidex/example/manifest_in/passes/pass_multiple/pass_one_db', 
+                'config': {'db_name': 'Locidex Database 1', 'db_version': '1.0.0', 'db_date': '04/04/2024', 'db_author': 'test1', 'db_desc': 'test1', 'db_num_seqs': 53, 'is_nucl': True, 'is_prot': True, 'nucleotide_db_name': 'nucleotide', 'protein_db_name': 'protein'}}}
+    assert manifest.read_manifest(cmd_args.input) == output
