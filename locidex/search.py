@@ -291,6 +291,7 @@ def run_search(config):
         fh.write(json.dumps(store_obj.record, indent=4))
 
     run_data['analysis_end_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    print(run_data)
     with open(os.path.join(outdir,"run.json"),'w' ) as fh:
         fh.write(json.dumps(run_data, indent=4))
 
@@ -309,7 +310,7 @@ def run(cmd_args=None):
                     raise AttributeError("Missing required parameter: {}".format(option))
 
     if cmd_args.db_group is not None:
-        analysis_parameters.db = manifest.get_manifest_db(input_file=Path(cmd_args.db_group), name=cmd_args.db_name, version=cmd_args.db_version)
+        analysis_parameters["db"] = str(manifest.get_manifest_db(input_file=Path(cmd_args.db_group), name=cmd_args.db_name, version=cmd_args.db_version))
 
     config_file = cmd_args.config
 

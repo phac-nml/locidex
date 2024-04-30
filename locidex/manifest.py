@@ -180,8 +180,6 @@ def read_manifest(input_file: pathlib.Path) -> dict:
     """
     input_file Path: Manifest file to be parsed
     """
-    print(input_file.exists())
-    print(input_file)
     if not input_file.is_dir():
         raise AssertionError("Allele database directory must be passed directly.")
     

@@ -8,7 +8,7 @@
   command: locidex extract --help
 
 - name: Run search DB selection
-  command: locidex search --annotate --query locidex/example/search/NC_003198.1.fasta --db_group locidex/example/manifest_selection -o here --db_name "Locidex Database" --db_version 1.0.0
+  command: locidex search --annotate --query locidex/example/search/NC_003198.1.fasta --db_group locidex/example/manifest_selection/dbs -o here --db_name "Locidex Database" --db_version 1.0.0
 
 - name: Run search
   command: locidex search --annotate --query locidex/example/search/NC_003198.1.fasta -d locidex/example/build_db_mlst_out -o here
