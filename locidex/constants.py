@@ -1,7 +1,7 @@
 
 from dataclasses import dataclass, asdict, fields
 import pathlib
-from typing import Any, Union, NamedTuple
+from typing import Any, Union
 
 DNA_AMBIG_CHARS = ['b', 'd', 'e', 'f', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 'u', 'v', 'w', 'x',
                    'y', 'z', '-']
@@ -66,8 +66,9 @@ EXTRACT_MODES = ['snps','trim','raw','extend']
 
 # Manifest opts for parsing
 
+
 OPTION_GROUPS = {
-    "db_group": ["db_name"],
+    "db_group": ["db_name", "db_version"],
 }
 
 @dataclass

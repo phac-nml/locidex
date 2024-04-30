@@ -22,7 +22,7 @@ class locidex_build:
     messages = []
 
 
-    def __init__(self, input_file: os.PathLike, outdir: os.PathLike, config: DBConfig,seq_columns={'nucleotide':'dna_seq','protein':'aa_seq'},force=False,parse_seqids=False):
+    def __init__(self, input_file: os.PathLike, outdir: os.PathLike, config: DBConfig, seq_columns={'nucleotide':'dna_seq','protein':'aa_seq'},force=False,parse_seqids=False):
         self.input_file = input_file
         self.outdir = outdir
         self.force = force

@@ -8,6 +8,7 @@ from datetime import datetime
 
 import pandas as pd
 
+import locidex.manifest as manifest
 from locidex.classes.blast import blast_search, parse_blast
 from locidex.classes.db import search_db_conf, db_config
 from locidex.classes.seq_intake import seq_intake, seq_store
@@ -22,12 +23,11 @@ def add_args(parser=None):
     parser.add_argument('-q','--query', type=str, required=True,help='Query sequence file')
     parser.add_argument('-o', '--outdir', type=str, required=True, help='Output directory to put results')
     group = parser.add_mutually_exclusive_group()
-    parser.add_argument('-n', '--name', type=str, required=False, help='Sample name to include default=filename')
-    #parser.add_argument('-d', '--db', type=str, required=False, help='Locidex database directory')
     group.add_argument('-d', '--db', type=str, required=False, help='Locidex database directory')
+    group.add_argument("--db_group", type=str, required=False, help="A directory of databases containing a manifest file. Requires the db_name option to be set to select the correct db")
+    parser.add_argument('-n', '--name', type=str, required=False, help='Sample name to include default=filename')
     parser.add_argument('-c', '--config', type=str, required=False, help='Locidex parameter config file (json)')
     parser.add_argument('--db_name', type=str, required=False, help='Name of database to perform search, used when a manifest is specified as a db')
-    group.add_argument("--db_group", type=str, required=False, help="A directory of databases containing a manifest file. Requires the db_name option to be set to select the correct db")
     parser.add_argument('--db_version', type=str, required=False, help='Version of database to perform search, used when a manifest is specified as a db')
     parser.add_argument('--min_evalue', type=float, required=False, help='Minumum evalue required for match',
                         default=0.0001)
@@ -295,8 +295,6 @@ def run_search(config):
         fh.write(json.dumps(run_data, indent=4))
 
 
-
-
 def run(cmd_args=None):
     #cmd_args = parse_args()
     if cmd_args is None:
@@ -304,13 +302,14 @@ def run(cmd_args=None):
         cmd_args = parser.parse_args()
     analysis_parameters = vars(cmd_args)
     
-    
     for opt in OPTION_GROUPS:
         if analysis_parameters[opt] is not None:
             for option in analysis_parameters:
                 if analysis_parameters[option] is None:
                     parser.error("Missing required parameter: {}".format(option))
 
+    if cmd_args.db_group is not None:
+        analysis_parameters.db = manifest.get_manifest_db(input_file=Path(cmd_args.db_group), name=cmd_args.db_name, version=cmd_args.db_version)
 
     config_file = cmd_args.config
 

@@ -8,7 +8,8 @@ import sys
 from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
 from datetime import datetime
 from locidex.version import __version__
-from locidex.constants import DBConfig, DBFiles, ManifestFields
+from locidex.constants import DBConfig, DBFiles
+
 
 
 
@@ -156,6 +157,25 @@ def run(cmd_args):
     manifest = create_manifest(directory_in)
     return write_manifest(directory_in, manifest)
 
+def select_db(manifest_data: Dict[str, List[ManifestItem]], name: str, version: str):
+    """
+    Select a locidex database from the manifest file provided.
+
+    manifest_data Dict[str, List[ManifestItem]]: Parsed manifest file data for selecting a database
+    name str: Name of database to select
+    version str: version of selected database to select
+    """
+    db_data = manifest_data.get(name)
+    if db_data is None:
+        raise KeyError("Could not find database with specified name: {}".format(name))
+    
+    try:
+        db = next(filter(lambda x: x.config.db_version == version, db_data))
+    except StopIteration:
+        raise ValueError("No database entry with version: {}".format(version))
+    
+    return db
+
 def read_manifest(input_file: pathlib.Path) -> dict:
     """
     input_file Path: Manifest file to be parsed
@@ -174,6 +194,11 @@ def read_manifest(input_file: pathlib.Path) -> dict:
                 manifest_item = ManifestItem(db=v[ManifestItem.path_key()], config=DBConfig(**v[ManifestItem.config_key()]), root_db=input_file)
                 manifest_data[k].append(manifest_item)
     return manifest_data
+
+def get_manifest_db(input_file: pathlib.Path, name: str, version: str):
+    output = read_manifest(input_file)
+    db_out = select_db(output, name, version)
+    return db_out.db_path
 
 # call main function
 if __name__ == '__main__':

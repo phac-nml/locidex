@@ -1,0 +1,8 @@
+- name: Run help
+  command: locidex search --help
+- name: Run search help
+  command: locidex search --help
+- name: Run build help
+  command: locidex build --help
+- name: Run extract help
+  command: locidex extract --help

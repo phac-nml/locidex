@@ -109,3 +109,15 @@ def test_read_manifest(tmpdir):
         comp_data = output[k]
         v = [i.to_dict() for i in v]
         assert v == comp_data
+
+
+def test_select_db(tmpdir):
+    outdir = Path(tmpdir / "build")
+    shutil.copytree(TEST_PASS_MULTIPLE, outdir)
+    cmd_args = CMDArgs(input=outdir)
+    file_out = manifest.run(cmd_args=cmd_args)
+    assert file_out.exists()
+    db_out =  {'path': 'pass_three_db', 
+                'config': {'db_name': 'Locidex Database 3', 'db_version': '1.0.0', 'db_date': '04/04/2024', 'db_author': 'test1', 'db_desc': 'test1', 'db_num_seqs': 53, 'is_nucl': True, 'is_prot': True, 'nucleotide_db_name': 'nucleotide', 'protein_db_name': 'protein'}}
+    manifest_data: Dict[str, manifest.ManifestItem] = manifest.read_manifest(outdir)
+    assert manifest.select_db(manifest_data, "Locidex Database 3", "1.0.0").to_dict() == db_out

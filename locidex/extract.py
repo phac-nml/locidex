@@ -12,9 +12,10 @@ from locidex.classes.extractor import extractor
 from locidex.classes.blast import blast_search, parse_blast
 from locidex.classes.db import search_db_conf, db_config
 from locidex.classes.seq_intake import seq_intake, seq_store
-from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BLAST_TABLE_COLS, DB_CONFIG_FIELDS, DB_EXPECTED_FILES, NT_SUB, EXTRACT_MODES
+from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BLAST_TABLE_COLS, DBConfig, DB_EXPECTED_FILES, NT_SUB, EXTRACT_MODES, OPTION_GROUPS
 from locidex.version import __version__
 from locidex.classes.aligner import perform_alignment, aligner
+import locidex.manifest as manifest
 
 def add_args(parser=None):
     if parser is None:
@@ -24,7 +25,11 @@ def add_args(parser=None):
     parser.add_argument('-i','--in_fasta', type=str, required=True,help='Query assembly sequence file (fasta)')
     parser.add_argument('-o', '--outdir', type=str, required=True, help='Output directory to put results')
     parser.add_argument('-n', '--name', type=str, required=False, help='Sample name to include default=filename')
-    parser.add_argument('-d', '--db', type=str, required=False, help='Locidex database directory')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-d', '--db', type=str, required=False, help='Locidex database directory')
+    group.add_argument("--db_group", type=str, required=False, help="A directory of databases containing a manifest file. Requires the db_name option to be set to select the correct db")
+    parser.add_argument('--db_name', type=str, required=False, help='Name of database to perform search, used when a manifest is specified as a db')
+    parser.add_argument('--db_version', type=str, required=False, help='Version of database to perform search, used when a manifest is specified as a db')
     parser.add_argument('-c', '--config', type=str, required=False, help='Locidex parameter config file (json)')
     parser.add_argument('--min_evalue', type=float, required=False, help='Minumum evalue required for match',
                         default=0.0001)
@@ -117,7 +122,7 @@ def run_extract(config):
     seq_obj = seq_intake(input_fasta, format, 'source', translation_table, perform_annotation=False,skip_trans=True)
 
     # Validate database is valid
-    db_database_config = search_db_conf(db_dir, DB_EXPECTED_FILES, DB_CONFIG_FIELDS)
+    db_database_config = search_db_conf(db_dir, DB_EXPECTED_FILES, DBConfig._keys())
     if db_database_config.status == False:
         print(f'There is an issue with provided db directory: {db_dir}\n {db_database_config.messages}')
         sys.exit()
@@ -255,8 +260,20 @@ def run(cmd_args=None):
     if cmd_args is None:
         parser = add_args()
         cmd_args = parser.parser_args()
-    #cmd_args = parse_args()
+
     analysis_parameters = vars(cmd_args)
+
+    for opt in OPTION_GROUPS:
+        if analysis_parameters[opt] is not None:
+            for option in analysis_parameters:
+                if analysis_parameters[option] is None:
+                    parser.error("Missing required parameter: {}".format(option))
+
+    if cmd_args.db_group is not None:
+        analysis_parameters.db = manifest.get_manifest_db(input_file=Path(cmd_args.db_group), name=cmd_args.db_name, version=cmd_args.db_version)
+
+
+
     config_file = cmd_args.config
 
     config = {}
