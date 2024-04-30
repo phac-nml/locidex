@@ -10,6 +10,7 @@ from pathlib import PosixPath, Path
 from locidex import manifest
 from locidex.constants import DBConfig
 from dataclasses import dataclass
+from typing import Dict
 
 
 TEST_FAIL_AUTHOR = "locidex/example/manifest_in/fails/fails_author"
@@ -101,4 +102,8 @@ def test_read_manifest(tmpdir):
             'Locidex Database 1': 
                 {'path': 'locidex/example/manifest_in/passes/pass_multiple/pass_one_db', 
                 'config': {'db_name': 'Locidex Database 1', 'db_version': '1.0.0', 'db_date': '04/04/2024', 'db_author': 'test1', 'db_desc': 'test1', 'db_num_seqs': 53, 'is_nucl': True, 'is_prot': True, 'nucleotide_db_name': 'nucleotide', 'protein_db_name': 'protein'}}}
-    assert manifest.read_manifest(cmd_args.input) == output
+    
+    manifest_data: Dict[str, manifest.ManifestItem] = manifest.read_manifest(cmd_args.input)
+    for k, v in manifest_data.items():
+        comp_data = output[k]
+        assert v.to_dict() == comp_data

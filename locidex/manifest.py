@@ -11,6 +11,41 @@ from locidex.version import __version__
 from locidex.constants import DBConfig, DBFiles, ManifestFields
 
 
+
+class ManifestItem:
+    """
+    Manifest item created for exporting and importing locidex items
+    """
+    __path_key = 'path'
+    __config_key = 'config'
+
+    def __init__(self, db_path: pathlib.Path, config: DBConfig):
+        self.db = db_path
+        self.config = config
+
+    def to_dict(self):
+        return {self.__path_key: str(self.db), self.__config_key: self.config.to_dict()}
+    
+    def __repr__(self) -> str:
+        return "Allele location: {}\n Config data: {}".format(self.db, self.config)
+    
+    @classmethod
+    def path_key(cls):
+        """
+        ! Not passing this as a property as apparently that will be deprecated in 3.13
+        """
+        return cls.__path_key
+    
+    @classmethod
+    def config_key(cls):
+        """
+        ! Not passing this as a property as apparently that will be deprecated in 3.13
+        """
+        return cls.__config_key
+    
+
+
+
 @dataclass(frozen=True)
 class _Constants:
     manifest_name: pathlib.Path = "manifest.json"
@@ -80,13 +115,12 @@ def create_manifest(file_in: pathlib.Path):
             raise KeyError("Databases with the same name have been specified (name: {}, path: {})".format(conf.db_name, path))
 
         db_manifest[conf.db_name] = {
-            ManifestFields.db_path: str(path),
-            ManifestFields.config_data: conf.to_dict() 
+            **ManifestItem(db_path=path, config=conf).to_dict()
         }
     return db_manifest
 
 
-def write_manifest(file_in: pathlib.Path, manifest: Dict[str, Dict[str, Union[str, Dict[str, str]]]]) -> None:
+def write_manifest(file_in: pathlib.Path, manifest: Dict[str, ManifestItem]) -> pathlib.Path:
     """
     Write the manifest.json file
 
@@ -115,9 +149,13 @@ def read_manifest(input_file: pathlib.Path) -> dict:
     input_file Path: Manifest file to be parsed
     """
     manifest_file = input_file / _Constants.manifest_name
+    manifest_data: Dict[str, ManifestItem] = dict()
     with open(manifest_file, 'r', encoding='utf8') as mani_in:
         manifest = json.load(mani_in)
-    return manifest
+        for k, v in manifest.items():
+            manifest_item = ManifestItem(v[ManifestItem.path_key()], DBConfig(**v[ManifestItem.config_key()]))
+            manifest_data[k] = manifest_item
+    return manifest_data
 
 # call main function
 if __name__ == '__main__':
