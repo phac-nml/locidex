@@ -1,6 +1,6 @@
 import os, warnings
 import locidex.classes.seq_intake
-from locidex.constants import BLAST_TABLE_COLS, DB_EXPECTED_FILES, DB_CONFIG_FIELDS
+from locidex.constants import BLAST_TABLE_COLS, DB_EXPECTED_FILES, DBConfig
 from locidex.classes.db import search_db_conf, db_config
 from collections import Counter
 
@@ -19,7 +19,7 @@ def seq_intake_class_init(input_file, file_type, perform_annotation):
 #@pytest.mark.skip(reason="no way of currently testing this")
 def test_seq_store_class():
     db_dir = os.path.join(PACKAGE_ROOT, 'example/build_db_mlst_out')
-    db_database_config = search_db_conf(db_dir, DB_EXPECTED_FILES, DB_CONFIG_FIELDS)
+    db_database_config = search_db_conf(db_dir, DB_EXPECTED_FILES, DBConfig._keys())
     metadata_obj = db_config(db_database_config.meta_file_path, ['meta', 'info'])
     sample_name = 'NC_003198.1.fasta'
     seq_obj = locidex.classes.seq_intake.seq_intake(input_file=os.path.join(PACKAGE_ROOT, 'example/search/NC_003198.1.fasta'),

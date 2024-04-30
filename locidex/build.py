@@ -186,7 +186,6 @@ def run(cmd_args=None):
         db_desc=cmd_args.db_desc,
         db_author=cmd_args.author,
         db_date=datetime.now().strftime("%Y/%d/%m"),
-
     )
 
     if not os.path.isfile(input_file):
