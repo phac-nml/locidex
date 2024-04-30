@@ -1,0 +1,22 @@
+{
+  "version": "1.2",
+  "dbname": "protein",
+  "dbtype": "Protein",
+  "db-version": 5,
+  "description": "./locidex/example/build_db_mlst_out/blast/protein/protein.fasta",
+  "number-of-letters": 8347,
+  "number-of-sequences": 53,
+  "last-updated": "2024-04-30T16:04:00",
+  "number-of-volumes": 1,
+  "bytes-total": 50128,
+  "bytes-to-cache": 8969,
+  "files": [
+    "protein.pdb",
+    "protein.phr",
+    "protein.pin",
+    "protein.pot",
+    "protein.psq",
+    "protein.ptf",
+    "protein.pto"
+  ]
+}

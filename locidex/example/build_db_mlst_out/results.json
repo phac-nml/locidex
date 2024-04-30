@@ -1,14 +1,13 @@
 {
-    "analysis_start_time": "2024-04-04 14:12:12",
+    "analysis_start_time": "2024-04-30 16:04:14",
     "parameters": {
-        "input_file": "locidex/example/build_db_mlst_in/senterica.mlst.txt",
-        "outdir": "/tmp/pytest-of-mwells/pytest-82/build0",
+        "input_file": "./locidex/example/build_db_mlst_in/senterica.mlst.txt",
+        "outdir": "./locidex/example/build_db_mlst_out/",
         "name": "Locidex Database",
+        "author": "",
         "db_ver": "1.0.0",
         "db_desc": "",
-        "author": "",
-        "date": "",
         "force": true
     },
-    "analysis_end_time": "2024-04-04 14:12:12"
+    "analysis_end_time": "2024-04-30 16:04:15"
 }

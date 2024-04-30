@@ -12,7 +12,7 @@ import locidex.manifest as manifest
 from locidex.classes.blast import blast_search, parse_blast
 from locidex.classes.db import search_db_conf, db_config
 from locidex.classes.seq_intake import seq_intake, seq_store
-from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BLAST_TABLE_COLS, DB_EXPECTED_FILES, OPTION_GROUPS
+from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BLAST_TABLE_COLS, DB_EXPECTED_FILES, OPTION_GROUPS, DBConfig
 from locidex.utils import write_seq_dict
 from locidex.version import __version__
 
@@ -169,7 +169,7 @@ def run_search(config):
         
 
     # Validate database is valid
-    db_database_config = search_db_conf(db_dir, DB_EXPECTED_FILES, config.to_dict().keys())
+    db_database_config = search_db_conf(db_dir, DB_EXPECTED_FILES, DBConfig._keys())
     if db_database_config.status == False:
         print(f'There is an issue with provided db directory: {db_dir}\n {db_database_config.messages}')
         sys.exit()

@@ -6,3 +6,6 @@
   command: locidex build --help
 - name: Run extract help
   command: locidex extract --help
+
+- name: Run search
+  command: locidex search --annotate --query locidex/example/search/NC_003198.1.fasta -d locidex/example/build_db_mlst_out -o here
