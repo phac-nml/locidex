@@ -22,7 +22,7 @@ class ManifestItem:
     def __init__(self, db: pathlib.Path, root_db: pathlib.Path, config: DBConfig):
         """
         db Path: Relative path to the allele database
-        root_db Path: The path to the manifest.json file required to resolve paths
+        root_db Path: The directory containing the manifest.json file required to resolve paths
         config DBConfig: Database configuration data
         """
         self.db = db
@@ -52,8 +52,6 @@ class ManifestItem:
         ! Not passing this as a property for the class method as apparently that will be deprecated in 3.13
         """
         return cls.__config_key
-    
-
 
 
 @dataclass(frozen=True)
@@ -112,7 +110,7 @@ def check_dbs(file_in: pathlib.Path) -> List[pathlib.PosixPath]:
     db_dirs = [p for p in file_in.iterdir() if p.is_dir()]
     return db_dirs
 
-def create_manifest(file_in: pathlib.Path):
+def create_manifest(file_in: pathlib.Path) -> Dict[str, List[Dict[str, str]]]:
     """
     Create a manifest file for each of the locidex dbs.
 
@@ -122,15 +120,19 @@ def create_manifest(file_in: pathlib.Path):
     validated_dbs: List[Tuple[pathlib.Path, DBConfig]] = validate_db_files(allele_dirs, file_in)
     db_manifest = dict()
     for path, conf in validated_dbs:
-        if db_manifest.get(conf.db_name) is not None:
-            raise KeyError("Databases with the same name have been specified (name: {}, path: {})".format(conf.db_name, path))
-        db_manifest[conf.db_name] = {
-            **ManifestItem(db=path, config=conf, root_db=file_in).to_dict()
-        }
+
+        if db_manifest.get(conf.db_name) is None:
+            db_manifest[conf.db_name] = []
+            
+        if db_manifest[conf.db_name] and (versions := [i.db_version for i in db_manifest[conf.db_name]]):
+            if conf.db_version in versions:
+                raise KeyError("Databases with the same name and version have been specified (name: {}, path: {}, version: {})".format(conf.db_name, path, conf.db_version))
+            
+        db_manifest[conf.db_name].append(ManifestItem(db=path, config=conf, root_db=file_in).to_dict())
     return db_manifest
 
 
-def write_manifest(file_in: pathlib.Path, manifest: Dict[str, ManifestItem]) -> pathlib.Path:
+def write_manifest(file_in: pathlib.Path, manifest: Dict[str, List[Dict[str, str]]]) -> pathlib.Path:
     """
     Write the manifest.json file
 
@@ -165,9 +167,12 @@ def read_manifest(input_file: pathlib.Path) -> dict:
     manifest_data: Dict[str, ManifestItem] = dict()
     with open(manifest_file, 'r', encoding='utf8') as mani_in:
         manifest = json.load(mani_in)
-        for k, v in manifest.items():
-            manifest_item = ManifestItem(db=v[ManifestItem.path_key()], config=DBConfig(**v[ManifestItem.config_key()]), root_db=input_file)
-            manifest_data[k] = manifest_item
+        for k, list_manifests in manifest.items():
+            if manifest_data.get(k) is None:
+                manifest_data[k] = []
+            for v in list_manifests:
+                manifest_item = ManifestItem(db=v[ManifestItem.path_key()], config=DBConfig(**v[ManifestItem.config_key()]), root_db=input_file)
+                manifest_data[k].append(manifest_item)
     return manifest_data
 
 # call main function

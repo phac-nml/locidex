@@ -62,21 +62,21 @@ def test_fail_validate_db_files_description(capsys):
 
 
 def test_create_manifest_multiple():
-    output = {'Locidex Database 3': 
+    output = {'Locidex Database 3': [
                 {'path': 'pass_three_db', 
-                'config': {'db_name': 'Locidex Database 3', 'db_version': '1.0.0', 'db_date': '04/04/2024', 'db_author': 'test1', 'db_desc': 'test1', 'db_num_seqs': 53, 'is_nucl': True, 'is_prot': True, 'nucleotide_db_name': 'nucleotide', 'protein_db_name': 'protein'}}, 
-            'Locidex Database 2': 
+                'config': {'db_name': 'Locidex Database 3', 'db_version': '1.0.0', 'db_date': '04/04/2024', 'db_author': 'test1', 'db_desc': 'test1', 'db_num_seqs': 53, 'is_nucl': True, 'is_prot': True, 'nucleotide_db_name': 'nucleotide', 'protein_db_name': 'protein'}}], 
+            'Locidex Database 2': [
                 {'path': 'pass_two_db', 
-                'config': {'db_name': 'Locidex Database 2', 'db_version': '1.0.0', 'db_date': '04/04/2024', 'db_author': 'test1', 'db_desc': 'test1', 'db_num_seqs': 53, 'is_nucl': True, 'is_prot': True, 'nucleotide_db_name': 'nucleotide', 'protein_db_name': 'protein'}}, 
-            'Locidex Database 1': 
+                'config': {'db_name': 'Locidex Database 2', 'db_version': '1.0.0', 'db_date': '04/04/2024', 'db_author': 'test1', 'db_desc': 'test1', 'db_num_seqs': 53, 'is_nucl': True, 'is_prot': True, 'nucleotide_db_name': 'nucleotide', 'protein_db_name': 'protein'}}], 
+            'Locidex Database 1': [
                 {'path': 'pass_one_db', 
-                'config': {'db_name': 'Locidex Database 1', 'db_version': '1.0.0', 'db_date': '04/04/2024', 'db_author': 'test1', 'db_desc': 'test1', 'db_num_seqs': 53, 'is_nucl': True, 'is_prot': True, 'nucleotide_db_name': 'nucleotide', 'protein_db_name': 'protein'}}}
+                'config': {'db_name': 'Locidex Database 1', 'db_version': '1.0.0', 'db_date': '04/04/2024', 'db_author': 'test1', 'db_desc': 'test1', 'db_num_seqs': 53, 'is_nucl': True, 'is_prot': True, 'nucleotide_db_name': 'nucleotide', 'protein_db_name': 'protein'}}]}
     assert manifest.create_manifest(Path(TEST_PASS_MULTIPLE)) == output
 
 def test_create_manifest_single():
-    output = {'Locidex Database': 
+    output = {'Locidex Database': [
                 {'path': 'pass_one_db', 
-                'config': {'db_name': 'Locidex Database', 'db_version': '1.0.0', 'db_date': '04/04/2024', 'db_author': 'test1', 'db_desc': 'test1', 'db_num_seqs': 53, 'is_nucl': True, 'is_prot': True, 'nucleotide_db_name': 'nucleotide', 'protein_db_name': 'protein'}}}
+                'config': {'db_name': 'Locidex Database', 'db_version': '1.0.0', 'db_date': '04/04/2024', 'db_author': 'test1', 'db_desc': 'test1', 'db_num_seqs': 53, 'is_nucl': True, 'is_prot': True, 'nucleotide_db_name': 'nucleotide', 'protein_db_name': 'protein'}}] }
     assert manifest.create_manifest(Path(TEST_PASS_SINGLE)) == output
 
 
@@ -94,17 +94,18 @@ def test_read_manifest(tmpdir):
     cmd_args = CMDArgs(input=outdir)
     file_out = manifest.run(cmd_args=cmd_args)
     assert file_out.exists()
-    output = {'Locidex Database 3': 
+    output = {'Locidex Database 3': [
                 {'path': 'pass_three_db', 
-                'config': {'db_name': 'Locidex Database 3', 'db_version': '1.0.0', 'db_date': '04/04/2024', 'db_author': 'test1', 'db_desc': 'test1', 'db_num_seqs': 53, 'is_nucl': True, 'is_prot': True, 'nucleotide_db_name': 'nucleotide', 'protein_db_name': 'protein'}}, 
-            'Locidex Database 2': 
+                'config': {'db_name': 'Locidex Database 3', 'db_version': '1.0.0', 'db_date': '04/04/2024', 'db_author': 'test1', 'db_desc': 'test1', 'db_num_seqs': 53, 'is_nucl': True, 'is_prot': True, 'nucleotide_db_name': 'nucleotide', 'protein_db_name': 'protein'}}], 
+            'Locidex Database 2': [
                 {'path': 'pass_two_db', 
-                'config': {'db_name': 'Locidex Database 2', 'db_version': '1.0.0', 'db_date': '04/04/2024', 'db_author': 'test1', 'db_desc': 'test1', 'db_num_seqs': 53, 'is_nucl': True, 'is_prot': True, 'nucleotide_db_name': 'nucleotide', 'protein_db_name': 'protein'}}, 
+                'config': {'db_name': 'Locidex Database 2', 'db_version': '1.0.0', 'db_date': '04/04/2024', 'db_author': 'test1', 'db_desc': 'test1', 'db_num_seqs': 53, 'is_nucl': True, 'is_prot': True, 'nucleotide_db_name': 'nucleotide', 'protein_db_name': 'protein'}}], 
             'Locidex Database 1': 
-                {'path': 'pass_one_db', 
-                'config': {'db_name': 'Locidex Database 1', 'db_version': '1.0.0', 'db_date': '04/04/2024', 'db_author': 'test1', 'db_desc': 'test1', 'db_num_seqs': 53, 'is_nucl': True, 'is_prot': True, 'nucleotide_db_name': 'nucleotide', 'protein_db_name': 'protein'}}}
+                [ {'path': 'pass_one_db', 
+                'config': {'db_name': 'Locidex Database 1', 'db_version': '1.0.0', 'db_date': '04/04/2024', 'db_author': 'test1', 'db_desc': 'test1', 'db_num_seqs': 53, 'is_nucl': True, 'is_prot': True, 'nucleotide_db_name': 'nucleotide', 'protein_db_name': 'protein'}}]}
 
     manifest_data: Dict[str, manifest.ManifestItem] = manifest.read_manifest(outdir)
     for k, v in manifest_data.items():
         comp_data = output[k]
-        assert v.to_dict() == comp_data
+        v = [i.to_dict() for i in v]
+        assert v == comp_data

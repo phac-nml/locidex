@@ -11,7 +11,7 @@ import pandas as pd
 from locidex.classes.blast import blast_search, parse_blast
 from locidex.classes.db import search_db_conf, db_config
 from locidex.classes.seq_intake import seq_intake, seq_store
-from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BLAST_TABLE_COLS, DB_CONFIG_FIELDS, DB_EXPECTED_FILES
+from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BLAST_TABLE_COLS, DB_EXPECTED_FILES, OPTION_GROUPS
 from locidex.utils import write_seq_dict
 from locidex.version import __version__
 
@@ -21,10 +21,13 @@ def add_args(parser=None):
             description="Locidex: Advanced searching and filtering of sequence databases using query sequences",)
     parser.add_argument('-q','--query', type=str, required=True,help='Query sequence file')
     parser.add_argument('-o', '--outdir', type=str, required=True, help='Output directory to put results')
+    group = parser.add_mutually_exclusive_group()
     parser.add_argument('-n', '--name', type=str, required=False, help='Sample name to include default=filename')
-    parser.add_argument('-d', '--db', type=str, required=False, help='Locidex database directory')
+    #parser.add_argument('-d', '--db', type=str, required=False, help='Locidex database directory')
+    group.add_argument('-d', '--db', type=str, required=False, help='Locidex database directory')
     parser.add_argument('-c', '--config', type=str, required=False, help='Locidex parameter config file (json)')
     parser.add_argument('--db_name', type=str, required=False, help='Name of database to perform search, used when a manifest is specified as a db')
+    group.add_argument("--db_group", type=str, required=False, help="A directory of databases containing a manifest file. Requires the db_name option to be set to select the correct db")
     parser.add_argument('--db_version', type=str, required=False, help='Version of database to perform search, used when a manifest is specified as a db')
     parser.add_argument('--min_evalue', type=float, required=False, help='Minumum evalue required for match',
                         default=0.0001)
@@ -166,7 +169,7 @@ def run_search(config):
         
 
     # Validate database is valid
-    db_database_config = search_db_conf(db_dir, DB_EXPECTED_FILES, DB_CONFIG_FIELDS)
+    db_database_config = search_db_conf(db_dir, DB_EXPECTED_FILES, config.to_dict().keys())
     if db_database_config.status == False:
         print(f'There is an issue with provided db directory: {db_dir}\n {db_database_config.messages}')
         sys.exit()
@@ -247,7 +250,7 @@ def run_search(config):
     }
     store_obj = seq_store(sample_name, db_database_config.config_obj.config, metadata_obj.config['meta'],
                           seq_obj.seq_data, BLAST_TABLE_COLS, hit_filters)
-    print(store_obj.record)
+
     for db_label in blast_database_paths:
         label_col = 'index'
         if db_label == 'nucleotide':
@@ -300,6 +303,15 @@ def run(cmd_args=None):
         parser = add_args()
         cmd_args = parser.parse_args()
     analysis_parameters = vars(cmd_args)
+    
+    
+    for opt in OPTION_GROUPS:
+        if analysis_parameters[opt] is not None:
+            for option in analysis_parameters:
+                if analysis_parameters[option] is None:
+                    parser.error("Missing required parameter: {}".format(option))
+
+
     config_file = cmd_args.config
 
     config = {}

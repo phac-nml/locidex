@@ -64,6 +64,12 @@ SCHEME_HEADER = [
 
 EXTRACT_MODES = ['snps','trim','raw','extend']
 
+# Manifest opts for parsing
+
+OPTION_GROUPS = {
+    "db_group": ["db_name"],
+}
+
 @dataclass
 class DBConfig:
     db_name: Union[str, None] = None
@@ -92,6 +98,7 @@ class DBConfig:
 
     def keys(self) -> list:
         return [i.name for i in fields(self)]
+
 
 @dataclass(frozen=True)
 class DBFiles:
