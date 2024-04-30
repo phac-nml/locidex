@@ -304,9 +304,9 @@ def run(cmd_args=None):
     
     for opt in OPTION_GROUPS:
         if analysis_parameters[opt] is not None:
-            for option in analysis_parameters:
+            for option in OPTION_GROUPS[opt]:
                 if analysis_parameters[option] is None:
-                    parser.error("Missing required parameter: {}".format(option))
+                    raise AttributeError("Missing required parameter: {}".format(option))
 
     if cmd_args.db_group is not None:
         analysis_parameters.db = manifest.get_manifest_db(input_file=Path(cmd_args.db_group), name=cmd_args.db_name, version=cmd_args.db_version)

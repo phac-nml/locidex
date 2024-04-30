@@ -1,0 +1,13 @@
+{
+    "analysis_start_time": "2024-04-30 16:29:13",
+    "parameters": {
+        "input_file": "locidex/example/build_db_mlst_in/senterica.mlst.txt",
+        "outdir": "locidex/example/build_db_mlst_out/",
+        "name": "Locidex Database",
+        "author": "",
+        "db_ver": "1.0.0",
+        "db_desc": "",
+        "force": true
+    },
+    "analysis_end_time": "2024-04-30 16:29:13"
+}

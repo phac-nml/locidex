@@ -148,7 +148,7 @@ def write_manifest(file_in: pathlib.Path, manifest: Dict[str, List[Dict[str, str
     return path_out
 
 
-def run(cmd_args):
+def run(cmd_args=None):
     if cmd_args is None:
         parser = add_args()
         cmd_args = parser.parse_args()
@@ -180,6 +180,8 @@ def read_manifest(input_file: pathlib.Path) -> dict:
     """
     input_file Path: Manifest file to be parsed
     """
+    print(input_file.exists())
+    print(input_file)
     if not input_file.is_dir():
         raise AssertionError("Allele database directory must be passed directly.")
     
