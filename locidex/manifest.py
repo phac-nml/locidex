@@ -19,9 +19,19 @@ class ManifestItem:
     __path_key = 'path'
     __config_key = 'config'
 
-    def __init__(self, db_path: pathlib.Path, config: DBConfig):
-        self.db = db_path
+    def __init__(self, db: pathlib.Path, root_db: pathlib.Path, config: DBConfig):
+        """
+        db Path: Relative path to the allele database
+        root_db Path: The path to the manifest.json file required to resolve paths
+        config DBConfig: Database configuration data
+        """
+        self.db = db
         self.config = config
+        self.root_db = root_db
+
+    @property
+    def db_path(self):
+        return self.root_db / self.db
 
     def to_dict(self):
         return {self.__path_key: str(self.db), self.__config_key: self.config.to_dict()}
@@ -32,14 +42,14 @@ class ManifestItem:
     @classmethod
     def path_key(cls):
         """
-        ! Not passing this as a property as apparently that will be deprecated in 3.13
+        ! Not passing this as a property for the class method as apparently that will be deprecated in 3.13
         """
         return cls.__path_key
     
     @classmethod
     def config_key(cls):
         """
-        ! Not passing this as a property as apparently that will be deprecated in 3.13
+        ! Not passing this as a property for the class method as apparently that will be deprecated in 3.13
         """
         return cls.__config_key
     
@@ -76,19 +86,20 @@ def check_config(directory: pathlib.Path) -> None:
                 raise AttributeError("Config cannot have missing values: {}".format(k))
     return config_data
 
-def validate_db_files(allele_dir: List[pathlib.Path]) -> List[Tuple[pathlib.Path, DBConfig]]:
+def validate_db_files(allele_dir: List[pathlib.Path], file_in: pathlib.Path) -> List[Tuple[pathlib.Path, DBConfig]]:
     """
     Validates a directory of allele databases, and verifies that the config contains
     the required fields
 
-    allele_dir List[pathlib.Path: Directory of various allele databases needed by mikrokondo
+    allele_dir List[pathlib.Path: Directory of various allele databases needed by locidex
+    file_in Path: Root directory to set files relative too
     """
     db_configs: Tuple[pathlib.Path, DBConfig] = []
     for a_dir in allele_dir:
         for k, v in DBFiles.items():
             if not pathlib.Path(a_dir / v).exists():
                 raise FileNotFoundError("Required file {} does not exist.".format(k))
-        db_configs.append((a_dir, check_config(a_dir)))
+        db_configs.append((a_dir.relative_to(file_in), check_config(a_dir)))
     return db_configs
 
 
@@ -108,14 +119,13 @@ def create_manifest(file_in: pathlib.Path):
     file_in pathlib.Path: File path to directory of databases
     """
     allele_dirs: List[pathlib.Path] = check_dbs(file_in)
-    validated_dbs: List[Tuple[pathlib.Path, DBConfig]] = validate_db_files(allele_dirs)
+    validated_dbs: List[Tuple[pathlib.Path, DBConfig]] = validate_db_files(allele_dirs, file_in)
     db_manifest = dict()
     for path, conf in validated_dbs:
         if db_manifest.get(conf.db_name) is not None:
             raise KeyError("Databases with the same name have been specified (name: {}, path: {})".format(conf.db_name, path))
-
         db_manifest[conf.db_name] = {
-            **ManifestItem(db_path=path, config=conf).to_dict()
+            **ManifestItem(db=path, config=conf, root_db=file_in).to_dict()
         }
     return db_manifest
 
@@ -148,12 +158,15 @@ def read_manifest(input_file: pathlib.Path) -> dict:
     """
     input_file Path: Manifest file to be parsed
     """
+    if not input_file.is_dir():
+        raise AssertionError("Allele database directory must be passed directly.")
+    
     manifest_file = input_file / _Constants.manifest_name
     manifest_data: Dict[str, ManifestItem] = dict()
     with open(manifest_file, 'r', encoding='utf8') as mani_in:
         manifest = json.load(mani_in)
         for k, v in manifest.items():
-            manifest_item = ManifestItem(v[ManifestItem.path_key()], DBConfig(**v[ManifestItem.config_key()]))
+            manifest_item = ManifestItem(db=v[ManifestItem.path_key()], config=DBConfig(**v[ManifestItem.config_key()]), root_db=input_file)
             manifest_data[k] = manifest_item
     return manifest_data
 
