@@ -78,17 +78,10 @@ def test_create_manifest_single():
     assert manifest.create_manifest(Path(TEST_PASS_SINGLE)) == output
 
 
-#def test_no_db_author(tmpdir, capsys):
-#    out_dir = os.path.join(tmpdir, "build")
-#    shutil.copytree(TEST_FAIL_AUTHOR, out_dir)
-#    with pytest.raises(KeyError):
-#        manifest.run(CMDArgs(input=out_dir))
-#        assert "is missing a needed field value for db_desc, please set one" in capsys.readouterr()
-#
-#def test_no_db_description(tmpdir, capsys):
-#    outdir = os.path.join(tmpdir, "build")
-#    shutil.copytree(TEST_FAIL_DESC, outdir)
-#    with pytest.raises(KeyError):
-#        manifest.run(CMDArgs(input=outdir))
-#        assert "is missing a needed field value for db_author, please set one" in capsys.readouterr()
+def test_write_manifest(tmpdir):
+    outdir = tmpdir / "build"
+    shutil.copytree(TEST_PASS_MULTIPLE, outdir)
+    cmd_args = CMDArgs(input=TEST_PASS_MULTIPLE)
+    file_out = manifest.run(cmd_args=cmd_args)
+    assert file_out.exists()
 
