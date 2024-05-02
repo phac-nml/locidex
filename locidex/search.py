@@ -8,12 +8,11 @@ from datetime import datetime
 
 import pandas as pd
 
-import locidex.manifest as manifest
 from locidex.classes.blast import blast_search, parse_blast
 from locidex.classes.db import search_db_conf, db_config
 from locidex.classes.seq_intake import seq_intake, seq_store
 from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BLAST_TABLE_COLS, DB_EXPECTED_FILES, OPTION_GROUPS, DBConfig
-from locidex.utils import write_seq_dict
+from locidex.utils import write_seq_dict, check_db_groups
 from locidex.version import __version__
 
 def add_args(parser=None):
@@ -302,16 +301,9 @@ def run(cmd_args=None):
         parser = add_args()
         cmd_args = parser.parse_args()
     analysis_parameters = vars(cmd_args)
+
+    analysis_parameters = check_db_groups(analysis_params=analysis_parameters, cmd_args=cmd_args)
     
-    for opt in OPTION_GROUPS:
-        if analysis_parameters[opt] is not None:
-            for option in OPTION_GROUPS[opt]:
-                if analysis_parameters[option] is None:
-                    raise AttributeError("Missing required parameter: {}".format(option))
-
-    if cmd_args.db_group is not None:
-        analysis_parameters["db"] = str(manifest.get_manifest_db(input_file=Path(cmd_args.db_group), name=cmd_args.db_name, version=cmd_args.db_version))
-
     config_file = cmd_args.config
 
     config = {}

@@ -1,12 +1,29 @@
 import hashlib
 import json
 import os
+import argparse
 from collections import Counter
+from pathlib import Path
 
 from Bio.Seq import Seq
 
-from locidex.constants import NT_SUB, PROTEIN_ALPHA, DNA_ALPHA
+from locidex.constants import NT_SUB, PROTEIN_ALPHA, DNA_ALPHA, OPTION_GROUPS
+import locidex.manifest as manifest 
 
+def check_db_groups(analysis_params: dict, cmd_args: argparse.Namespace, param_db: str = "db") -> dict:
+    """
+    Verify that a locidex database, or database group passed has all of the require parameters
+    """
+    for opt in OPTION_GROUPS:
+        if analysis_params[opt] is not None:
+            for option in OPTION_GROUPS[opt]:
+                if analysis_params[option] is None:
+                    raise AttributeError("Missing required parameter: {}".format(option))
+    
+    if cmd_args.db_group is not None:
+        analysis_params[param_db] = str(manifest.get_manifest_db(input_file=Path(cmd_args.db_group), name=cmd_args.db_name, version=cmd_args.db_version))
+
+    return analysis_params
 
 def revcomp(s):
     """
