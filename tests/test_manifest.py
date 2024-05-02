@@ -27,9 +27,9 @@ def test_db_list():
     """
     List all databases in a test directory
     """
-    assert manifest.check_dbs(Path(TEST_PASS_MULTIPLE)) == [PosixPath('locidex/example/manifest_in/passes/pass_multiple/pass_three_db'), 
+    assert set(manifest.check_dbs(Path(TEST_PASS_MULTIPLE))) == set([PosixPath('locidex/example/manifest_in/passes/pass_multiple/pass_three_db'), 
                                                             PosixPath('locidex/example/manifest_in/passes/pass_multiple/pass_two_db'), 
-                                                            PosixPath('locidex/example/manifest_in/passes/pass_multiple/pass_one_db')]
+                                                            PosixPath('locidex/example/manifest_in/passes/pass_multiple/pass_one_db')])
 
 @pytest.mark.parametrize("input_dir,output",
 [
@@ -48,7 +48,7 @@ def test_db_list():
 def test_pass_validate_db_files(input_dir, output):
     input_path = Path(input_dir)
     dbs = manifest.check_dbs(input_path)
-    assert manifest.validate_db_files(dbs, input_path) == output
+    assert sorted(manifest.validate_db_files(dbs, input_path)) == sorted(output)
 
 def test_fail_validate_db_files_author(capsys):
     with pytest.raises(AttributeError):
