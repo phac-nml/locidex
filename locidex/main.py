@@ -2,7 +2,7 @@
 
 import sys
 import argparse
-from . import format, extract, report, merge, search, build
+from . import format, extract, report, merge, search, build, manifest
 
 tasks = {
     'search': (search, 'Query set of Loci/Genes against a database to produce a sequence store for downstream processing'),
@@ -11,6 +11,7 @@ tasks = {
     'merge':  (merge, 'Merge a set of gene profiles into a standard profile format'),
     'format': (format, 'Format fasta files from other MLST databases for use with locidex build'),
     'build': (build, 'Build a locidex database'),
+    'manifest': (manifest, 'Create a multi-database folder manifest'),
 }
 
 
@@ -27,7 +28,6 @@ def main(argv=None):
     if args.command is None:
         parser.print_help()
         sys.exit()
-    #print("args", tasks[args.command][module_idx].run(args))
     tasks[args.command][module_idx].run(args)
 
 

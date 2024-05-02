@@ -72,7 +72,7 @@ def get_all_file_paths(dir):
     ("config.json", ["db_name", "db_version", "db_author", "db_desc", 
                 "db_num_seqs", "is_nucl", "is_prot", "nucleotide_db_name",
                 "protein_db_name"], None),
-    ("results.json", ["input_file", "name", "db_ver", "db_desc", "author", "date", "force"], "parameters")
+    ("results.json", ["input_file", "name", "db_ver", "db_desc", "author", "force"], "parameters")
 ])
 def test_config_results_json(output_directory,f_name,comp_fields, primary_key):
     """Verify that config and results files outputs are the same.

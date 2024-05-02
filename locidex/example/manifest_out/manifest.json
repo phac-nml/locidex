@@ -1,0 +1,53 @@
+{
+  "Locidex Database 3": [
+    {
+      "path": "pass_three_db",
+      "config": {
+        "db_name": "Locidex Database 3",
+        "db_version": "1.0.0",
+        "db_date": "04/04/2024",
+        "db_author": "test1",
+        "db_desc": "test1",
+        "db_num_seqs": 53,
+        "is_nucl": true,
+        "is_prot": true,
+        "nucleotide_db_name": "nucleotide",
+        "protein_db_name": "protein"
+      }
+    }
+  ],
+  "Locidex Database 2": [
+    {
+      "path": "pass_two_db",
+      "config": {
+        "db_name": "Locidex Database 2",
+        "db_version": "1.0.0",
+        "db_date": "04/04/2024",
+        "db_author": "test1",
+        "db_desc": "test1",
+        "db_num_seqs": 53,
+        "is_nucl": true,
+        "is_prot": true,
+        "nucleotide_db_name": "nucleotide",
+        "protein_db_name": "protein"
+      }
+    }
+  ],
+  "Locidex Database 1": [
+    {
+      "path": "pass_one_db",
+      "config": {
+        "db_name": "Locidex Database 1",
+        "db_version": "1.0.0",
+        "db_date": "04/04/2024",
+        "db_author": "test1",
+        "db_desc": "test1",
+        "db_num_seqs": 53,
+        "is_nucl": true,
+        "is_prot": true,
+        "nucleotide_db_name": "nucleotide",
+        "protein_db_name": "protein"
+      }
+    }
+  ]
+}
