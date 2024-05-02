@@ -11,7 +11,7 @@ from mimetypes import guess_type
 import pandas as pd
 from Bio import SeqIO
 
-from locidex.constants import LOCIDEX_DB_HEADER, FILE_TYPES, FORMAT_RUN_DATA
+from locidex.constants import LOCIDEX_DB_HEADER, FILE_TYPES, FORMAT_RUN_DATA, LocidexDBHeader
 from locidex.utils import six_frame_translation, revcomp, calc_md5
 from locidex.version import __version__
 from locidex.constants import DNA_AMBIG_CHARS, DNA_IUPAC_CHARS
@@ -167,17 +167,30 @@ class locidex_format:
 
                 dna_len = len(dna_seq)
                 aa_len = len(aa_seq)
-                row = self.create_row()
-                row['seq_id'] = self.seq_idx
-                row['locus_name'] = gene_name
-                row['locus_name_alt'] = id
-                row['locus_product'] = ''
-                row['locus_description'] = ''
-                row['locus_uid'] = id.split(self.delim)[-1]
-                row['dna_seq'] = dna_seq
-                row['dna_seq_len'] = dna_len
-                row['dna_seq_hash'] = calc_md5([dna_seq])[0]
-                row['dna_ambig_count'] =dna_seq.count('n')
+                #row = self.create_row()
+                row = LocidexDBHeader(
+                    seq_id=self.seq_idx,
+                    locus_name=gene_name,
+                    locus_name_alt=id,
+                    locus_product='',
+                    locus_description='',
+                    locus_uid=id.split(self.delim)[-1],
+                    dna_seq=dna_seq,
+                    dna_seq_len=dna_len,
+                    dna_seq_hash=calc_md5([dna_seq])[0],
+                    dna_ambig_count=dna_seq.count('n'),
+                )
+                
+                #row['seq_id'] = self.seq_idx
+                #row['locus_name'] = gene_name
+                #row['locus_name_alt'] = id
+                #row['locus_product'] = ''
+                #row['locus_description'] = ''
+                #row['locus_uid'] = id.split(self.delim)[-1]
+                #row['dna_seq'] = dna_seq
+                #row['dna_seq_len'] = dna_len
+                #row['dna_seq_hash'] = calc_md5([dna_seq])[0]
+                #row['dna_ambig_count'] =dna_seq.count('n')
 
 
                 if self.is_protein_coding:

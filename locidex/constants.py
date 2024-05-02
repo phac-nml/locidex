@@ -1,7 +1,7 @@
 
 from dataclasses import dataclass, asdict, fields
 import pathlib
-from typing import Any, Union
+from typing import Any, Union, NamedTuple
 
 DNA_AMBIG_CHARS = ['b', 'd', 'e', 'f', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 'u', 'v', 'w', 'x',
                    'y', 'z', '-']
@@ -132,6 +132,32 @@ DB_EXPECTED_FILES = {
     'protein':'protein.fasta',
 }
 
+
+class LocidexDBHeader(NamedTuple):
+    seq_id: str
+    locus_name: str
+    locus_name_alt: str 
+    locus_product: str
+    locus_description: str
+    locus_uid: str
+    dna_seq: str
+    dna_seq_len: int
+    dna_seq_hash: str
+    aa_seq: str
+    aa_seq_len: int
+    aa_seq_hash: str
+    dna_min_len: int
+    dna_max_len: int
+    aa_min_len: int
+    aa_max_len: int
+    dna_min_ident: float
+    aa_min_ident: float
+    min_dna_match_cov: int
+    min_aa_match_cov: int
+    count_int_stops: int
+    dna_ambig_count: int
+
+
 LOCIDEX_DB_HEADER = [
     'seq_id',
     'locus_name',
@@ -155,5 +181,4 @@ LOCIDEX_DB_HEADER = [
     'min_aa_match_cov',
     'count_int_stops',
     'dna_ambig_count'
-
 ]

@@ -4,7 +4,7 @@ import pandas as pd
 import os, sys
 from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
 from locidex.version import __version__
-from locidex.constants import FORMAT_RUN_DATA
+from locidex.constants import FORMAT_RUN_DATA, DBFiles
 from locidex.classes import run_command
 from locidex.constants import DBConfig
 
@@ -169,17 +169,6 @@ def run(cmd_args=None):
     run_data['analysis_start_time'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     run_data['parameters'] = vars(cmd_args)
 
-    #config = {}
-    #for f in DB_CONFIG_FIELDS:
-    #    config[f] = ''
-
-    #config["db_name"] = cmd_args.name
-    #config["db_version"] = cmd_args.db_ver
-    #config["db_desc"] = cmd_args.db_desc
-    #config["db_author"] = cmd_args.author
-    #if cmd_args.date == '':
-    #    config["db_date"] = datetime.now().strftime("%Y/%d/%m")
-
     config = DBConfig(
         db_name=cmd_args.name,
         db_version =cmd_args.db_ver,
@@ -199,14 +188,14 @@ def run(cmd_args=None):
         sys.exit()
 
     run_data['analysis_end_time'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    with open(os.path.join(outdir,"config.json"),"w") as oh:
+    with open(os.path.join(outdir,DBFiles.config_file),"w") as oh:
         oh.write(json.dumps(obj.config.to_dict(),indent=4))
 
-    with open(os.path.join(outdir,"meta.json"),"w") as oh:
+    with open(os.path.join(outdir, DBFiles.meta_file),"w") as oh:
         oh.write(json.dumps(obj.meta,indent=4))
 
 
-    with open(os.path.join(outdir,"results.json"),"w") as oh:
+    with open(os.path.join(outdir, DBFiles.results_file),"w") as oh:
         oh.write(json.dumps(run_data,indent=4))
 
 

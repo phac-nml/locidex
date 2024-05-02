@@ -1,5 +1,5 @@
 - name: Run help
-  command: locidex search --help
+  command: locidex --help
 
 - name: Run search help
   command: locidex search --help
