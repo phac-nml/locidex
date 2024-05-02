@@ -22,7 +22,7 @@ def add_args(parser=None):
             description="Locidex: Advanced searching and filtering of sequence databases using query sequences",)
     parser.add_argument('-q','--query', type=str, required=True,help='Query sequence file')
     parser.add_argument('-o', '--outdir', type=str, required=True, help='Output directory to put results')
-    group = parser.add_mutually_exclusive_group()
+    group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('-d', '--db', type=str, required=False, help='Locidex database directory')
     group.add_argument("--db_group", type=str, required=False, help="A directory of databases containing a manifest file. Requires the db_name option to be set to select the correct db")
     parser.add_argument('-n', '--name', type=str, required=False, help='Sample name to include default=filename')

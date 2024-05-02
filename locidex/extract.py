@@ -25,7 +25,7 @@ def add_args(parser=None):
     parser.add_argument('-i','--in_fasta', type=str, required=True,help='Query assembly sequence file (fasta)')
     parser.add_argument('-o', '--outdir', type=str, required=True, help='Output directory to put results')
     parser.add_argument('-n', '--name', type=str, required=False, help='Sample name to include default=filename')
-    group = parser.add_mutually_exclusive_group()
+    group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('-d', '--db', type=str, required=False, help='Locidex database directory')
     group.add_argument("--db_group", type=str, required=False, help="A directory of databases containing a manifest file. Requires the db_name option to be set to select the correct db")
     parser.add_argument('--db_name', type=str, required=False, help='Name of database to perform search, used when a manifest is specified as a db')
@@ -259,7 +259,7 @@ def run_extract(config):
 def run(cmd_args=None):
     if cmd_args is None:
         parser = add_args()
-        cmd_args = parser.parser_args()
+        cmd_args = parser.parse_args()
 
     analysis_parameters = vars(cmd_args)
 
