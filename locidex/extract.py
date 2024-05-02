@@ -15,7 +15,7 @@ from locidex.classes.seq_intake import seq_intake, seq_store
 from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BLAST_TABLE_COLS, DBConfig, DB_EXPECTED_FILES, NT_SUB, EXTRACT_MODES, OPTION_GROUPS
 from locidex.version import __version__
 from locidex.classes.aligner import perform_alignment, aligner
-import locidex.manifest as manifest
+from locidex.utils import check_db_groups
 
 def add_args(parser=None):
     if parser is None:
@@ -263,16 +263,7 @@ def run(cmd_args=None):
 
     analysis_parameters = vars(cmd_args)
 
-    for opt in OPTION_GROUPS:
-        if analysis_parameters[opt] is not None:
-            for option in OPTION_GROUPS[opt]:
-                if analysis_parameters[option] is None:
-                    raise AttributeError("Missing required parameter: {}".format(option))
-
-    if cmd_args.db_group is not None:
-        analysis_parameters["db"] = str(manifest.get_manifest_db(input_file=Path(cmd_args.db_group), name=cmd_args.db_name, version=cmd_args.db_version))
-
-
+    analysis_parameters = check_db_groups(analysis_params=analysis_parameters, cmd_args=cmd_args)
 
     config_file = cmd_args.config
 
