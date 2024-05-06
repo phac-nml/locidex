@@ -17,7 +17,7 @@ from locidex.utils import six_frame_translation, revcomp, calc_md5
 from locidex.version import __version__
 
 class locidex_format:
-    input = None
+
     input_type = None
     delim = '_'
     status = True
