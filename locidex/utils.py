@@ -79,7 +79,9 @@ def six_frame_translation(dna_seq,trans_table):
     for i in range(0,3):
         fwd.append(translate_dna(dna_seq[i:], trans_table))
         rev.append(translate_dna(revcomp(dna_seq)[i:], trans_table))
-    return (fwd, rev)
+    fwd.extend(rev)
+    #return (fwd, rev)
+    return fwd
 
 def guess_alphabet(seq):
     seq = seq.lower().replace('-','')

@@ -8,9 +8,11 @@ from datetime import datetime
 from functools import partial
 from mimetypes import guess_type
 from dataclasses import dataclass
+from typing import List, Tuple
 
 import pandas as pd
 from Bio import SeqIO
+from Bio.Seq import Seq
 
 from locidex.constants import FILE_TYPES, LocidexDBHeader
 from locidex.utils import six_frame_translation, revcomp, calc_md5
@@ -21,14 +23,15 @@ class locidex_format:
     input_type = None
     delim = '_'
     status = True
+    __stop_codon = "*"
 
     @dataclass
     class FrameSelection:
         offset: int
         seq: str
         count_int_stops: int
-        frame: int
         revcomp: bool
+        default_allele: bool
 
     def __init__(self,input,header,is_protein=False,delim="_",trans_table=11,
                 min_len_frac=0.7,max_len_frac=1.3,min_cov_perc=80.0,min_ident_perc=80.0,valid_ext=None):
@@ -87,55 +90,30 @@ class locidex_format:
         return files
 
     def pick_frame(self, six_frame_translation) -> FrameSelection:
-        count_internal_stops = []
-        terminal_stop_codon_present = []
-        for i in range(0, len(six_frame_translation)):
-            for k in range(0, len(six_frame_translation[i])):
-                count_internal_stops.append(six_frame_translation[i][k][:-1].count('*'))
-                terminal_stop_codon_present.append(six_frame_translation[i][k][-1] == '*')
+        count_internal_stops: List[Tuple[int, str]] = []
+        reversed_frame_idx = 3 # all frames above this index are reverse complimented
+        for k, v in enumerate(six_frame_translation):
+            count_internal_stops.append((k, v[:-1].count(self.__stop_codon)))
 
-        min_int_stop = min(count_internal_stops)
-        idx = count_internal_stops.index(min_int_stop)
-        i = 0
-        k = 0
-        offset = 0
-        r = False
-        s = 1
+        idx, min_int_stop = min(count_internal_stops, key=lambda x: x[1])
+        candidate_seq = six_frame_translation[idx]
+        reverse_p = False
+        default_qa = False
 
-        if min_int_stop == 0 and (terminal_stop_codon_present[idx] == 1):
-            s = idx + 1
-            if s == 1 or s == 4:
-                offset = 0
-            elif s == 2 or s == 5:
-                offset = 1
-            else:
-                offset = 2
-            if idx > 2:
-                r = True
-            k = offset
-        elif min_int_stop == 0 and max(terminal_stop_codon_present) == 1:
-            best_idx = [0, min_int_stop, False]
-            for idx, value in enumerate(count_internal_stops):
-                if value != min_int_stop:
-                    continue
-                if best_idx[2] == False and terminal_stop_codon_present[idx]:
-                    best_idx = [idx, min_int_stop, terminal_stop_codon_present[idx]]
-            s = best_idx[0] + 1
-            if s == 1 or s == 4:
-                offset = 0
-            elif s == 2 or s == 5:
-                offset = 1
-            else:
-                offset = 2
-            if idx > 2:
-                r = True
-            k = offset
+        offset = idx % 3 # gives offset for both revcomp and seq
+        if idx >= reversed_frame_idx:
+            reverse_p = True
+        
+        #print(candidate_seq, reverse_p)
+        #print(six_frame_translation)
+        if min_int_stop == 0 and candidate_seq[-1] == self.__stop_codon:
+            seq = candidate_seq
+        else:
+            seq = six_frame_translation[0]
+            reverse_p = False
+            default_qa = True
 
-        if idx > 2:
-            i = 1
-
-        seq = six_frame_translation[i][k].lower()
-        return self.FrameSelection(offset=offset, frame=s, seq=seq, count_int_stops=min_int_stop, revcomp=r)
+        return self.FrameSelection(offset=offset, seq=seq.lower(), count_int_stops=min_int_stop, revcomp=reverse_p, default_allele=default_qa)
 
 
     def parse_fasta(self, input_file):
