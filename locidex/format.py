@@ -13,6 +13,7 @@ from typing import List, Tuple
 import pandas as pd
 from Bio import SeqIO
 from Bio.Seq import Seq
+from pyrodigal import GeneFinder
 
 from locidex.constants import FILE_TYPES, LocidexDBHeader
 from locidex.utils import six_frame_translation, revcomp, calc_md5
@@ -90,28 +91,44 @@ class locidex_format:
         return files
 
     def pick_frame(self, six_frame_translation) -> FrameSelection:
-        count_internal_stops: List[Tuple[int, str]] = []
+        count_internal_stops: List[Tuple[int, str, str]] = []
         reversed_frame_idx = 3 # all frames above this index are reverse complimented
         for k, v in enumerate(six_frame_translation):
-            count_internal_stops.append((k, v[:-1].count(self.__stop_codon)))
+            count_internal_stops.append((k, v.count(self.__stop_codon), v))
 
-        idx, min_int_stop = min(count_internal_stops, key=lambda x: x[1])
-        candidate_seq = six_frame_translation[idx]
+        count_internal_stops.sort(key=lambda x: x[1])
+
+
+
         reverse_p = False
         default_qa = False
+        output_seq = None
+        
+        ordered_stops = filter(lambda x: x[2][-1] == self.__stop_codon or x[1] > 0, count_internal_stops)
+        ordered_stops = [i for i in count_internal_stops if i[1] > 0]
+        ordered_stops.sort(key=lambda x: x[2].index(self.__stop_codon), reverse=True)
+        for i in ordered_stops:
+            print(i)
+
+        #if candidate_seq[-1] != self.__stop_codon:
+        #    for i in count_internal_stops:
+        #        print(i)
+        #        print()
+        #    # TODO add in orf finding
+        #if min_int_stop == 0 and candidate_seq[-1] == self.__stop_codon:
+        #    seq = candidate_seq
+        
+
+        if output_seq is None:
+            idx = 0
+            min_int_stop = count_internal_stops[idx][1]
+            seq = six_frame_translation[idx]
+            reverse_p = False
+            default_qa = True
 
         offset = idx % 3 # gives offset for both revcomp and seq
         if idx >= reversed_frame_idx:
             reverse_p = True
-        
-        #print(candidate_seq, reverse_p)
-        #print(six_frame_translation)
-        if min_int_stop == 0 and candidate_seq[-1] == self.__stop_codon:
-            seq = candidate_seq
-        else:
-            seq = six_frame_translation[0]
-            reverse_p = False
-            default_qa = True
 
         return self.FrameSelection(offset=offset, seq=seq.lower(), count_int_stops=min_int_stop, revcomp=reverse_p, default_allele=default_qa)
 
