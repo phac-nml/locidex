@@ -3,41 +3,38 @@ import json
 import os
 import pathlib
 import sys
-from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
+from argparse import ArgumentParser
 from datetime import datetime
 from functools import partial
 from mimetypes import guess_type
+from dataclasses import dataclass
 
 import pandas as pd
 from Bio import SeqIO
 
-from locidex.constants import LOCIDEX_DB_HEADER, FILE_TYPES, FORMAT_RUN_DATA, LocidexDBHeader
+from locidex.constants import FILE_TYPES, LocidexDBHeader
 from locidex.utils import six_frame_translation, revcomp, calc_md5
 from locidex.version import __version__
-from locidex.constants import DNA_AMBIG_CHARS, DNA_IUPAC_CHARS
-
 
 class locidex_format:
     input = None
     input_type = None
-    data = {}
-    is_protein_coding = True
-    header = []
-    seq_idx = 0
     delim = '_'
-    translation_table = 11
-    min_len_frac = 0.7
-    max_len_frac = 1.3
-    min_cov_perc = 80
-    min_ident_perc = 80
-    gene_name = None
-    valid_ext = ['.fasta','.fasta.gz','.fa','.fa.gz','.fas','.fas.gz']
     status = True
-    messages = []
 
-    def __init__(self, input, header,is_protein,delim="_",trans_table=11,
-                 min_len_frac=0.7,max_len_frac=1.3,min_cov_perc=80,min_ident_perc=80,valid_ext=None):
+    @dataclass
+    class FrameSelection:
+        offset: int
+        seq: str
+        count_int_stops: int
+        frame: int
+        revcomp: bool
+
+    def __init__(self,input,header,is_protein=False,delim="_",trans_table=11,
+                min_len_frac=0.7,max_len_frac=1.3,min_cov_perc=80.0,min_ident_perc=80.0,valid_ext=None):
         self.input = input
+        self.seq_idx = 0
+        self.gene_name = None
         self.header = header
         self.delim = delim
         self.translation_table = trans_table
@@ -46,6 +43,8 @@ class locidex_format:
         self.min_cov_perc = min_cov_perc
         self.min_ident_perc = min_ident_perc
         self.is_protein_coding = is_protein
+        self.data = dict()
+        self.valid_ext = valid_ext
 
         if valid_ext is not None:
             if isinstance(valid_ext,list):
@@ -59,9 +58,6 @@ class locidex_format:
         else:
             self.parse_fasta(self.input)
 
-    def get_data(self):
-        return self.data
-
     def process_dir(self):
         files = self.get_dir_files(self.input)
         for f in files['file']:
@@ -71,12 +67,13 @@ class locidex_format:
                     self.parse_fasta(f[0])
                     break
 
-
     def set_input_type(self):
         if os.path.isfile(self.input):
             self.input_type = 'file'
         elif os.path.isdir(self.input):
             self.input_type = 'dir'
+        else:
+            raise AttributeError("Unknown input type could not be determined for: {}".format(self.input))
 
     def get_dir_files(self, input_dir):
         files = {'file': [], 'dir': []}
@@ -89,7 +86,7 @@ class locidex_format:
             files[type].append([f"{item.resolve()}", os.path.basename(item)])
         return files
 
-    def pick_frame(self, six_frame_translation):
+    def pick_frame(self, six_frame_translation) -> FrameSelection:
         count_internal_stops = []
         terminal_stop_codon_present = []
         for i in range(0, len(six_frame_translation)):
@@ -137,8 +134,8 @@ class locidex_format:
         if idx > 2:
             i = 1
 
-        seq = six_frame_translation[i][k]
-        return {'offset': offset, 'revcomp': r, 'frame': s, 'seq': seq.lower(), 'count_int_stops': min_int_stop}
+        seq = six_frame_translation[i][k].lower()
+        return self.FrameSelection(offset=offset, frame=s, seq=seq, count_int_stops=min_int_stop, revcomp=r)
 
 
     def create_row(self):
@@ -160,14 +157,15 @@ class locidex_format:
                 dna_seq = str(record.seq).lower().replace('-','')
                 if self.is_protein_coding:
                     t = self.pick_frame(six_frame_translation(dna_seq, trans_table=self.translation_table))
-                    aa_seq = t['seq'].lower()
-                    dna_seq = dna_seq[t['offset']:]
-                    if t['revcomp']:
+                    aa_seq = t.seq
+                    dna_seq = dna_seq[t.offset:]
+                    if t.revcomp:
                         dna_seq = revcomp(dna_seq)
 
                 dna_len = len(dna_seq)
                 aa_len = len(aa_seq)
-                #row = self.create_row()
+
+                aa_encoding_p = lambda x: x if self.is_protein_coding else None
                 row = LocidexDBHeader(
                     seq_id=self.seq_idx,
                     locus_name=gene_name,
@@ -179,34 +177,19 @@ class locidex_format:
                     dna_seq_len=dna_len,
                     dna_seq_hash=calc_md5([dna_seq])[0],
                     dna_ambig_count=dna_seq.count('n'),
+                    aa_seq = aa_encoding_p(aa_seq),
+                    aa_seq_len=aa_encoding_p(len(aa_seq)),
+                    aa_seq_hash= aa_encoding_p(calc_md5([aa_seq])[0]),
+                    aa_min_ident=aa_encoding_p(self.min_ident_perc * (self.min_ident_perc /100)),
+                    aa_min_len=aa_encoding_p(aa_len * self.min_len_frac),
+                    aa_max_len=aa_encoding_p( aa_len * self.max_len_frac),
+                    min_aa_match_cov=aa_encoding_p(self.min_cov_perc),
+                    count_int_stops=aa_encoding_p(t.count_int_stops),
+                    dna_min_len=dna_len*self.min_len_frac,
+                    dna_max_len=dna_len*self.max_len_frac,
+                    dna_min_ident=self.min_ident_perc,
+                    min_dna_match_cov=self.min_cov_perc
                 )
-                
-                #row['seq_id'] = self.seq_idx
-                #row['locus_name'] = gene_name
-                #row['locus_name_alt'] = id
-                #row['locus_product'] = ''
-                #row['locus_description'] = ''
-                #row['locus_uid'] = id.split(self.delim)[-1]
-                #row['dna_seq'] = dna_seq
-                #row['dna_seq_len'] = dna_len
-                #row['dna_seq_hash'] = calc_md5([dna_seq])[0]
-                #row['dna_ambig_count'] =dna_seq.count('n')
-
-
-                if self.is_protein_coding:
-                    row['aa_seq'] = aa_seq
-                    row['aa_seq_len'] = len(aa_seq)
-                    row['aa_seq_hash'] = calc_md5([aa_seq])[0]
-                    row['aa_min_ident'] = self.min_ident_perc * 0.8
-                    row['aa_min_len'] = aa_len * self.min_len_frac
-                    row['aa_max_len'] = aa_len * self.max_len_frac
-                    row['min_aa_match_cov'] = self.min_cov_perc
-                    row['count_int_stops'] = t['count_int_stops']
-
-                row['dna_min_len'] = dna_len*self.min_len_frac
-                row['dna_max_len'] = dna_len*self.max_len_frac
-                row['dna_min_ident'] = self.min_ident_perc
-                row['min_dna_match_cov'] = self.min_cov_perc
 
                 self.data[self.seq_idx] = row
                 self.seq_idx += 1
@@ -253,7 +236,7 @@ def run(cmd_args=None):
     if cmd_args.not_coding:
         is_coding = False
 
-    run_data = FORMAT_RUN_DATA
+    run_data = dict()
     run_data['analysis_start_time'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     run_data['parameters'] = vars(cmd_args)
 
@@ -268,20 +251,15 @@ def run(cmd_args=None):
         print(f'Error {input} does not exist as a file or directory')
         sys.exit()
 
-
-    obj = locidex_format(input=input,header=LOCIDEX_DB_HEADER,is_protein=is_coding,min_len_frac=min_len_frac,max_len_frac=max_len_frac, min_ident_perc=min_ident,
-                   min_cov_perc=min_match_cov,trans_table=trans_table,valid_ext=FILE_TYPES['fasta'])
+    obj = locidex_format(input=input,header=LocidexDBHeader._fields,is_protein=is_coding,min_len_frac=min_len_frac,max_len_frac=max_len_frac, min_ident_perc=min_ident,
+            min_cov_perc=min_match_cov,trans_table=trans_table,valid_ext=FILE_TYPES['fasta'])
 
     run_data['result_file'] = os.path.join(outdir,"locidex.txt")
-    pd.DataFrame.from_dict(obj.get_data(),orient='index').to_csv(run_data['result_file'],sep="\t",index=False,header=True)
+    pd.DataFrame.from_dict(obj.data,orient='index').to_csv(run_data['result_file'],sep="\t",index=False,header=True)
 
     run_data['analysis_end_time'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(os.path.join(outdir,"results.json"),"w") as oh:
         oh.write(json.dumps(run_data,indent=4))
-
-
-
-
 
 
 # call main function

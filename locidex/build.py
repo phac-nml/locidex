@@ -4,7 +4,7 @@ import pandas as pd
 import os, sys
 from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
 from locidex.version import __version__
-from locidex.constants import FORMAT_RUN_DATA, DBFiles
+from locidex.constants import DBFiles
 from locidex.classes import run_command
 from locidex.constants import DBConfig
 
@@ -165,7 +165,7 @@ def run(cmd_args=None):
     input_file = cmd_args.input_file
     outdir = cmd_args.outdir
     force = cmd_args.force
-    run_data = FORMAT_RUN_DATA
+    run_data = dict()
     run_data['analysis_start_time'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     run_data['parameters'] = vars(cmd_args)
 

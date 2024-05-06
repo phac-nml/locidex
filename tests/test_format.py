@@ -5,6 +5,7 @@ Tests for locidex format module
 import pytest
 from locidex import format
 
+
 import os
 import json
 from dataclasses import dataclass
