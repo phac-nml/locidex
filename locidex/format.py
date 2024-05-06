@@ -138,12 +138,6 @@ class locidex_format:
         return self.FrameSelection(offset=offset, frame=s, seq=seq, count_int_stops=min_int_stop, revcomp=r)
 
 
-    def create_row(self):
-        row = {}
-        for f in self.header:
-            row[f] = ''
-        return row
-
     def parse_fasta(self, input_file):
         encoding = guess_type(input_file)
         _open = partial(gzip.open, mode='rt') if encoding == 'gzip' else open
