@@ -32,7 +32,6 @@ class locidex_format:
         seq: str
         count_int_stops: int
         revcomp: bool
-        default_allele: bool
 
     def __init__(self,input,header,is_protein=False,delim="_",trans_table=11,
                 min_len_frac=0.7,max_len_frac=1.3,min_cov_perc=80.0,min_ident_perc=80.0,valid_ext=None):
@@ -91,46 +90,33 @@ class locidex_format:
         return files
 
     def pick_frame(self, six_frame_translation) -> FrameSelection:
-        count_internal_stops: List[Tuple[int, str, str]] = []
+        """
+        Reducing the complexity of this function now only checking if the allele is reverse complimented
+        """
+
         reversed_frame_idx = 3 # all frames above this index are reverse complimented
-        for k, v in enumerate(six_frame_translation):
-            count_internal_stops.append((k, v.count(self.__stop_codon), v))
-
-        count_internal_stops.sort(key=lambda x: x[1])
-
-
-
+        fwd_idx, rev_idx = 0, 3
         reverse_p = False
-        default_qa = False
-        output_seq = None
-        
-        ordered_stops = filter(lambda x: x[2][-1] == self.__stop_codon or x[1] > 0, count_internal_stops)
-        ordered_stops = [i for i in count_internal_stops if i[1] > 0]
-        ordered_stops.sort(key=lambda x: x[2].index(self.__stop_codon), reverse=True)
-        for i in ordered_stops:
-            print(i)
 
-        #if candidate_seq[-1] != self.__stop_codon:
-        #    for i in count_internal_stops:
-        #        print(i)
-        #        print()
-        #    # TODO add in orf finding
-        #if min_int_stop == 0 and candidate_seq[-1] == self.__stop_codon:
-        #    seq = candidate_seq
-        
+        rev = six_frame_translation[fwd_idx] # frame 1
+        fwd = six_frame_translation[rev_idx] # frame 2
 
-        if output_seq is None:
-            idx = 0
-            min_int_stop = count_internal_stops[idx][1]
-            seq = six_frame_translation[idx]
-            reverse_p = False
-            default_qa = True
+        fwd_stop_counts = fwd[:-1].count(self.__stop_codon)
 
-        offset = idx % 3 # gives offset for both revcomp and seq
+        output_seq = fwd
+        idx = fwd_idx
+        min_int_stop = fwd_stop_counts
+
+        if rev[-1] == self.__stop_codon and (stop_counts := rev[:-1].count(self.__stop_codon)) == 1 and fwd_stop_counts > 0:
+            idx = rev_idx
+            output_seq = rev
+            min_int_stop = stop_counts
+
+        offset = idx % reversed_frame_idx # gives offset for both revcomp and seq
         if idx >= reversed_frame_idx:
             reverse_p = True
 
-        return self.FrameSelection(offset=offset, seq=seq.lower(), count_int_stops=min_int_stop, revcomp=reverse_p, default_allele=default_qa)
+        return self.FrameSelection(offset=offset, seq=output_seq.lower(), count_int_stops=min_int_stop, revcomp=reverse_p)
 
 
     def parse_fasta(self, input_file):
