@@ -6,6 +6,27 @@ from locidex.classes.fasta import parse_fasta
 from locidex.utils import guess_alphabet, calc_md5, six_frame_translation
 from locidex.classes.prodigal import gene_prediction
 from locidex.constants import DNA_AMBIG_CHARS, DNA_IUPAC_CHARS
+from typing import NamedTuple, Optional
+from dataclasses import dataclass
+
+@dataclass
+class SeqObject:
+
+    parent_id: str
+    locus_name: str
+    seq_id: str
+    dna_seq: str
+    dna_ambig_count: int
+    dna_hash: str
+    dna_len: int
+    aa_seq: str
+    aa_hash: str
+    aa_len: int
+    start_codon: Optional[str] 
+    end_codon: Optional[str]
+    count_internal_stop: Optional[int]
+    __slots__ = ("parent_id", "locus_name", "seq_id", "dna_seq", "dna_ambig_count",
+                "dna_hash", "dna_len", "aa_seq", "aa_hash", "aa_len", "start_codon", "end_codon", "count_internal_stop")
 
 class seq_intake:
     input_file = ''
@@ -14,9 +35,8 @@ class seq_intake:
     feat_key = 'CDS'
     translation_table = 11
     is_file_valid = ''
-    status = True
+    
     messages = []
-    seq_data = []
     prodigal_genes = []
     skip_trans = False
 
@@ -26,6 +46,9 @@ class seq_intake:
         self.translation_table = translation_table
         self.feat_key = feat_key
         self.skip_trans = skip_trans
+        self.status = True
+        self.num_threads = num_threads
+        #self.seq_data = self.process_fasta()
 
         if not os.path.isfile(self.input_file):
             self.messages.append(f'Error {self.input_file} does not exist')
@@ -35,15 +58,17 @@ class seq_intake:
             return
 
         if file_type == 'genbank':
-            self.status = self.process_gbk()
+            self.seq_data = self.process_gbk()
+            self.status = True
         elif file_type == 'fasta' and perform_annotation==True:
-            sobj = gene_prediction(self.input_file)
-            sobj.predict(num_threads)
-            self.prodigal_genes = sobj.genes
-            self.process_seq_hash(sobj.sequences)
-            self.process_fasta()
+            #sobj = gene_prediction(self.input_file)
+            #sobj.predict(num_threads)
+            #self.prodigal_genes = sobj.genes
+            #self.process_seq_hash(sobj.sequences)
+            #self.seq_data = self.process_fasta()
+            self.seq_data = self.annotate_fasta(self.input_file, num_threads=self.num_threads)
         elif file_type == 'fasta' and perform_annotation==False:
-            self.process_fasta()
+            self.seq_data = self.process_fasta()
         elif file_type == 'gff':
             self.status = False
         elif file_type == 'gtf':
@@ -51,12 +76,19 @@ class seq_intake:
         if self.status:
             self.add_codon_data()
 
+    
+    def annotate_fasta(self, input_file, num_threads):
+        sobj = gene_prediction(input_file)
+        sobj.predict(num_threads)
+        self.prodigal_genes = sobj.genes
+        seq_data = self.process_seq_hash(sobj.sequences)
+        return self.process_fasta(seq_data)
 
     def add_codon_data(self):
         for record in self.seq_data:
-            if record['aa_len'] == 0:
+            if record.aa_len == 0:
                 continue
-            dna_seq = record['dna_seq'].lower().replace('-','')
+            dna_seq = record.dna_seq.lower().replace('-','')
             dna_len = len(dna_seq)
             start_codon = ''
             stop_codon = ''
@@ -64,15 +96,15 @@ class seq_intake:
             if dna_len >= 6:
                 start_codon = dna_seq[0:3]
                 stop_codon = dna_seq[-3:]
-                count_internal_stop = record['aa_seq'][:-1].count('*')
-            record['start_codon'] = start_codon
-            record['stop_codon'] = stop_codon
-            record['count_internal_stop'] = count_internal_stop
+                count_internal_stop = record.aa_seq[:-1].count('*')
+            record.start_codon = start_codon
+            record.end_codon = stop_codon
+            record.count_internal_stop = count_internal_stop
 
 
-    def process_gbk(self):
+    def process_gbk(self) -> list[SeqObject]:
         obj = parse_gbk(self.input_file)
-
+        seq_data = []
         if obj.status == False:
             return False
         acs = obj.get_acs()
@@ -84,22 +116,25 @@ class seq_intake:
                 for char in DNA_IUPAC_CHARS:
                     s = s.replace(char,"n")
 
-                self.seq_data.append( {
-                    'parent_id': a,
-                    'locus_name':seq['gene_name'],
-                    'seq_id': seq['gene_name'],
-                    'dna_seq': s,
-                    'dna_ambig_count': self.count_ambig_chars(seq['dna_seq'], DNA_AMBIG_CHARS),
-                    'dna_hash': calc_md5([s])[0],
-                    'dna_len': len(seq['dna_seq']),
-                    'aa_seq': seq['aa_seq'],
-                    'aa_hash': seq['aa_hash'],
-                    'aa_len': len(seq['aa_seq']),
+                seq_data.append(SeqObject(
+                    parent_id = a,
+                    locus_name = seq['gene_name'],
+                    seq_id = seq['gene_name'],
+                    dna_seq = s,
+                    dna_ambig_count = self.count_ambig_chars(seq['dna_seq'], DNA_AMBIG_CHARS),
+                    dna_hash = calc_md5([s])[0],
+                    dna_len = len(seq['dna_seq']),
+                    aa_seq = seq['aa_seq'],
+                    aa_hash = seq['aa_hash'],
+                    aa_len = len(seq['aa_seq']),
+                    start_codon=None,
+                    end_codon=None,
+                    count_internal_stop=None,
+                ))
+        return seq_data
 
-                } )
-        return True
+    def process_fasta(self, seq_data = []) -> list[SeqObject]:
 
-    def process_fasta(self):
         obj = parse_fasta(self.input_file)
         if obj.status == False:
             return
@@ -132,23 +167,25 @@ class seq_intake:
                 aa_hash = calc_md5([aa_seq])[0]
                 aa_len = len(aa_seq)
 
-            self.seq_data.append({
-                'parent_id': features['gene_name'],
-                'locus_name': features['gene_name'],
-                'seq_id': features['seq_id'],
-                'dna_seq': dna_seq,
-                'dna_ambig_count': self.count_ambig_chars(dna_seq, DNA_AMBIG_CHARS),
-                'dna_hash': dna_hash,
-                'dna_len': dna_len,
-                'aa_seq': aa_seq,
-                'aa_hash': aa_hash,
-                'aa_len': aa_len,
+            seq_data.append(SeqObject(
+                parent_id=features['gene_name'],
+                locus_name = features['gene_name'],
+                seq_id = features['seq_id'],
+                dna_seq = dna_seq,
+                dna_ambig_count = self.count_ambig_chars(dna_seq, DNA_AMBIG_CHARS),
+                dna_hash = dna_hash,
+                dna_len = dna_len,
+                aa_seq = aa_seq,
+                aa_hash = aa_hash,
+                aa_len = aa_len,
+                start_codon=None,
+                end_codon=None,
+                count_internal_stop=None,))
+        return seq_data
 
-            })
 
-        return
-
-    def process_seq_hash(self,sequences):
+    def process_seq_hash(self,sequences) -> list[SeqObject]:
+        seq_data = []
         for id in sequences:
             seq = sequences[id]
             dtype = guess_alphabet(seq)
@@ -174,21 +211,23 @@ class seq_intake:
                 aa_seq = seq.lower().replace('-','')
                 aa_hash = calc_md5([aa_seq])[0]
                 aa_len = len(aa_seq)
-            self.seq_data.append({
-                'parent_id': id,
-                'locus_name': id,
-                'seq_id': id,
-                'dna_seq': dna_seq,
-                'dna_hash': dna_hash,
-                'dna_ambig_count':self.count_ambig_chars(dna_seq, DNA_AMBIG_CHARS),
-                'dna_len': dna_len,
-                'aa_seq': aa_seq,
-                'aa_hash': aa_hash,
-                'aa_len': aa_len,
+            seq_data.append(SeqObject(
+                parent_id=id,
+                locus_name=id,
+                seq_id=id,
+                dna_seq= dna_seq,
+                dna_hash= dna_hash,
+                dna_ambig_count=self.count_ambig_chars(dna_seq, DNA_AMBIG_CHARS),
+                dna_len=dna_len,
+                aa_seq=aa_seq,
+                aa_hash=aa_hash,
+                aa_len=aa_len,
+                start_codon=None,
+                end_codon=None,
+                count_internal_stop=None,
+            ))
 
-            })
-
-        return
+        return seq_data
 
     def count_ambig_chars(self,seq,chars):
         count = 0
@@ -200,7 +239,7 @@ class seq_intake:
 
 
 class seq_store:
-    stored_fields = ['parent_id','locus_name','seq_id','dna_hash','dna_len','aa_hash','aa_len','start_codon','stop_codon','count_internal_stop','dna_ambig_count']
+    #stored_fields = ['parent_id','locus_name','seq_id','dna_hash','dna_len','aa_hash','aa_len','start_codon','stop_codon','count_internal_stop','dna_ambig_count']
     record = {
         'db_info': {},
         'db_seq_info': {},
@@ -213,13 +252,14 @@ class seq_store:
         }
     }
 
-    def __init__(self,sample_name,db_config_dict,metadata_dict,query_seq_records,blast_columns,filters={},stored_fields=[]):
+    #def __init__(self,sample_name,db_config_dict,metadata_dict,query_seq_records,blast_columns,filters={},stored_fields=[]):
+    def __init__(self,sample_name,db_config_dict,metadata_dict,query_seq_records,blast_columns,filters={}):
         self.sample_name = sample_name
         self.record['query_data']['sample_name'] = sample_name
         self.add_db_config(db_config_dict)
         self.add_seq_data(query_seq_records)
-        if len(stored_fields) > 0 :
-            self.stored_fields = stored_fields
+        #if len(stored_fields) > 0 :
+        #    self.stored_fields = stored_fields
         self.add_db_metadata(metadata_dict)
         self.add_hit_cols(blast_columns)
         self.filters = filters
@@ -233,12 +273,14 @@ class seq_store:
         self.record['query_hit_columns'] = columns
 
     def add_seq_data(self,query_seq_records):
-        for idx in range(0, len(query_seq_records)):
-            self.record['query_data']['query_seq_data'][idx] = {}
-            for f in self.stored_fields:
-                self.record['query_data']['query_seq_data'][idx][f] = ''
-                if f in query_seq_records[idx]:
-                    self.record['query_data']['query_seq_data'][idx][f] = query_seq_records[idx][f]
+        print(type(query_seq_records[0]))
+        for idx, v in enumerate(query_seq_records):
+            self.record['query_data']['query_seq_data'][idx] = v
+            #print(self.record['query_data']['query_seq_data'][idx])
+            #for f in self.stored_fields:
+            #    self.record['query_data']['query_seq_data'][idx][f] = ''
+            #    if f in query_seq_records[idx]:
+            #        self.record['query_data']['query_seq_data'][idx][f] = query_seq_records[idx][f]
 
     def add_db_metadata(self,metadata_dict):
         locus_profile = {}

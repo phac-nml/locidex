@@ -1,8 +1,10 @@
 import os, warnings
 import locidex.classes.seq_intake
+from locidex.classes.seq_intake import SeqObject
 from locidex.constants import BLAST_TABLE_COLS, DB_EXPECTED_FILES, DBConfig
 from locidex.classes.db import search_db_conf, db_config
 from collections import Counter
+from dataclasses import asdict
 
 PACKAGE_ROOT = os.path.dirname(locidex.__file__)
 
@@ -36,8 +38,10 @@ def test_seq_store_class():
         assert len(seq_store_obj.record['query_data']['query_seq_data']) == 1
     else:    
         warnings.warn(f"expected len(seq_store_obj.record['query_data']['query_seq_data']) == 1 but got {len(seq_store_obj.record['query_data']['query_seq_data'])}")
-    assert list(seq_store_obj.record['query_data']['query_seq_data'][0].keys()) ==  ['parent_id', 'locus_name', 'seq_id', 'dna_hash', 'dna_len', 'aa_hash', 
-                                                                                     'aa_len', 'start_codon', 'stop_codon', 'count_internal_stop', 'dna_ambig_count']
+    
+    compare_dict = asdict(seq_store_obj.record['query_data']['query_seq_data'][0])
+    assert set(compare_dict.keys()) ==  set(['parent_id', 'locus_name', 'seq_id', 'dna_hash', 'dna_len', 'aa_hash', 
+                                                                                    'aa_len', 'start_codon', 'end_codon', 'count_internal_stop', 'dna_ambig_count', 'dna_seq', 'aa_seq'])
     assert list(seq_store_obj.record['query_data']['locus_profile'].keys()) == ['aroC', 'dnaN', 'hemD', 'hisD', 'purE', 'sucA', 'thrA']
     assert seq_store_obj.record['query_data']['query_hit_columns'] == []
     assert seq_store_obj.record['query_data']['query_hits'] == {}
@@ -45,7 +49,7 @@ def test_seq_store_class():
 
 def test_read_gbk_file():
     seq_intake_object = seq_intake_class_init(input_file=os.path.join(PACKAGE_ROOT, 'example/search/NC_003198.1.gbk'),
-                          file_type='genbank', perform_annotation=False)
+                        file_type='genbank', perform_annotation=False)
     
     expected_orfs = 4644
     assert seq_intake_object.file_type == 'genbank'
@@ -58,12 +62,13 @@ def test_read_gbk_file():
     else:
         assert len(seq_intake_object.seq_data) == expected_orfs
 
-    assert seq_intake_object.seq_data[0] == {'parent_id': 'NC_003198', 'locus_name': 'STY_RS00005', 'seq_id': 'STY_RS00005', 
+    assert seq_intake_object.seq_data[0] == SeqObject(**{'parent_id': 'NC_003198', 'locus_name': 'STY_RS00005', 'seq_id': 'STY_RS00005', 
             'dna_seq': 'atgaaccgcatcagcaccaccaccattaccaccatcaccattaccacaggtaacggtgcgggctga', 
-            'dna_hash': 'f46b7aac05dba47f42391aaa5ac25edf', 'count_internal_stop': 0, 'dna_ambig_count': 0, 'start_codon': 'atg', 'stop_codon': 'tga',
-            'dna_len': 66, 'aa_seq': 'mnristttittitittgngag', 'aa_hash': '8b370db9e32fd0a8362c35f3535303d8', 'aa_len': 21} 
-    assert all(['start_codon' in record for record in seq_intake_object.seq_data if record['aa_len'] > 0]) == True
-    assert dict(Counter(['start_codon' in record if record['aa_len'] > 0 else False in record for record in seq_intake_object.seq_data ])) == {True: 4325, False: 319}
+            'dna_hash': 'f46b7aac05dba47f42391aaa5ac25edf', 'count_internal_stop': 0, 'dna_ambig_count': 0, 'start_codon': 'atg', 'end_codon': 'tga',
+            'dna_len': 66, 'aa_seq': 'mnristttittitittgngag', 'aa_hash': '8b370db9e32fd0a8362c35f3535303d8', 'aa_len': 21})
+    assert all([record.start_codon for record in seq_intake_object.seq_data if record.aa_len > 0]) == True
+    #assert dict(Counter(['start_codon' in record if record.aa_len > 0 else False in record for record in seq_intake_object.seq_data ])) == {True: 4325, False: 319}
+    assert dict(Counter([record.start_codon is not None if record.aa_len > 0 else False for record in seq_intake_object.seq_data ])) == {True: 4325, False: 319}
     
 
 def test_read_fasta_file():

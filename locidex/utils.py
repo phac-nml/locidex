@@ -4,7 +4,7 @@ import os
 import argparse
 from collections import Counter
 from pathlib import Path
-
+from locidex.manifest import ManifestItem
 from Bio.Seq import Seq
 
 from locidex.constants import NT_SUB, PROTEIN_ALPHA, DNA_ALPHA, OPTION_GROUPS
@@ -21,7 +21,8 @@ def check_db_groups(analysis_params: dict, cmd_args: argparse.Namespace, param_d
                     raise AttributeError("Missing required parameter: {}".format(option))
     
     if cmd_args.db_group is not None:
-        analysis_params[param_db] = str(manifest.get_manifest_db(input_file=Path(cmd_args.db_group), name=cmd_args.db_name, version=cmd_args.db_version))
+        manifest_data = manifest.get_manifest_db(input_file=Path(cmd_args.db_group), name=cmd_args.db_name, version=cmd_args.db_version)
+        analysis_params[param_db] = str(manifest_data.db_path)
 
     return analysis_params
 

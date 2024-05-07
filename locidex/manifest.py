@@ -157,7 +157,7 @@ def run(cmd_args=None):
     manifest = create_manifest(directory_in)
     return write_manifest(directory_in, manifest)
 
-def select_db(manifest_data: Dict[str, List[ManifestItem]], name: str, version: str):
+def select_db(manifest_data: Dict[str, List[ManifestItem]], name: str, version: str) -> ManifestItem:
     """
     Select a locidex database from the manifest file provided.
 
@@ -195,10 +195,13 @@ def read_manifest(input_file: pathlib.Path) -> dict:
                 manifest_data[k].append(manifest_item)
     return manifest_data
 
-def get_manifest_db(input_file: pathlib.Path, name: str, version: str):
+def get_manifest_db(input_file: pathlib.Path, name: str, version: str) -> ManifestItem:
+    """
+    Retruns path to the database file selected
+    """
     output = read_manifest(input_file)
     db_out = select_db(output, name, version)
-    return db_out.db_path
+    return db_out
 
 # call main function
 if __name__ == '__main__':
