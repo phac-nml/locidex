@@ -1,7 +1,7 @@
 
 from dataclasses import dataclass, asdict, fields
 import pathlib
-from typing import Any, Union
+from typing import Any, Union, NamedTuple, Optional
 
 DNA_AMBIG_CHARS = ['b', 'd', 'e', 'f', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 'u', 'v', 'w', 'x',
                    'y', 'z', '-']
@@ -39,8 +39,8 @@ bitscore
 
 
 FILE_TYPES = {
-    'genbank':["gbk","genbank","gbf","gbk.gz","genbank.gz","gbf.gz","gbff","gbff.gz"],
-    'fasta':["fasta","fas","fa","ffn","fna","fasta.gz","fas.gz","fa.gz","ffn.gz","fna.gz"],
+    'genbank': ["gbk","genbank","gbf","gbk.gz","genbank.gz","gbf.gz","gbff","gbff.gz"],
+    'fasta': ["fasta","fas","fa","ffn","fna","fasta.gz","fas.gz","fa.gz","ffn.gz","fna.gz"],
 }
 
 
@@ -121,9 +121,6 @@ SEARCH_RUN_DATA = {
 
 }
 
-FORMAT_RUN_DATA = {
-
-}
 
 DB_EXPECTED_FILES = {
     'config':'config.json',
@@ -132,28 +129,53 @@ DB_EXPECTED_FILES = {
     'protein':'protein.fasta',
 }
 
-LOCIDEX_DB_HEADER = [
-    'seq_id',
-    'locus_name',
-    'locus_name_alt',
-    'locus_product',
-    'locus_description',
-    'locus_uid',
-    'dna_seq',
-    'dna_seq_len',
-    'dna_seq_hash',
-    'aa_seq',
-    'aa_seq_len',
-    'aa_seq_hash',
-    'dna_min_len',
-    'dna_max_len',
-    'aa_min_len',
-    'aa_max_len',
-    'dna_min_ident',
-    'aa_min_ident',
-    'min_dna_match_cov',
-    'min_aa_match_cov',
-    'count_int_stops',
-    'dna_ambig_count'
 
-]
+class LocidexDBHeader(NamedTuple):
+    seq_id: str
+    locus_name: str
+    locus_name_alt: str 
+    locus_product: str
+    locus_description: str
+    locus_uid: str
+    dna_seq: str
+    dna_seq_len: int
+    dna_seq_hash: str
+    aa_seq: Optional[str]
+    aa_seq_len: Optional[int]
+    aa_seq_hash: Optional[str]
+    dna_min_len: int
+    dna_max_len: int
+    aa_min_len: Optional[int]
+    aa_max_len: Optional[int]
+    dna_min_ident: float
+    aa_min_ident: Optional[float]
+    min_dna_match_cov: int
+    min_aa_match_cov: Optional[int]
+    count_int_stops: int
+    dna_ambig_count: int
+
+
+#LOCIDEX_DB_HEADER = [
+#    'seq_id',
+#    'locus_name',
+#    'locus_name_alt',
+#    'locus_product',
+#    'locus_description',
+#    'locus_uid',
+#    'dna_seq',
+#    'dna_seq_len',
+#    'dna_seq_hash',
+#    'aa_seq',
+#    'aa_seq_len',
+#    'aa_seq_hash',
+#    'dna_min_len',
+#    'dna_max_len',
+#    'aa_min_len',
+#    'aa_max_len',
+#    'dna_min_ident',
+#    'aa_min_ident',
+#    'min_dna_match_cov',
+#    'min_aa_match_cov',
+#    'count_int_stops',
+#    'dna_ambig_count'
+#]

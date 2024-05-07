@@ -1,8 +1,8 @@
 {
-    "analysis_start_time": "2024-04-04 15:51:06",
+    "analysis_start_time": "2024-05-07 15:30:10",
     "parameters": {
-        "input": "locidex/example/format_db_mlst_in",
-        "outdir": "/tmp/pytest-of-mwells/pytest-115/build0",
+        "input": "./locidex/example/format_db_mlst_in/",
+        "outdir": "./locidex/example/format_db_mlst_out/",
         "min_len_frac": 0.7,
         "max_len_frac": 1.3,
         "min_ident": 80.0,
@@ -11,6 +11,6 @@
         "not_coding": false,
         "force": true
     },
-    "result_file": "/tmp/pytest-of-mwells/pytest-115/build0/locidex.txt",
-    "analysis_end_time": "2024-04-04 15:51:06"
+    "result_file": "./locidex/example/format_db_mlst_out/locidex.txt",
+    "analysis_end_time": "2024-05-07 15:30:10"
 }

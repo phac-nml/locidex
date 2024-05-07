@@ -1,5 +1,5 @@
 - name: Run help
-  command: locidex search --help
+  command: locidex --help
 
 - name: Run search help
   command: locidex search --help
@@ -34,3 +34,8 @@
     - path: "searched/seq_store.json"
     - path: "reported/report.json"
 
+- name: Run format
+  command: locidex format -i locidex/example/format_db_mlst_in -o format_out
+  files:
+    - path: format_out/locidex.txt
+    - path: format_out/results.json
