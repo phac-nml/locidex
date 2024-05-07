@@ -26,6 +26,10 @@ class locidex_format:
     status = True
     __stop_codon = "*"
 
+    # ? These two parameters below can probably be cleaned up
+    __file_input = "file"
+    __dir_input = "dir"
+
     @dataclass
     class FrameSelection:
         offset: int
@@ -56,14 +60,14 @@ class locidex_format:
                 self.valid_ext = [valid_ext]
 
         self.set_input_type()
-        if self.input_type == 'dir':
+        if self.input_type == self.__dir_input:
             self.process_dir()
         else:
             self.parse_fasta(self.input)
 
     def process_dir(self):
         files = self.get_dir_files(self.input)
-        for f in files['file']:
+        for f in files[self.__file_input]:
             for e in self.valid_ext:
                 if e in f[1]:
                     self.gene_name = f[1].replace(f'.{e}','')
@@ -72,19 +76,19 @@ class locidex_format:
 
     def set_input_type(self):
         if os.path.isfile(self.input):
-            self.input_type = 'file'
+            self.input_type = self.__file_input
         elif os.path.isdir(self.input):
-            self.input_type = 'dir'
+            self.input_type = self.__dir_input
         else:
             raise AttributeError("Unknown input type could not be determined for: {}".format(self.input))
 
     def get_dir_files(self, input_dir):
-        files = {'file': [], 'dir': []}
+        files = {self.__file_input: [], self.__dir_input: []}
         d = pathlib.Path(input_dir)
         for item in d.iterdir():
-            type = 'file'
+            type = self.__file_input
             if item.is_dir():
-                type = 'dir'
+                type = self.__dir_input
 
             files[type].append([f"{item.resolve()}", os.path.basename(item)])
         return files
@@ -125,7 +129,7 @@ class locidex_format:
         with _open(input_file) as f:
             for record in SeqIO.parse(f, 'fasta'):
                 id = str(record.id)
-                if self.input_type == 'file':
+                if self.input_type == self.__file_input:
                     gene_name = "_".join(id.split(self.delim)[:-1])
                 else:
                     gene_name = self.gene_name
