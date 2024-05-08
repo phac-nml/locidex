@@ -3,11 +3,24 @@ import sys
 
 from locidex.classes.gbk import parse_gbk
 from locidex.classes.fasta import parse_fasta
-from locidex.utils import guess_alphabet, calc_md5, six_frame_translation
+from locidex.utils import guess_alphabet, calc_md5, six_frame_translation, slots
 from locidex.classes.prodigal import gene_prediction
-from locidex.constants import DNA_AMBIG_CHARS, DNA_IUPAC_CHARS
+from locidex.constants import DNA_AMBIG_CHARS, DNA_IUPAC_CHARS, CharacterConstants
 from typing import NamedTuple, Optional
 from dataclasses import dataclass
+
+@dataclass
+class HitFilters:
+    min_dna_len: int
+    max_dna_len: int
+    min_dna_ident: float
+    min_dna_match_cov: float
+    min_aa_len: int
+    max_aa_len: int
+    min_aa_ident: float
+    min_aa_match_cov: float
+    dna_ambig_count: int
+    __slots__ = slots(__annotations__)
 
 @dataclass
 class SeqObject:
@@ -25,8 +38,8 @@ class SeqObject:
     start_codon: Optional[str] 
     end_codon: Optional[str]
     count_internal_stop: Optional[int]
-    __slots__ = ("parent_id", "locus_name", "seq_id", "dna_seq", "dna_ambig_count",
-                "dna_hash", "dna_len", "aa_seq", "aa_hash", "aa_len", "start_codon", "end_codon", "count_internal_stop")
+    # Manually adding slots for compatibility
+    __slots__ = slots(__annotations__)
 
 class seq_intake:
     input_file = ''
@@ -96,7 +109,7 @@ class seq_intake:
             if dna_len >= 6:
                 start_codon = dna_seq[0:3]
                 stop_codon = dna_seq[-3:]
-                count_internal_stop = record.aa_seq[:-1].count('*')
+                count_internal_stop = record.aa_seq[:-1].count(CharacterConstants.stop_codon)
             record.start_codon = start_codon
             record.end_codon = stop_codon
             record.count_internal_stop = count_internal_stop
@@ -134,14 +147,11 @@ class seq_intake:
         return seq_data
 
     def process_fasta(self, seq_data = []) -> list[SeqObject]:
-
         obj = parse_fasta(self.input_file)
-        if obj.status == False:
-            return
         ids = obj.get_seqids()
         for id in ids:
             features = obj.get_seq_by_id(id)
-            seq = features['seq'].lower().replace('-','')
+            seq = features.seq
             dtype = guess_alphabet(seq)
             dna_seq = ''
             dna_hash = ''
@@ -168,9 +178,9 @@ class seq_intake:
                 aa_len = len(aa_seq)
 
             seq_data.append(SeqObject(
-                parent_id=features['gene_name'],
-                locus_name = features['gene_name'],
-                seq_id = features['seq_id'],
+                parent_id=features.gene_name,
+                locus_name = features.gene_name,
+                seq_id = features.seq_id,
                 dna_seq = dna_seq,
                 dna_ambig_count = self.count_ambig_chars(dna_seq, DNA_AMBIG_CHARS),
                 dna_hash = dna_hash,
@@ -236,8 +246,6 @@ class seq_intake:
         return count
 
 
-
-
 class seq_store:
     #stored_fields = ['parent_id','locus_name','seq_id','dna_hash','dna_len','aa_hash','aa_len','start_codon','stop_codon','count_internal_stop','dna_ambig_count']
     record = {
@@ -253,13 +261,11 @@ class seq_store:
     }
 
     #def __init__(self,sample_name,db_config_dict,metadata_dict,query_seq_records,blast_columns,filters={},stored_fields=[]):
-    def __init__(self,sample_name,db_config_dict,metadata_dict,query_seq_records,blast_columns,filters={}):
+    def __init__(self,sample_name,db_config_dict,metadata_dict,query_seq_records,blast_columns,filters: HitFilters):
         self.sample_name = sample_name
         self.record['query_data']['sample_name'] = sample_name
         self.add_db_config(db_config_dict)
         self.add_seq_data(query_seq_records)
-        #if len(stored_fields) > 0 :
-        #    self.stored_fields = stored_fields
         self.add_db_metadata(metadata_dict)
         self.add_hit_cols(blast_columns)
         self.filters = filters
@@ -273,14 +279,8 @@ class seq_store:
         self.record['query_hit_columns'] = columns
 
     def add_seq_data(self,query_seq_records):
-        print(type(query_seq_records[0]))
         for idx, v in enumerate(query_seq_records):
             self.record['query_data']['query_seq_data'][idx] = v
-            #print(self.record['query_data']['query_seq_data'][idx])
-            #for f in self.stored_fields:
-            #    self.record['query_data']['query_seq_data'][idx][f] = ''
-            #    if f in query_seq_records[idx]:
-            #        self.record['query_data']['query_seq_data'][idx][f] = query_seq_records[idx][f]
 
     def add_db_metadata(self,metadata_dict):
         locus_profile = {}

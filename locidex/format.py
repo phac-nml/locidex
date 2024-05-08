@@ -15,7 +15,7 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from pyrodigal import GeneFinder
 
-from locidex.constants import FILE_TYPES, LocidexDBHeader
+from locidex.constants import FILE_TYPES, LocidexDBHeader, CharacterConstants
 from locidex.utils import six_frame_translation, revcomp, calc_md5
 from locidex.version import __version__
 
@@ -24,7 +24,7 @@ class locidex_format:
     input_type = None
     delim = '_'
     status = True
-    __stop_codon = "*"
+    __stop_codon = CharacterConstants.stop_codon
 
     # ? These two parameters below can probably be cleaned up
     __file_input = "file"

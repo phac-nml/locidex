@@ -1,7 +1,7 @@
 import os, warnings
-import locidex.classes.seq_intake
-from locidex.classes.seq_intake import SeqObject
-from locidex.constants import BLAST_TABLE_COLS, DB_EXPECTED_FILES, DBConfig
+import locidex
+from locidex.classes.seq_intake import SeqObject, seq_intake, seq_store
+from locidex.constants import BlastColumns, DB_EXPECTED_FILES, DBConfig
 from locidex.classes.db import search_db_conf, db_config
 from collections import Counter
 from dataclasses import asdict
@@ -11,10 +11,8 @@ PACKAGE_ROOT = os.path.dirname(locidex.__file__)
 
 def seq_intake_class_init(input_file, file_type, perform_annotation):
    #reset global class variables to avoid ambiguous results
-   locidex.classes.seq_intake.seq_intake.seq_data = []
-   locidex.classes.seq_intake.seq_intake.messages = []
-   locidex.classes.seq_intake.seq_intake.prodigal_genes = []
-   obj = locidex.classes.seq_intake.seq_intake(input_file=input_file,
+
+   obj = seq_intake(input_file=input_file,
                                       file_type=file_type,feat_key='CDS',translation_table=11,
                                       perform_annotation=perform_annotation,num_threads=1,skip_trans=False)
    return obj
@@ -24,12 +22,12 @@ def test_seq_store_class():
     db_database_config = search_db_conf(db_dir, DB_EXPECTED_FILES, DBConfig._keys())
     metadata_obj = db_config(db_database_config.meta_file_path, ['meta', 'info'])
     sample_name = 'NC_003198.1.fasta'
-    seq_obj = locidex.classes.seq_intake.seq_intake(input_file=os.path.join(PACKAGE_ROOT, 'example/search/NC_003198.1.fasta'),
+    seq_obj = seq_intake(input_file=os.path.join(PACKAGE_ROOT, 'example/search/NC_003198.1.fasta'),
                           file_type='fasta', perform_annotation=False)
     hit_filters = {'min_dna_len': 1, 'max_dna_len': 10000000, 'min_dna_ident': 80.0, 'min_dna_match_cov': 80.0, 'min_aa_len': 1, 
                    'max_aa_len': 10000000, 'min_aa_ident': 80.0, 'min_aa_match_cov': 80.0, 'dna_ambig_count': 99999999999999}
-    seq_store_obj = locidex.classes.seq_intake.seq_store(sample_name, db_database_config.config_obj.config, metadata_obj.config['meta'],
-                          seq_obj.seq_data, BLAST_TABLE_COLS, hit_filters)
+    seq_store_obj = seq_store(sample_name, db_database_config.config_obj.config, metadata_obj.config['meta'],
+                          seq_obj.seq_data, BlastColumns._fields, hit_filters)
     assert list(seq_store_obj.record.keys()) == ['db_info', 'db_seq_info', 'query_data', 'query_hit_columns']
     assert list(seq_store_obj.record['db_info'].keys()) == ['db_name', 'db_version', 'db_date', 'db_author', 
                                                             'db_desc', 'db_num_seqs', 'is_nucl', 'is_prot', 'nucleotide_db_name', 'protein_db_name']
@@ -84,14 +82,14 @@ def test_read_fasta_file():
         msg = f"Expected ORFs number is {expected_orfs} but found {len(seq_intake_object.seq_data)}! Check pyrodigal and python versions."
         warnings.warn(msg)
     assert len(seq_intake_object.seq_data) > 0
-    assert sum([contig['aa_len'] for contig in seq_intake_object.seq_data]) > 0
-    assert any([True if 'NC_003198.1' in contig['parent_id'] else False  for contig in seq_intake_object.seq_data]) == True
-    assert any([True if 'NC_003198.1' in contig['locus_name'] else False  for contig in seq_intake_object.seq_data]) == True
-    assert any([True if 'NC_003198.1' in contig['seq_id'] else False  for contig in seq_intake_object.seq_data]) == True
-    assert len(seq_intake_object.seq_data[0]['dna_seq']) > 0
-    assert seq_intake_object.seq_data[0]['dna_len'] > 0
-    assert len(seq_intake_object.seq_data[0]['dna_hash']) > 0
-    assert any([ True if contig['dna_ambig_count'] == 0 else False  for contig in seq_intake_object.seq_data]) == True
-   
+    assert sum([contig.aa_len for contig in seq_intake_object.seq_data]) > 0
+    assert any([True if 'NC_003198.1' in contig.parent_id else False  for contig in seq_intake_object.seq_data]) == True
+    assert any([True if 'NC_003198.1' in contig.locus_name else False  for contig in seq_intake_object.seq_data]) == True
+    assert any([True if 'NC_003198.1' in contig.seq_id else False  for contig in seq_intake_object.seq_data]) == True
+    assert len(seq_intake_object.seq_data[0].dna_seq) > 0
+    assert seq_intake_object.seq_data[0].dna_len > 0
+    assert len(seq_intake_object.seq_data[0].dna_hash) > 0
+    assert any([ True if contig.dna_ambig_count == 0 else False  for contig in seq_intake_object.seq_data]) == True
+
 
 

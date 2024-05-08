@@ -12,7 +12,7 @@ from locidex.classes.extractor import extractor
 from locidex.classes.blast import blast_search, parse_blast
 from locidex.classes.db import search_db_conf, db_config
 from locidex.classes.seq_intake import seq_intake, seq_store
-from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BLAST_TABLE_COLS, DBConfig, DB_EXPECTED_FILES, NT_SUB, EXTRACT_MODES, OPTION_GROUPS
+from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BlastColumns, DBConfig, DB_EXPECTED_FILES, NT_SUB, EXTRACT_MODES, OPTION_GROUPS
 from locidex.version import __version__
 from locidex.classes.aligner import perform_alignment, aligner
 from locidex.utils import check_db_groups
@@ -170,7 +170,7 @@ def run_extract(config):
     hit_file = os.path.join(blast_dir_base, "hsps.txt")
     obj = blast_search(input_db_path=db_path, input_query_path=nt_db,
                        output_results=hit_file, blast_params=blast_params, blast_method='blastn',
-                       blast_columns=BLAST_TABLE_COLS,create_db=True)
+                       blast_columns=BlastColumns._fields,create_db=True)
 
     if obj.status == False:
         print("Error something went wrong, please check error messages above")
@@ -183,7 +183,7 @@ def run_extract(config):
         'qcovhsp': {'min': min_dna_match_cov, 'max': None, 'include': None},
     }
 
-    hit_df = parse_blast(hit_file, BLAST_TABLE_COLS, filter_options).df
+    hit_df = parse_blast(hit_file, BlastColumns._fields, filter_options).df
     hit_df['sseqid'] = hit_df['sseqid'].astype(str)
     hit_df['qseqid'] = hit_df['qseqid'].astype(str)
 

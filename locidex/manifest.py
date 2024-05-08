@@ -1,6 +1,6 @@
 import pathlib
 import json
-from typing import List, Union, Tuple, Dict
+from typing import List, Union, Tuple, Dict, Optional
 from dataclasses import dataclass
 import os
 import re
@@ -11,6 +11,65 @@ from locidex.version import __version__
 from locidex.constants import DBConfig, DBFiles
 
 
+
+class DBData:
+    """
+    Validate and get all database data for other modules.
+    
+    * This class will create some redundancy and will need to be refactored to reflect
+    * the overall use of this module in the future. But once refactoring is complete 
+    * it should be much easier to refactor this and the other modules. Additionally, at that
+    * point we should have a better understanding of how all the modules fit together.
+    """
+
+    __db_names = ["nucleotide", "protein"]
+    __nucleotide_path = pathlib.Path(__db_names[0])
+    __protein_path = pathlib.Path(__db_names[1])
+
+    def __init__(self, db_dir: pathlib.Path):
+        self.db_dir = db_dir
+        self.config_data: DBConfig = self._get_config(self.db_dir)
+        self.metadata: dict = self._get_metadata(self.db_dir)
+        self.nucleotide, self.protein = self._get_blast_dbs(db_dir, self.config_data)
+
+    @property
+    def nucleotide_blast_db(self):
+        if self.nucleotide is None:
+            raise ValueError("Nucleotide blast database does not exist")
+        return self.nucleotide / self.__nucleotide_path
+    
+    @property
+    def protein_blast_db(self):
+        if self.protein is None:
+            raise ValueError("Protein blast database does not exist")
+        return self.protein / self.__protein_path
+
+    def _get_config(self, db_dir: pathlib.Path) -> DBConfig:
+        """
+        Validates the config file and searializes the data into a DBConfig object
+        """
+        return check_config(db_dir)
+    
+    def _get_metadata(self, db_dir: pathlib.Path) -> dict:
+        metadata_file = db_dir.joinpath(DBFiles.meta_file)
+        if not metadata_file.exists():
+            raise FileNotFoundError("Metadata file does not exist. Database path maybe incorrect: {}".format(db_dir))
+
+    def _get_blast_dbs(self, db_dir: pathlib.Path, config_data: DBConfig) -> Tuple[Optional[pathlib.Path], Optional[pathlib.Path]]:
+        blast_db = db_dir.joinpath(DBFiles.blast_dir)
+        nucleotide: Optional[pathlib.Path] = None
+        protein: Optional[pathlib.Path] = None
+        if not blast_db.exists():
+            raise OSError("blast directory not found. Database path maybe incorrect: {}".format(db_dir))
+        if config_data.is_nucl:
+            nucleotide = blast_db.joinpath(self.__nucleotide_path)
+            if not nucleotide.exists():
+                raise FileNotFoundError("Cannot find nucleotide database, but it should exist. {}".format(nucleotide))
+        if config_data.is_prot:
+            protein = blast_db.joinpath(self.__protein_path)
+            if not protein.exists():
+                raise FileNotFoundError("Cannot find protein database, but it should exist. {}".format(protein))
+        return nucleotide, protein
 
 
 class ManifestItem:
@@ -68,7 +127,7 @@ def add_args(parser=None):
     return parser
 
 
-def check_config(directory: pathlib.Path) -> None:
+def check_config(directory: pathlib.Path) -> DBConfig:
     """
     Validate config file in a directory. Throws an error if any required parameters
     are missing.
@@ -77,7 +136,7 @@ def check_config(directory: pathlib.Path) -> None:
     """
 
     config_dir = pathlib.Path(directory / DBFiles.config_file)
-    config_data: Union[DBConfig, None] = None 
+    config_data: Optional[DBConfig] = None 
     with open(config_dir, 'r') as conf:
         config_data = DBConfig(**json.load(conf))
         for k, v in config_data.to_dict().items():
@@ -197,7 +256,7 @@ def read_manifest(input_file: pathlib.Path) -> dict:
 
 def get_manifest_db(input_file: pathlib.Path, name: str, version: str) -> ManifestItem:
     """
-    Retruns path to the database file selected
+    Returns path to the database file selected
     """
     output = read_manifest(input_file)
     db_out = select_db(output, name, version)

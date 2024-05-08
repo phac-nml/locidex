@@ -6,9 +6,15 @@ from collections import Counter
 from pathlib import Path
 from locidex.manifest import ManifestItem
 from Bio.Seq import Seq
-
+from typing import Dict, FrozenSet
 from locidex.constants import NT_SUB, PROTEIN_ALPHA, DNA_ALPHA, OPTION_GROUPS
 import locidex.manifest as manifest 
+
+def slots(annotations: Dict[str, object]) -> FrozenSet[str]:
+    """
+    Thank you for this: https://stackoverflow.com/a/63658478
+    """
+    return frozenset(annotations.keys())
 
 def check_db_groups(analysis_params: dict, cmd_args: argparse.Namespace, param_db: str = "db") -> dict:
     """

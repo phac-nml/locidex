@@ -1,7 +1,8 @@
 import pytest
 import os
-import locidex.classes.blast
-from locidex.constants import BLAST_TABLE_COLS
+import locidex
+from locidex.classes.blast import FilterOptions, blast_search, parse_blast
+from locidex.constants import BlastColumns
 from locidex.classes.extractor import extractor
 from locidex.classes.seq_intake import seq_intake
 from locidex.classes.db import db_config
@@ -14,15 +15,15 @@ PACKAGE_ROOT = os.path.dirname(locidex.__file__)
 
 
 def blast_db_and_search(tmpdir,input_db_path):
-    blast_search_obj = locidex.classes.blast.blast_search(input_db_path=input_db_path, 
+    blast_search_obj = blast_search(input_db_path=input_db_path, 
                         input_query_path=os.path.join(PACKAGE_ROOT, 'example/build_db_mlst_out/blast/nucleotide/nucleotide.fasta'),
                         output_results=os.path.join(tmpdir,"hsps.txt"), blast_params={'evalue': 0.0001,'max_target_seqs': 10,'num_threads': 1}, 
                         blast_method='blastn',
-                        blast_columns=BLAST_TABLE_COLS,create_db=True)
+                        blast_columns=BlastColumns._fields,create_db=True)
     blast_search_obj.run_blast()
     output_blast_results_path = os.path.join(tmpdir,"hsps.txt")
-    parse_blast_obj = locidex.classes.blast.parse_blast(input_file = output_blast_results_path,
-                                                        blast_columns = BLAST_TABLE_COLS,
+    parse_blast_obj = parse_blast(input_file = output_blast_results_path,
+                                                        blast_columns = BlastColumns._fields,
                                                         filter_options={'bitscore':{'min':600, 'max':None, 'include':None}})
     return parse_blast_obj
 
@@ -38,20 +39,22 @@ def seq_intake_fixture():
 
 def test_extractor_initialization(seq_intake_fixture, tmpdir):
     db_path=os.path.join(tmpdir,"contigs.fasta")
-    nt_db = os.path.join(PACKAGE_ROOT,'example/build_db_mlst_out/blast/nucleotide/nucleotide.fasta')
+    nt_db_test = os.path.join(PACKAGE_ROOT,'example/build_db_mlst_out/blast/nucleotide/nucleotide.fasta')
+    nt_db = os.path.join(PACKAGE_ROOT,'example/build_db_mlst_out/blast/nucleotide/')
     hit_file = os.path.join(tmpdir,"hsps.txt")
     blast_params={'evalue': 0.0001, 'max_target_seqs': 10, 'num_threads': 1}
     metadata_path = os.path.join(PACKAGE_ROOT,'example/build_db_mlst_out/meta.json')
     seq_obj = seq_intake_fixture
     seq_data={}
-    with open(db_path,'w') as oh:
-        for idx,seq in enumerate(seq_obj.seq_data):
-            seq_data[str(idx)] = {'id':str(seq['seq_id']),'seq':seq['dna_seq']}
-            oh.write(">{}\n{}\n".format(idx,seq['dna_seq']))
-    locidex.classes.blast.blast_search(input_db_path=db_path, input_query_path=nt_db,
-                       output_results=hit_file, blast_params=blast_params, blast_method='blastn',
-                       blast_columns=BLAST_TABLE_COLS,create_db=True)
-    hit_df = locidex.classes.blast.parse_blast(hit_file, BLAST_TABLE_COLS, {}).df
+    #with open(db_path,'w') as oh:
+    #    for idx,seq in enumerate(seq_obj.seq_data):
+    #        seq_data[str(idx)] = {'id':str(seq.seq_id),'seq':seq.dna_seq}
+    #        oh.write(">{}\n{}\n".format(idx,seq.dna_seq))
+    blast_search(input_db_path=nt_db, 
+                                    input_query_path=nt_db_test,
+                    output_results=hit_file, blast_params=blast_params, blast_method='blastn',
+                    blast_columns=BlastColumns._fields)
+    hit_df = parse_blast(hit_file, BlastColumns._fields, {}).df
     loci = []; metadata_obj = db_config(metadata_path, ['meta', 'info'])
     for idx,row in hit_df.iterrows():
         qid = str(row['qseqid'])

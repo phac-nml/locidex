@@ -18,25 +18,57 @@ START_CODONS = ['atg','gtg','ctg','ttg','ata']
 STOP_CODONS = ['taa','tag','tta','tca','tga','aga','agg']
 
 
-BLAST_TABLE_COLS = '''
-qseqid
-sseqid
-qlen
-slen
-qstart
-qend
-sstart
-send
-length
-mismatch
-pident
-qcovhsp
-qcovs
-sstrand
-evalue
-bitscore
-'''.strip().split('\n')
+@dataclass(frozen=True)
+class CharacterConstants:
+    stop_codon: str = "*"
 
+#BLAST_TABLE_COLS = '''
+#qseqid
+#sseqid
+#qlen
+#slen
+#qstart
+#qend
+#sstart
+#send
+#length
+#mismatch
+#pident
+#qcovhsp
+#qcovs
+#sstrand
+#evalue
+#bitscore
+#'''.strip().split('\n')
+
+class BlastColumns(NamedTuple):
+    qseqid: str
+    sseqid: str
+    qlen: int
+    slen: int
+    qstart: int
+    qend: int
+    sstart: int
+    send: int
+    length: int
+    mismatch: str
+    pident: float
+    qcovhsp: float
+    qcovs: float
+    sstrand: str
+    evalue: float
+    bitscore: float
+
+@dataclass(frozen=True)
+class BlastCommands:
+    # upgrading this to a string enum would be nice
+    tblastn: str = "tblastn"
+    blastn: str = "blastn"
+    blastp: str = "blastp"
+
+    @classmethod
+    def _keys(cls) -> list:
+        return [i.name for i in fields(cls)]
 
 FILE_TYPES = {
     'genbank': ["gbk","genbank","gbf","gbk.gz","genbank.gz","gbf.gz","gbff","gbff.gz"],
@@ -153,29 +185,3 @@ class LocidexDBHeader(NamedTuple):
     min_aa_match_cov: Optional[int]
     count_int_stops: int
     dna_ambig_count: int
-
-
-#LOCIDEX_DB_HEADER = [
-#    'seq_id',
-#    'locus_name',
-#    'locus_name_alt',
-#    'locus_product',
-#    'locus_description',
-#    'locus_uid',
-#    'dna_seq',
-#    'dna_seq_len',
-#    'dna_seq_hash',
-#    'aa_seq',
-#    'aa_seq_len',
-#    'aa_seq_hash',
-#    'dna_min_len',
-#    'dna_max_len',
-#    'aa_min_len',
-#    'aa_max_len',
-#    'dna_min_ident',
-#    'aa_min_ident',
-#    'min_dna_match_cov',
-#    'min_aa_match_cov',
-#    'count_int_stops',
-#    'dna_ambig_count'
-#]

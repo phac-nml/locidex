@@ -5,14 +5,17 @@ import sys
 from pathlib import Path
 from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
 from datetime import datetime
+from typing import Optional
+from dataclasses import dataclass
 
 import pandas as pd
 
-from locidex.classes.blast import blast_search, parse_blast
+from locidex.classes.blast import blast_search, parse_blast, FilterOptions
 from locidex.classes.db import search_db_conf, db_config
-from locidex.classes.seq_intake import seq_intake, seq_store
-from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BLAST_TABLE_COLS, DB_EXPECTED_FILES, OPTION_GROUPS, DBConfig
-from locidex.utils import write_seq_dict, check_db_groups
+from locidex.manifest import DBData
+from locidex.classes.seq_intake import seq_intake, seq_store, HitFilters
+from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BlastColumns, DB_EXPECTED_FILES, OPTION_GROUPS, DBConfig
+from locidex.utils import write_seq_dict, check_db_groups, slots
 from locidex.version import __version__
 
 def add_args(parser=None):
@@ -62,15 +65,12 @@ def add_args(parser=None):
     return parser
 
 
-
-
 def perform_search(query_file,results_file,db_path,blast_prog,blast_params,columns):
     return blast_search(db_path,query_file,results_file,blast_params,blast_prog,columns)
 
 
 def create_fasta_from_df(df,label_col,seq_col,out_file):
     write_seq_dict(dict(zip(df[label_col].tolist(), df[seq_col])), out_file)
-
 
 
 def run_search(config):
@@ -96,10 +96,10 @@ def run_search(config):
     perform_annotation = config['annotate']
     max_target_seqs = config['max_target_seqs']
 
-    if 'max_ambig_count' in config:
-        max_ambig_count = config['max_ambig_count']
+    if max_count := config.get('max_ambig_count'):
+        max_ambig_count = max_count
     else:
-        max_ambig_count = 99999999999999
+        max_ambig_count = float('inf')
 
     if not perform_annotation:
         perform_annotation = False
@@ -118,8 +118,12 @@ def run_search(config):
     #    print(f'There is an issue with provided db directory: {db_dir}\n {db_database_config.messages}')
     #    sys.exit()
 
-    metadata_path = db_database_config.meta_file_path
-    metadata_obj = db_config(metadata_path, ['meta', 'info'])
+    db_data = DBData(db_dir=db_dir)
+
+    #metadata_path = db_database_config.meta_file_path
+    #metadata_obj = db_config(metadata_path, ['meta', 'info'])
+    metadata_obj = db_data.metadata
+    #blast_database_paths = db_database_config.blast_paths
     blast_database_paths = db_database_config.blast_paths
     if os.path.isdir(outdir) and not force:
         print(f'Error {outdir} exists, if you would like to overwrite, then specify --force')
@@ -145,11 +149,6 @@ def run_search(config):
 
     seq_obj = seq_intake(query_file, format, 'CDS', translation_table, perform_annotation)
 
-    if seq_obj.status == False:
-        print(
-            f'Something went wrong parsing query file: {query_file}, please check logs and messages:\n{seq_obj.messages}')
-        sys.exit()
-
     if perform_annotation:
         gbk_data = []
         for idx,genes in enumerate(seq_obj.prodigal_genes):
@@ -174,42 +173,42 @@ def run_search(config):
     }
 
     filter_options = {
-        'evalue': {'min': None, 'max': min_evalue, 'include': None},
+        'evalue': FilterOptions(min=None, max=min_evalue, include=None)
     }
 
     df = pd.DataFrame.from_dict(seq_obj.seq_data)
     filtered_df = df
     filtered_df['index'] = filtered_df.index.to_list()
-    hit_filters = {
-        'min_dna_len': min_dna_len,
-        'max_dna_len': max_dna_len,
-        'min_dna_ident': min_dna_ident,
-        'min_dna_match_cov': min_dna_match_cov,
-        'min_aa_len': min_aa_len,
-        'max_aa_len': max_aa_len,
-        'min_aa_ident': min_aa_ident,
-        'min_aa_match_cov': min_aa_match_cov,
-        'dna_ambig_count':max_ambig_count
+    hit_filters = HitFilters(
+        min_dna_len = min_dna_len,
+        max_dna_len=max_dna_len,
+        min_dna_ident=min_dna_ident,
+        min_dna_match_cov=min_dna_match_cov,
+        min_aa_len=min_aa_len,
+        max_aa_len=max_aa_len,
+        min_aa_ident=min_aa_ident,
+        min_aa_match_cov=min_aa_match_cov,
+        dna_ambig_count=max_ambig_count)
+    
 
-    }
-    store_obj = seq_store(sample_name, db_database_config.config_obj.config, metadata_obj.config['meta'],
-                          seq_obj.seq_data, BLAST_TABLE_COLS, hit_filters)
+    store_obj = seq_store(sample_name, db_data.config, metadata_obj.config['meta'],
+                        seq_obj.seq_data, BlastColumns._fields, hit_filters)
 
-    for db_label in blast_database_paths:
+    for db_label in (db_data.nucleotide,):
         label_col = 'index'
-        if db_label == 'nucleotide':
+        if db_data.nucleotide:
             blast_prog = 'blastn'
             seq_col = 'dna_seq'
-            d = os.path.join(blast_dir_base, 'nucleotide')
-            filter_options['pident'] = {'min': min_dna_ident, 'max': None, 'include': None}
-            filter_options['qcovs'] = {'min': min_dna_match_cov, 'max': None, 'include': None}
+            d = db_data.nucleotide
+            filter_options['pident'] = FilterOptions(min=min_dna_ident, max=None, include=None)
+            filter_options['qcovs'] = FilterOptions(min=min_dna_match_cov, max=None, include=None)
 
-        elif db_label == 'protein':
+        elif db_data.protein:
             blast_prog = 'blastp'
             seq_col = 'aa_seq'
-            d = os.path.join(blast_dir_base, 'protein')
-            filter_options['pident'] = {'min': min_aa_ident, 'max': None, 'include': None}
-            filter_options['qcovs'] = {'min': min_aa_match_cov, 'max': None, 'include': None}
+            d = db_data.protein
+            filter_options['pident'] = FilterOptions(min=min_aa_ident, max=None, include=None)
+            filter_options['qcovs'] = FilterOptions(min=min_aa_match_cov, max=None, include=None)
 
         if not os.path.isdir(d):
             os.makedirs(d, 0o755)
@@ -222,8 +221,8 @@ def run_search(config):
         db_path = blast_database_paths[db_label]
         create_fasta_from_df(filtered_df, label_col, seq_col, os.path.join(d, "queries.fasta"))
         perform_search(os.path.join(d, "queries.fasta"), os.path.join(d, "hsps.txt"), db_path, blast_prog, blast_params,
-                       BLAST_TABLE_COLS)
-        hit_obj = parse_blast(os.path.join(d, "hsps.txt"), BLAST_TABLE_COLS, filter_options)
+                    BlastColumns._fields)
+        hit_obj = parse_blast(os.path.join(d, "hsps.txt"), BlastColumns._fields, filter_options)
         hit_df = hit_obj.df
         store_obj.add_hit_data(hit_df, db_label, 'qseqid')
 
