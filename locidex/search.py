@@ -10,7 +10,8 @@ from dataclasses import dataclass
 
 import pandas as pd
 
-from locidex.classes.blast import blast_search, parse_blast, FilterOptions
+#from locidex.classes.blast import blast_search, parse_blast, FilterOptions
+from locidex.classes.blast2 import BlastSearch, FilterOptions
 from locidex.classes.db import search_db_conf, db_config
 from locidex.manifest import DBData
 from locidex.classes.seq_intake import seq_intake, seq_store, HitFilters
@@ -124,7 +125,7 @@ def run_search(config):
     #metadata_obj = db_config(metadata_path, ['meta', 'info'])
     metadata_obj = db_data.metadata
     #blast_database_paths = db_database_config.blast_paths
-    blast_database_paths = db_database_config.blast_paths
+    #blast_database_paths = db_database_config.blast_paths
     if os.path.isdir(outdir) and not force:
         print(f'Error {outdir} exists, if you would like to overwrite, then specify --force')
         sys.exit()
@@ -162,9 +163,9 @@ def run_search(config):
             oh.write("\n".join([str(x) for x in gbk_data]))
 
 
-    blast_dir_base = os.path.join(outdir, 'blast')
-    if not os.path.isdir(blast_dir_base):
-        os.makedirs(blast_dir_base, 0o755)
+    #blast_dir_base = os.path.join(outdir, 'blast')
+    #if not os.path.isdir(blast_dir_base):
+    #    os.makedirs(blast_dir_base, 0o755)
 
     blast_params = {
         'evalue': min_evalue,
@@ -194,7 +195,8 @@ def run_search(config):
     store_obj = seq_store(sample_name, db_data.config, metadata_obj.config['meta'],
                         seq_obj.seq_data, BlastColumns._fields, hit_filters)
 
-    for db_label in (db_data.nucleotide,):
+    ############# Tommorow wrap this in two individual functions
+    for db_label in dbs:
         label_col = 'index'
         if db_data.nucleotide:
             blast_prog = 'blastn'
@@ -218,13 +220,17 @@ def run_search(config):
             if os.path.isfile(os.path.join(d, "hsps.txt")):
                 os.remove(os.path.join(d, "hsps.txt"))
 
-        db_path = blast_database_paths[db_label]
+        #db_path = blast_database_paths[db_label]
         create_fasta_from_df(filtered_df, label_col, seq_col, os.path.join(d, "queries.fasta"))
-        perform_search(os.path.join(d, "queries.fasta"), os.path.join(d, "hsps.txt"), db_path, blast_prog, blast_params,
-                    BlastColumns._fields)
-        hit_obj = parse_blast(os.path.join(d, "hsps.txt"), BlastColumns._fields, filter_options)
-        hit_df = hit_obj.df
-        store_obj.add_hit_data(hit_df, db_label, 'qseqid')
+        #perform_search(os.path.join(d, "queries.fasta"), os.path.join(d, "hsps.txt"), db_path, blast_prog, blast_params,
+        #            BlastColumns._fields)
+        #hit_obj = parse_blast(os.path.join(d, "hsps.txt"), BlastColumns._fields, filter_options)
+        #hit_df = hit_obj.df
+        search_data = BlastSearch(db_data, os.path.join(d, "queries.fasta"), blast_params, blast_prog, BlastColumns._fields, filter_options)
+        searched_df = search_data.get_blast_data(db_data.nucleotide_blast_db, os.path.join(d, "hsps.txt"))
+
+        #store_obj.add_hit_data(hit_df, db_label, 'qseqid')
+        store_obj.add_hit_data(searched_df, db_label, 'qseqid')
 
     store_obj.filter_hits()
     store_obj.convert_profile_to_list()
@@ -234,7 +240,7 @@ def run_search(config):
         fh.write(json.dumps(store_obj.record, indent=4))
 
     run_data['analysis_end_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    print(run_data)
+
     with open(os.path.join(outdir,"run.json"),'w' ) as fh:
         fh.write(json.dumps(run_data, indent=4))
 
