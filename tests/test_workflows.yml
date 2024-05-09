@@ -25,8 +25,8 @@
 - name: Run all
   command: > 
     bash -c "
-    locidex extract -i locidex/example/search/NC_003198.1.fasta -d locidex/example/build_db_mlst_out -o here;
-    locidex search --query here/raw.extracted.seqs.fasta -d locidex/example/build_db_mlst_out -o searched;
+    locidex extract -i locidex/example/search/NC_003198.1.fasta -d locidex/example/build_db_mlst_out -o here &&
+    locidex search --query here/raw.extracted.seqs.fasta -d locidex/example/build_db_mlst_out -o searched &&
     locidex report -i searched/seq_store.json -o reported
     "
   files:

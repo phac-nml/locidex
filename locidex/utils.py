@@ -134,6 +134,7 @@ def write_seq_dict(data,output_file):
     with open(output_file, 'w') as oh:
         for id in data:
             oh.write(f">{id}\n{data[id]}\n")
+    return output_file
 
 
 def validate_dict_keys(data_dict,required_keys):

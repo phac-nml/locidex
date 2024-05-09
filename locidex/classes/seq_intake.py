@@ -2,12 +2,12 @@ import os
 import sys
 
 from locidex.classes.gbk import parse_gbk
-from locidex.classes.fasta import parse_fasta
+from locidex.classes.fasta import ParseFasta
 from locidex.utils import guess_alphabet, calc_md5, six_frame_translation, slots
 from locidex.classes.prodigal import gene_prediction
-from locidex.constants import DNA_AMBIG_CHARS, DNA_IUPAC_CHARS, CharacterConstants
-from typing import NamedTuple, Optional
-from dataclasses import dataclass
+from locidex.constants import DNA_AMBIG_CHARS, DNA_IUPAC_CHARS, CharacterConstants, DBConfig
+from typing import NamedTuple, Optional, List
+from dataclasses import dataclass, asdict
 
 @dataclass
 class HitFilters:
@@ -24,7 +24,6 @@ class HitFilters:
 
 @dataclass
 class SeqObject:
-
     parent_id: str
     locus_name: str
     seq_id: str
@@ -41,51 +40,44 @@ class SeqObject:
     # Manually adding slots for compatibility
     __slots__ = slots(__annotations__)
 
+    def to_dict(self) -> dict:
+        return asdict(self)
+
 class seq_intake:
-    input_file = ''
     valid_types = ['genbank','gff','gtf','fasta']
-    file_type = None
-    feat_key = 'CDS'
-    translation_table = 11
     is_file_valid = ''
-    
-    messages = []
-    prodigal_genes = []
-    skip_trans = False
+
 
     def __init__(self,input_file,file_type,feat_key='CDS',translation_table=11,perform_annotation=False,num_threads=1,skip_trans=False):
+        if not input_file.exists():
+            raise FileNotFoundError("File {} does not exist.".format(input_file))
+        
         self.input_file = input_file
         self.file_type = file_type
         self.translation_table = translation_table
         self.feat_key = feat_key
         self.skip_trans = skip_trans
-        self.status = True
         self.num_threads = num_threads
+        self.prodigal_genes = []
+        self.skip_trans = False
         #self.seq_data = self.process_fasta()
+        self.status = True
 
-        if not os.path.isfile(self.input_file):
-            self.messages.append(f'Error {self.input_file} does not exist')
-            self.status = False
-
-        if not self.status:
-            return
 
         if file_type == 'genbank':
             self.seq_data = self.process_gbk()
             self.status = True
         elif file_type == 'fasta' and perform_annotation==True:
-            #sobj = gene_prediction(self.input_file)
-            #sobj.predict(num_threads)
-            #self.prodigal_genes = sobj.genes
-            #self.process_seq_hash(sobj.sequences)
-            #self.seq_data = self.process_fasta()
             self.seq_data = self.annotate_fasta(self.input_file, num_threads=self.num_threads)
         elif file_type == 'fasta' and perform_annotation==False:
             self.seq_data = self.process_fasta()
-        elif file_type == 'gff':
+        elif file_type == 'gff': # TODO these lists do not contain all allowed file types
             self.status = False
         elif file_type == 'gtf':
             self.status = False
+        else:
+            raise AttributeError
+
         if self.status:
             self.add_codon_data()
 
@@ -147,7 +139,7 @@ class seq_intake:
         return seq_data
 
     def process_fasta(self, seq_data = []) -> list[SeqObject]:
-        obj = parse_fasta(self.input_file)
+        obj = ParseFasta(self.input_file)
         ids = obj.get_seqids()
         for id in ids:
             features = obj.get_seq_by_id(id)
@@ -272,15 +264,15 @@ class seq_store:
         self.record['query_data']['sample_name'] = self.sample_name
 
 
-    def add_db_config(self,conf):
-        self.record['db_info'] = conf
+    def add_db_config(self,conf: DBConfig):
+        self.record['db_info'] = conf.to_dict()
 
     def add_hit_cols(self,columns):
         self.record['query_hit_columns'] = columns
 
-    def add_seq_data(self,query_seq_records):
+    def add_seq_data(self,query_seq_records: List[SeqObject]):
         for idx, v in enumerate(query_seq_records):
-            self.record['query_data']['query_seq_data'][idx] = v
+            self.record['query_data']['query_seq_data'][idx] = v.to_dict()
 
     def add_db_metadata(self,metadata_dict):
         locus_profile = {}

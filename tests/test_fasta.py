@@ -4,7 +4,7 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 import tempfile
 import os
-from locidex.classes.fasta import parse_fasta
+from locidex.classes.fasta import ParseFasta
 
 @pytest.fixture
 def fasta_content():
@@ -23,7 +23,7 @@ def fasta_file(fasta_content):
     os.unlink(tmp_path)
 
 def test_parse_fasta_normal(fasta_file):
-    parser = parse_fasta(fasta_file)
+    parser = ParseFasta(fasta_file)
     assert len(parser.get_seqids()) == 2, "There should be two sequences"
     seq_data = parser.get_seq_by_id("gene1|123")
     assert seq_data.seq == "ATGCGTACGTAGCTAGC", "Sequence data should match the input"
@@ -31,13 +31,13 @@ def test_parse_fasta_normal(fasta_file):
 def test_parse_fasta_with_nonexistent_file():
     # Assuming that the locidex errors out with File not found error if FASTA is non existant:
     with pytest.raises(FileNotFoundError):
-        parse_fasta("nonexistent.fasta")
+        ParseFasta("nonexistent.fasta")
 
     # parser = parse_fasta("nonexistent.fasta")
     # assert not parser.status, "Parser status should be False when file does not exist"
 
 def test_parse_fasta_with_definitions(fasta_file):
-    parser = parse_fasta(fasta_file, parse_def=True, delim="|")
+    parser = ParseFasta(fasta_file, parse_def=True, delim="|")
     seq_data = parser.get_seq_by_id("gene1|123")
     assert seq_data.gene_name == "gene1", "Gene name should be correctly parsed from definition"
     assert seq_data.seq_id == "123", "Seq ID should be correctly parsed from definition"

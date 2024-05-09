@@ -5,6 +5,7 @@ from functools import partial
 import os
 from locidex.utils import calc_md5, slots
 from dataclasses import dataclass
+from pathlib import Path
 
 @dataclass
 class Fasta:
@@ -18,11 +19,11 @@ class Fasta:
     __slots__ = slots(__annotations__)
 
 
-class parse_fasta:
+class ParseFasta:
 
-    def __init__(self, input_file,parse_def=False,seq_type=None,delim="|"):
+    def __init__(self, input_file: Path,parse_def=False,seq_type=None,delim="|"):
         self.input_file = input_file
-        if not os.path.isfile(self.input_file):
+        if not self.input_file.exists():
             raise FileNotFoundError("Input file: {} not found.".format(self.input_file))
 
         self.delim = delim
@@ -38,6 +39,7 @@ class parse_fasta:
         return fasta.lower().replace("-", "")
 
     def get_seqids(self):
+        print(bool(self.seq_obj), self.seq_obj.keys())
         if self.seq_obj:
             return list(self.seq_obj.keys())
         raise AssertionError("No fasta file loaded.")

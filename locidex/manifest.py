@@ -22,15 +22,34 @@ class DBData:
     * point we should have a better understanding of how all the modules fit together.
     """
 
-    __db_names = ["nucleotide", "protein"]
-    __nucleotide_path = pathlib.Path(__db_names[0])
-    __protein_path = pathlib.Path(__db_names[1])
+    __nucleotide_name = "nucleotide"
+    __nucleotide_db_type = "nucl"
+    __protein_name = "protein"
+    __protein_db_type = "prot"
+    __nucleotide_path = pathlib.Path(__nucleotide_name)
+    __protein_path = pathlib.Path(__protein_name)
 
     def __init__(self, db_dir: pathlib.Path):
-        self.db_dir = db_dir
+        self.db_dir = pathlib.Path(db_dir)
         self.config_data: DBConfig = self._get_config(self.db_dir)
         self.metadata: dict = self._get_metadata(self.db_dir)
-        self.nucleotide, self.protein = self._get_blast_dbs(db_dir, self.config_data)
+        self.nucleotide, self.protein = self._get_blast_dbs(self.db_dir, self.config_data)
+
+    @classmethod
+    def nucleotide_db_type(cls):
+        return cls.__nucleotide_db_type
+
+    @classmethod
+    def protein_db_type(cls):
+        return cls.__protein_db_type
+
+    @classmethod
+    def protein_name(cls):
+        return cls.__protein_name
+    
+    @classmethod
+    def nucleotide_name(cls):
+        return cls.__nucleotide_name
 
     @property
     def nucleotide_blast_db(self):
@@ -54,6 +73,11 @@ class DBData:
         metadata_file = db_dir.joinpath(DBFiles.meta_file)
         if not metadata_file.exists():
             raise FileNotFoundError("Metadata file does not exist. Database path maybe incorrect: {}".format(db_dir))
+        md_data = None
+        with open(metadata_file, 'r') as md:
+            md_data = json.load(md)
+        return md_data
+
 
     def _get_blast_dbs(self, db_dir: pathlib.Path, config_data: DBConfig) -> Tuple[Optional[pathlib.Path], Optional[pathlib.Path]]:
         blast_db = db_dir.joinpath(DBFiles.blast_dir)
@@ -135,7 +159,7 @@ def check_config(directory: pathlib.Path) -> DBConfig:
     directory: Path of the directory containing the parent.
     """
 
-    config_dir = pathlib.Path(directory / DBFiles.config_file)
+    config_dir = pathlib.Path(directory).joinpath(DBFiles.config_file)
     config_data: Optional[DBConfig] = None 
     with open(config_dir, 'r') as conf:
         config_data = DBConfig(**json.load(conf))

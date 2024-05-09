@@ -11,8 +11,11 @@ from locidex.constants import BlastCommands
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, List, Dict
-import os
+import logging
+import sys
 
+logger = logging.getLogger(__name__)
+logging.basicConfig(filemode=sys.stderr, level=logging.INFO)
 
 @dataclass
 class FilterOptions:
@@ -21,6 +24,27 @@ class FilterOptions:
     include: Optional[bool] 
     __slots__ = slots(__annotations__)
 
+
+class BlastMakeDB:
+    """
+    Create a blast database
+    """
+
+    def __init__(self, input_file: Path, db_type: str, parse_seqids: bool, output_db_path: Optional[Path]):
+        self.input_file = input_file
+        self.db_type = db_type
+        self.parse_seqids = parse_seqids
+        self.output_db_path = output_db_path
+
+    def makeblastdb(self):
+        command = ['makeblastdb', '-in', str(self.input_file), '-dbtype', self.db_type]
+        if self.parse_seqids:
+            command.append('-parse_seqids')
+        if self.output_db_path != None:
+            command +=['-out', str(self.output_db_path)]
+        stdout, stderr = run_command(" ".join([str(x) for x in command]))
+        print(stdout, stderr)
+        return self.output_db_path
 
 class BlastSearch:
     __blast_commands = set(BlastCommands._keys())
@@ -38,11 +62,15 @@ class BlastSearch:
         self.blast_columns = blast_columns
         self.filter_options = filter_options
 
-    def get_blast_data(self, db_path, output) -> pd.DataFrame:
+    def get_blast_data(self, db_path: Path, output: Path) -> pd.DataFrame:
         """
         Run blast and parse results
+        TODO need to clean up the db_path hand off from the DBData obj its dirty
         """
+        
         stdout, stderr = self._run_blast(db=db_path, output=output)
+        #logger.info("Blast stdout: {}".format(stdout))
+        #logger.info("Blast stderr: {}".format(stderr))
         blast_data = self.parse_blast(output_file=output)
         return blast_data
 
@@ -59,24 +87,24 @@ class BlastSearch:
                 tp[id_col] = 'object'
             df = df.astype(tp)
         for col_name in self.filter_options:
-                if col_name in self.columns:
+                if col_name in columns:
                     min_value = self.filter_options[col_name].min
                     max_value = self.filter_options[col_name].max
                     include = self.filter_options[col_name].include
-                    self.filter_df(col_name, min_value, max_value, include)
+                    df = self.filter_df(df,col_name, min_value, max_value, include, columns)
         return df
         
 
-    def filter_df(self,col_name,min_value,max_value,include):
-        if col_name not in self.columns:
+    def filter_df(self,df, col_name,min_value,max_value,include, columns):
+        if col_name not in columns:
             return False
         if min_value is not None:
-            self.df = self.df[self.df[col_name] >= min_value]
+            df = df[df[col_name] >= min_value]
         if max_value is not None:
-            self.df = self.df[self.df[col_name] <= max_value]
+            df = df[df[col_name] <= max_value]
         if include is not None:
-            self.df = self.df[self.df[col_name].isin(include)]
-        return True
+            df = df[df[col_name].isin(include)]
+        return df
 
     def read_hit_table(self, blast_data):
         return pd.read_csv(blast_data,header=None,names=self.blast_columns,sep="\t",low_memory=False)
