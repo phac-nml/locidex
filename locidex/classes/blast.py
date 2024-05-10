@@ -64,7 +64,6 @@ class blast_search:
     def is_blast_db_valid(self):
         extensions = ['nsq', 'nin', 'nhr']
         for e in extensions:
-            print(self.output_db_path, e)
             if not os.path.isfile(f'{self.output_db_path}.{e}'):
                 extensions2 = ['pto', 'ptf', 'phr']
                 for e2 in extensions2:

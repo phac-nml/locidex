@@ -57,7 +57,7 @@ class BlastSearch:
     __blast_extensions_pt = frozenset(['.pto', '.ptf', '.phr'])
     __filter_columns = ["qseqid", "sseqid"]
 
-    def __init__(self, db_data: DBData, query_path: Path, blast_params: dict, blast_method: str, blast_columns: List[str], filter_options: Dict[str, FilterOptions]):
+    def __init__(self, db_data: DBData, query_path: Path, blast_params: dict, blast_method: str, blast_columns: List[str], filter_options: Optional[Dict[str, FilterOptions]]=None):
         self.db_data = db_data
         if blast_method not in self.__blast_commands:
             raise ValueError("{} is not a valid blast command please pick from {}".format(blast_method, self.__blast_commands))
@@ -94,6 +94,9 @@ class BlastSearch:
             if id_col in columns:
                 tp[id_col] = 'object'
             df = df.astype(tp)
+        if self.filter_options is None:
+            return df
+        
         for col_name in self.filter_options:
                 if col_name in columns:
                     min_value = self.filter_options[col_name].min

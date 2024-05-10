@@ -3,6 +3,7 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 import tempfile
+from pathlib import Path
 import os
 from locidex.classes.fasta import ParseFasta
 
@@ -19,19 +20,19 @@ def fasta_file(fasta_content):
     with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix=".fasta") as tmp:
         SeqIO.write(fasta_content, tmp, "fasta")
         tmp_path = tmp.name
-    yield tmp_path
+    yield Path(tmp_path)
     os.unlink(tmp_path)
 
 def test_parse_fasta_normal(fasta_file):
     parser = ParseFasta(fasta_file)
     assert len(parser.get_seqids()) == 2, "There should be two sequences"
     seq_data = parser.get_seq_by_id("gene1|123")
-    assert seq_data.seq == "ATGCGTACGTAGCTAGC", "Sequence data should match the input"
+    assert seq_data.seq == "ATGCGTACGTAGCTAGC".lower(), "Sequence data should match the input"
 
 def test_parse_fasta_with_nonexistent_file():
     # Assuming that the locidex errors out with File not found error if FASTA is non existant:
     with pytest.raises(FileNotFoundError):
-        ParseFasta("nonexistent.fasta")
+        ParseFasta(Path("nonexistent.fasta"))
 
     # parser = parse_fasta("nonexistent.fasta")
     # assert not parser.status, "Parser status should be False when file does not exist"

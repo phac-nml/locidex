@@ -37,9 +37,9 @@ def cmd_args(output_directory):
                     outdir=output_directory,
                     name='Locidex Database',
                     db_ver='1.0.0',
-                    db_desc='',
+                    db_desc='test',
                     force=True,
-                    author='',
+                    author='mw',
                     date=''
                     )
     return command

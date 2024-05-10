@@ -105,16 +105,16 @@ OPTION_GROUPS = {
 
 @dataclass
 class DBConfig:
-    db_name: Union[str, None] = None
-    db_version: Union[str, None] = None
-    db_date: Union[str, None] = None
-    db_author: Union[str, None] = None
-    db_desc: Union[str, None] = None
-    db_num_seqs: Union[str, int] = None
-    is_nucl: Union[bool, None] = None
-    is_prot: Union[bool, None] = None
-    nucleotide_db_name: Union[str, None] = None
-    protein_db_name: Union[str, None] = None
+    db_name: Optional[str] = None
+    db_version: Optional[str] = None
+    db_date: Optional[str] = None
+    db_author: Optional[str] = None
+    db_desc: Optional[str] = None
+    db_num_seqs: Optional[Union[str, int]] = None
+    is_nucl: Optional[bool] = None
+    is_prot: Optional[bool] = None
+    nucleotide_db_name: Optional[str] = None
+    protein_db_name: Optional[str] = None
 
     def __getitem__(self, name: str) -> Any:
         return getattr(self, str(name))

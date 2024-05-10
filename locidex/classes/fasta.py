@@ -39,7 +39,6 @@ class ParseFasta:
         return fasta.lower().replace("-", "")
 
     def get_seqids(self):
-        print(bool(self.seq_obj), self.seq_obj.keys())
         if self.seq_obj:
             return list(self.seq_obj.keys())
         raise AssertionError("No fasta file loaded.")

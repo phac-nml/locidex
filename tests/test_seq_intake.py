@@ -1,10 +1,11 @@
 import os, warnings
 import locidex
-from locidex.classes.seq_intake import SeqObject, seq_intake, seq_store
+from locidex.classes.seq_intake import SeqObject, seq_intake, seq_store, HitFilters
 from locidex.constants import BlastColumns, DB_EXPECTED_FILES, DBConfig
 from locidex.classes.db import search_db_conf, db_config
 from collections import Counter
 from dataclasses import asdict
+from pathlib import Path
 
 PACKAGE_ROOT = os.path.dirname(locidex.__file__)
 
@@ -12,22 +13,27 @@ PACKAGE_ROOT = os.path.dirname(locidex.__file__)
 def seq_intake_class_init(input_file, file_type, perform_annotation):
    #reset global class variables to avoid ambiguous results
 
-   obj = seq_intake(input_file=input_file,
+   obj = seq_intake(input_file=Path(input_file),
                                       file_type=file_type,feat_key='CDS',translation_table=11,
                                       perform_annotation=perform_annotation,num_threads=1,skip_trans=False)
    return obj
+
 #@pytest.mark.skip(reason="no way of currently testing this")
 def test_seq_store_class():
     db_dir = os.path.join(PACKAGE_ROOT, 'example/build_db_mlst_out')
     db_database_config = search_db_conf(db_dir, DB_EXPECTED_FILES, DBConfig._keys())
     metadata_obj = db_config(db_database_config.meta_file_path, ['meta', 'info'])
     sample_name = 'NC_003198.1.fasta'
-    seq_obj = seq_intake(input_file=os.path.join(PACKAGE_ROOT, 'example/search/NC_003198.1.fasta'),
+
+    seq_obj = seq_intake(input_file=Path(os.path.join(PACKAGE_ROOT, 'example/search/NC_003198.1.fasta')),
                           file_type='fasta', perform_annotation=False)
-    hit_filters = {'min_dna_len': 1, 'max_dna_len': 10000000, 'min_dna_ident': 80.0, 'min_dna_match_cov': 80.0, 'min_aa_len': 1, 
-                   'max_aa_len': 10000000, 'min_aa_ident': 80.0, 'min_aa_match_cov': 80.0, 'dna_ambig_count': 99999999999999}
-    seq_store_obj = seq_store(sample_name, db_database_config.config_obj.config, metadata_obj.config['meta'],
+    
+    hit_filters = HitFilters(**{'min_dna_len': 1, 'max_dna_len': 10000000, 'min_dna_ident': 80.0, 'min_dna_match_cov': 80.0, 'min_aa_len': 1, 
+                   'max_aa_len': 10000000, 'min_aa_ident': 80.0, 'min_aa_match_cov': 80.0, 'dna_ambig_count': 99999999999999})
+    
+    seq_store_obj = seq_store(sample_name, DBConfig(**db_database_config.config_obj.config), metadata_obj.config['meta'],
                           seq_obj.seq_data, BlastColumns._fields, hit_filters)
+    
     assert list(seq_store_obj.record.keys()) == ['db_info', 'db_seq_info', 'query_data', 'query_hit_columns']
     assert list(seq_store_obj.record['db_info'].keys()) == ['db_name', 'db_version', 'db_date', 'db_author', 
                                                             'db_desc', 'db_num_seqs', 'is_nucl', 'is_prot', 'nucleotide_db_name', 'protein_db_name']
@@ -37,7 +43,7 @@ def test_seq_store_class():
     else:    
         warnings.warn(f"expected len(seq_store_obj.record['query_data']['query_seq_data']) == 1 but got {len(seq_store_obj.record['query_data']['query_seq_data'])}")
     
-    compare_dict = asdict(seq_store_obj.record['query_data']['query_seq_data'][0])
+    compare_dict = seq_store_obj.record['query_data']['query_seq_data'][0]
     assert set(compare_dict.keys()) ==  set(['parent_id', 'locus_name', 'seq_id', 'dna_hash', 'dna_len', 'aa_hash', 
                                                                                     'aa_len', 'start_codon', 'end_codon', 'count_internal_stop', 'dna_ambig_count', 'dna_seq', 'aa_seq'])
     assert list(seq_store_obj.record['query_data']['locus_profile'].keys()) == ['aroC', 'dnaN', 'hemD', 'hisD', 'purE', 'sucA', 'thrA']
@@ -71,7 +77,7 @@ def test_read_gbk_file():
 
 def test_read_fasta_file():
     expected_orfs=4653
-    seq_intake_object = seq_intake_class_init(input_file=os.path.join(PACKAGE_ROOT, 'example/search/NC_003198.1.fasta'),
+    seq_intake_object = seq_intake_class_init(input_file=Path(os.path.join(PACKAGE_ROOT, 'example/search/NC_003198.1.fasta')),
                           file_type='fasta', perform_annotation=True)
     assert seq_intake_object.file_type == 'fasta'
     assert seq_intake_object.feat_key == 'CDS'

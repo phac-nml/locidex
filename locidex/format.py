@@ -70,7 +70,7 @@ class locidex_format:
         for f in files[self.__file_input]:
             for e in self.valid_ext:
                 if e in f[1]:
-                    self.gene_name = f[1].replace(f'.{e}','')
+                    self.gene_name = f[1].replace(f'{e}','')
                     self.parse_fasta(f[0])
                     break
 

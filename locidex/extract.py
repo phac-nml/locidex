@@ -172,7 +172,10 @@ def run_extract(config):
         'num_threads': n_threads,
         'word_size':11
     }
-    nt_db = Path("{}.fasta".format(blast_database_paths['nucleotide']))
+    #nt_db = Path("{}.fasta".format(blast_database_paths['nucleotide']))
+    nt_db = Path("{}.fasta".format(db_data.nucleotide_blast_db))
+    if not nt_db.exists():
+        raise FileNotFoundError("Could not find nucleotide database: {}".format(nt_db))
 
     filter_options = {
         'evalue':  FilterOptions(min=None, max=min_evalue, include=None),
