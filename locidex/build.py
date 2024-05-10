@@ -7,7 +7,7 @@ from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescript
 from locidex.version import __version__
 from locidex.constants import DBFiles
 from locidex.classes import run_command
-from locidex.constants import DBConfig
+from locidex.constants import DBConfig, MetadataFields
 from locidex.classes.blast import BlastMakeDB
 from locidex.manifest import DBData
 import getpass
@@ -19,11 +19,6 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(filemode=sys.stderr, level=logging.INFO)
 
 class locidex_build:
-    input_file = None
-    config = {}
-    meta = {}
-    num_seqs = 0
-
 
 
     def __init__(self, input_file: os.PathLike, outdir: os.PathLike, config: DBConfig, seq_columns={'nucleotide':'dna_seq','protein':'aa_seq'},force=False,parse_seqids=False,translation_table: int = 11):
@@ -37,10 +32,8 @@ class locidex_build:
         self.is_dna = False
         self.is_protein = False
         self.blast_dir = outdir.joinpath("blast")
-        #self.status = self.blast_dir = os.path.join(outdir,'blast')
+
         self.init_dir(self.blast_dir)
-        if not self.status:
-            return
 
         self.df = self.read_data(self.input_file)
         self.config = config
@@ -50,7 +43,6 @@ class locidex_build:
             col_name = seq_columns[t]
             s = self.is_seqtype_present(col_name)
             if s:
-                #outfile  = os.path.join(self.blast_dir, t)
                 outfile  = self.blast_dir.joinpath(t)
                 if t == DBData.nucleotide_name():
                     self.is_dna = True
@@ -113,17 +105,16 @@ class locidex_build:
                 columns_to_include.append(col)
         subset = df[columns_to_include]
         self.meta = {
-            "info": {
-                "num_seqs": len(df),
-                "is_cds": "True",
-                "trans_table": self.translation_table,
-                "dna_min_len": min(df['dna_min_len'].tolist()),
-                "dna_max_len": max(df['dna_min_len'].tolist()),
-                "dna_min_ident": min(df['dna_min_ident'].tolist()),
-                "aa_min_len": min(df['aa_min_len'].tolist()),
-                "aa_max_len": max(df['aa_min_len'].tolist()),
-                "aa_min_ident": min(df['aa_min_ident'].tolist()),
-            },
+            "info": MetadataFields(
+                num_seqs=len(df),
+                is_cds=True,
+                trans_table=self.translation_table,
+                dna_min_len=min(df['dna_min_len'].tolist()),
+                dna_max_len=max(df['dna_min_len'].tolist()),
+                dna_min_ident=min(df['dna_min_ident'].tolist()),
+                aa_min_len=min(df['aa_min_len'].tolist()),
+                aa_max_len= max(df['aa_min_len'].tolist()),
+                aa_min_ident= min(df['aa_min_ident'].tolist())).to_dict(),
             "meta": subset.to_dict(orient='index')
         }
 

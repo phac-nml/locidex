@@ -161,6 +161,22 @@ DB_EXPECTED_FILES = {
     'protein':'protein.fasta',
 }
 
+@dataclass
+class MetadataFields:
+    num_seqs: int
+    is_cds: bool
+    trans_table: int
+    dna_min_len: int
+    dna_max_len: int
+    dna_min_ident: float
+    aa_min_len: int
+    aa_max_len: int
+    aa_min_ident: float
+    
+    def to_dict(self):
+        return asdict(self)
+
+
 
 class LocidexDBHeader(NamedTuple):
     seq_id: str

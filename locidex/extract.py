@@ -165,7 +165,7 @@ def run_extract(config):
     if not os.path.isdir(blast_dir_base):
         os.makedirs(blast_dir_base, 0o755)
 
-    blast_database_paths = db_database_config.blast_paths
+    #blast_database_paths = db_database_config.blast_paths
 
     blast_params = {
         'evalue': min_evalue,
