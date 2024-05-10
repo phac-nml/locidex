@@ -9,8 +9,8 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 from locidex.classes.extractor import extractor
-#from locidex.classes.blast import blast_search, parse_blast
-from locidex.classes.blast2 import BlastSearch, FilterOptions, BlastMakeDB
+
+from locidex.classes.blast import BlastSearch, FilterOptions, BlastMakeDB
 from locidex.manifest import DBData
 from locidex.classes.db import search_db_conf, db_config
 from locidex.classes.seq_intake import seq_intake, seq_store
@@ -156,6 +156,7 @@ def run_extract(config):
             seq_data[str(idx)] = {'id':str(seq.seq_id),'seq':seq.dna_seq}
             oh.write(">{}\n{}\n".format(idx,seq.dna_seq))
     del(seq_obj)
+    #TODO this should probably work on more than just nucleotides
     contigs_db = BlastMakeDB(contigs_path, DBData.nucleotide_db_type(), True, contigs_path)
     contigs_db.makeblastdb()
 

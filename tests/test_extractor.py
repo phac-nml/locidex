@@ -1,8 +1,8 @@
 import pytest
 import os
 import locidex
-from locidex.classes.blast import blast_search, parse_blast
-from locidex.classes.blast2 import FilterOptions, BlastSearch, BlastMakeDB
+#from locidex.classes.blast import blast_search, parse_blast
+from locidex.classes.blast import FilterOptions, BlastSearch, BlastMakeDB
 from locidex.constants import BlastColumns, BlastCommands
 from locidex.classes.extractor import extractor
 from locidex.classes.seq_intake import seq_intake
@@ -17,17 +17,34 @@ PACKAGE_ROOT = os.path.dirname(locidex.__file__)
 
 
 def blast_db_and_search(tmpdir,input_db_path):
-    blast_search_obj = blast_search(input_db_path=input_db_path, 
-                        input_query_path=os.path.join(PACKAGE_ROOT, 'example/build_db_mlst_out/blast/nucleotide/nucleotide.fasta'),
-                        output_results=os.path.join(tmpdir,"hsps.txt"), blast_params={'evalue': 0.0001,'max_target_seqs': 10,'num_threads': 1}, 
-                        blast_method='blastn',
-                        blast_columns=BlastColumns._fields,create_db=True)
-    blast_search_obj.run_blast()
-    output_blast_results_path = os.path.join(tmpdir,"hsps.txt")
-    parse_blast_obj = parse_blast(input_file = output_blast_results_path,
-                                                        blast_columns = BlastColumns._fields,
-                                                        filter_options={'bitscore':{'min':600, 'max':None, 'include':None}})
-    return parse_blast_obj
+    #blast_search_obj = blast_search(input_db_path=input_db_path, 
+    #                    input_query_path=os.path.join(PACKAGE_ROOT, 'example/build_db_mlst_out/blast/nucleotide/nucleotide.fasta'),
+    #                    output_results=os.path.join(tmpdir,"hsps.txt"), blast_params={'evalue': 0.0001,'max_target_seqs': 10,'num_threads': 1}, 
+    #                    blast_method='blastn',
+    #                    blast_columns=BlastColumns._fields,create_db=True)
+    #blast_search_obj.run_blast()
+    #output_blast_results_path = os.path.join(tmpdir,"hsps.txt")
+    #parse_blast_obj = parse_blast(input_file = output_blast_results_path,
+    #                                                    blast_columns = BlastColumns._fields,
+    #                                                    filter_options={'bitscore':{'min':600, 'max':None, 'include':None}})
+
+    blast_search_obj = BlastMakeDB(
+        db_data=Path(input_db_path),
+        db_type=DBData.nucleotide_db_type(),
+        parse_seqids=True,
+        output_db_path=Path(input_db_path))
+    blast_db_path = blast_search_obj.makeblastdb()
+
+    blast_search_obj = BlastSearch(db_data=blast_db_path, 
+                query_path=Path(os.path.join(PACKAGE_ROOT, 'example/build_db_mlst_out/blast/nucleotide/nucleotide.fasta')),
+                blast_params={'evalue': 0.0001,'max_target_seqs': 10,'num_threads': 1},
+                blast_method=BlastCommands.blastn,
+                blast_columns=BlastColumns._fields,
+                filter_options={'bitscore':FilterOptions(**{'min':600, 'max':None, 'include':None})})
+    
+    parse_blast_obj = blast_search_obj.get_blast_data(db_path=blast_db_path, output=tmpdir.joinpath("hsps.txt"))
+    
+    #return parse_blast_obj
 
 @pytest.fixture
 def seq_intake_fixture():
