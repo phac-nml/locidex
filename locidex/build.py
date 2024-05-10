@@ -2,41 +2,41 @@ import json
 from datetime import datetime
 import pandas as pd
 import os, sys
+from pathlib import Path
 from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
 from locidex.version import __version__
 from locidex.constants import DBFiles
 from locidex.classes import run_command
-from locidex.constants import DBConfig
+from locidex.constants import DBConfig, MetadataFields
+from locidex.classes.blast import BlastMakeDB
+from locidex.manifest import DBData
+import getpass
+
+import logging
+import sys
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(filemode=sys.stderr, level=logging.INFO)
 
 class locidex_build:
-    input_file = None
-    outdir = None
-    blast_dir = None
-    is_dna = False
-    is_protein = False
-    df = None
-    config = {}
-    meta = {}
-    num_seqs = 0
-    status = True
-    messages = []
 
 
-    def __init__(self, input_file: os.PathLike, outdir: os.PathLike, config: DBConfig, seq_columns={'nucleotide':'dna_seq','protein':'aa_seq'},force=False,parse_seqids=False):
+    def __init__(self, input_file: os.PathLike, outdir: os.PathLike, config: DBConfig, 
+                seq_columns={DBData.nucleotide_name():'dna_seq',DBData.protein_name():'aa_seq'},force=False,parse_seqids=False,translation_table: int = 11):
         self.input_file = input_file
+        self.translation_table = translation_table
         self.outdir = outdir
         self.force = force
         self.status = self.init_dir(self.outdir)
         self.parse_seqids = parse_seqids
-        if not self.status:
-            return
 
-        self.status = self.blast_dir = os.path.join(outdir,'blast')
+        self.is_dna = False
+        self.is_protein = False
+        self.blast_dir = outdir.joinpath("blast")
+
         self.init_dir(self.blast_dir)
-        if not self.status:
-            return
 
-        self.df = self.read_data( self.input_file)
+        self.df = self.read_data(self.input_file)
         self.config = config
         self.config.db_num_seqs = len(self.df)
 
@@ -44,37 +44,36 @@ class locidex_build:
             col_name = seq_columns[t]
             s = self.is_seqtype_present(col_name)
             if s:
-                outfile  = os.path.join(self.blast_dir, t)
-                if t == 'nucleotide':
+                outfile  = self.blast_dir.joinpath(t)
+                if t == DBData.nucleotide_name():
                     self.is_dna = True
                     self.config.nucleotide_db_name = t
-                    blast_method = 'nucl'
-                elif t == 'protein':
-
+                    blast_method = DBData.nucleotide_db_type()
+                elif t == DBData.protein_name():
                     self.is_protein  = True
                     self.config.protein_db_name = t
-                    blast_method = 'prot'
-                self.create_seq_db(t, col_name, outfile, blast_method)
+                    blast_method = DBData.protein_db_type()
+                self.init_dir(outfile)
+                out_fasta = outfile.joinpath("{}.fasta".format(t))
+                self.write_seq_file(out_fasta, col_name)
+                creating_db = BlastMakeDB(input_file=out_fasta, 
+                                        db_type=blast_method,
+                                        parse_seqids=self.parse_seqids,
+                                        output_db_path=out_fasta)
+                creating_db.makeblastdb()
         self.config.is_nucl = self.is_dna
         self.config.is_prot = self.is_protein
         self.get_metadata(self.df,columns_to_exclude=list(seq_columns.values()))
 
-    def create_seq_db(self,stype,col_name,outfile,blast_method='nucl'):
-        self.init_dir(outfile)
-        f = os.path.join(outfile,"{}.fasta".format(stype))
-        self.write_seq_file(f,col_name)
-        (stdout,stderr) = self.makeblastdb(fasta_file=f,outfile=os.path.join(outfile,stype),blast_method=blast_method)
-        self.messages.append(stderr)
-
-    def init_dir(self,d):
-        if os.path.isdir(d) and not self.force:
-            self.messages.append(f'Error {d} exists, if you would like to overwrite, then specify --force')
-            return False
-
-        if not os.path.isdir(d):
-            os.makedirs(d, 0o755)
-
+    def init_dir(self, d: Path):
+        logger.info("Checking if directory {} exists.".format(d))
+        try:
+            d.mkdir(parents=True, exist_ok=self.force, mode=0o755)
+        except FileExistsError:
+            logger.critical("Database file {} already exists. To overwrite please run with --force".format(d))
+            sys.exit(17)
         return True
+    
 
     def read_data(self,f):
         if os.path.isfile(f) and os.path.getsize(f) > 0:
@@ -99,21 +98,6 @@ class locidex_build:
             oh.write(f">{id}\n{data[id]}\n")
         oh.close()
 
-    def makeblastdb(self,fasta_file,outfile,blast_method):
-        dbtype = 'nucl'
-        if blast_method == 'prot':
-            dbtype = 'prot'
-        command = ['makeblastdb',
-                   '-in', fasta_file,
-                   '-dbtype', dbtype]
-        if self.parse_seqids:
-            command.append('-parse_seqids')
-        if outfile != None:
-            command+= ['-out',outfile]
-        command = " ".join([str(x) for x in command])
-
-        return run_command(command)
-
     def get_metadata(self,df,columns_to_exclude=['dna_seq','aa_seq']):
         columns_to_exclude = set(columns_to_exclude)
         columns_to_include = []
@@ -122,33 +106,34 @@ class locidex_build:
                 columns_to_include.append(col)
         subset = df[columns_to_include]
         self.meta = {
-            "info": {
-                "num_seqs": len(df),
-                "is_cds": "True",
-                "trans_table": 11,
-                "dna_min_len": min(df['dna_min_len'].tolist()),
-                "dna_max_len": max(df['dna_min_len'].tolist()),
-                "dna_min_ident": min(df['dna_min_ident'].tolist()),
-                "aa_min_len": min(df['aa_min_len'].tolist()),
-                "aa_max_len": max(df['aa_min_len'].tolist()),
-                "aa_min_ident": min(df['aa_min_ident'].tolist()),
-            },
+            "info": MetadataFields(
+                num_seqs=len(df),
+                is_cds=True,
+                trans_table=self.translation_table,
+                dna_min_len=min(df['dna_min_len'].tolist()),
+                dna_max_len=max(df['dna_min_len'].tolist()),
+                dna_min_ident=min(df['dna_min_ident'].tolist()),
+                aa_min_len=min(df['aa_min_len'].tolist()),
+                aa_max_len= max(df['aa_min_len'].tolist()),
+                aa_min_ident= min(df['aa_min_ident'].tolist())).to_dict(),
             "meta": subset.to_dict(orient='index')
         }
 
 def add_args(parser=None):
-
+    translation_table_def = 11
+    default_version = "1.0.0"
     if parser is None:
         parser = ArgumentParser(
             description="Locidex: Build a locidex database",)
     parser.add_argument('-i','--input_file', type=str, required=True,help='Input tsv formated for locidex')
     parser.add_argument('-o', '--outdir', type=str, required=True, help='Output directory to put results')
-    parser.add_argument('-n', '--name', type=str, required=False, help='DB name',default='Locidex Database')
-    parser.add_argument('-a', '--author', type=str, required=False, help='Author Name for Locidex Database',default='')
-    parser.add_argument('-c', '--db_ver', type=str, required=False, help='Version code for locidex db',
-                        default='1.0.0')
+    parser.add_argument('-n', '--name', type=str, required=True, help='Database name',default='Locidex Database')
+    parser.add_argument('-a', '--author', type=str, required=False, help='Author Name for Locidex Database. Default: {}'.format(getpass.getuser()),default=getpass.getuser())
+    parser.add_argument('-c', '--db_ver', type=str, required=False, help='Version code for locidex db: {}'.format(default_version),
+                        default=default_version)
     parser.add_argument('-e', '--db_desc',type=str, required=False, help='Version code for locidex db',
                         default='')
+    parser.add_argument("-t", "--translation_table", type=int, required=False, help="Translation table to use: {}".format(translation_table_def), default=translation_table_def)
     parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
     parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
                         action='store_true')
@@ -161,7 +146,7 @@ def run(cmd_args=None):
     if cmd_args is None:
         parser = add_args()
         cmd_args = parser.parse_args()
-    #cmd_args = parse_args()
+    
     input_file = cmd_args.input_file
     outdir = cmd_args.outdir
     force = cmd_args.force
@@ -181,7 +166,7 @@ def run(cmd_args=None):
         print(f'Error {input_file} does not exist, please check path and try again')
         sys.exit()
 
-    obj = locidex_build(input_file, outdir,config=config,seq_columns={'nucleotide':'dna_seq','protein':'aa_seq'},force=force)
+    obj = locidex_build(Path(input_file), Path(outdir),config=config,seq_columns={'nucleotide':'dna_seq','protein':'aa_seq'},force=force)
 
     if obj.status == False:
         print(f'Error something went wrong building the db, check error messages {obj.messages}')

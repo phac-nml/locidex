@@ -9,8 +9,8 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 from locidex.classes.extractor import extractor
-#from locidex.classes.blast import blast_search, parse_blast
-from locidex.classes.blast2 import BlastSearch, FilterOptions, BlastMakeDB
+
+from locidex.classes.blast import BlastSearch, FilterOptions, BlastMakeDB
 from locidex.manifest import DBData
 from locidex.classes.db import search_db_conf, db_config
 from locidex.classes.seq_intake import seq_intake, seq_store
@@ -61,7 +61,7 @@ def add_args(parser=None):
                         help='Format of query file [genbank,fasta]')
     parser.add_argument('--translation_table', type=int, required=False,
                         help='output directory', default=11)
-    parser.add_argument('-a', '--annotate', required=False, help='Perform annotation on unannotated input fasta',
+    parser.add_argument('-a', '--annotate', required=False, help='Perform annotation on unannotated input fasta (Do not use if you are taking in the output of extract)',
                         action='store_true')
     parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
     parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
@@ -156,6 +156,7 @@ def run_extract(config):
             seq_data[str(idx)] = {'id':str(seq.seq_id),'seq':seq.dna_seq}
             oh.write(">{}\n{}\n".format(idx,seq.dna_seq))
     del(seq_obj)
+    #TODO this should probably work on more than just nucleotides
     contigs_db = BlastMakeDB(contigs_path, DBData.nucleotide_db_type(), True, contigs_path)
     contigs_db.makeblastdb()
 
@@ -164,7 +165,7 @@ def run_extract(config):
     if not os.path.isdir(blast_dir_base):
         os.makedirs(blast_dir_base, 0o755)
 
-    blast_database_paths = db_database_config.blast_paths
+    #blast_database_paths = db_database_config.blast_paths
 
     blast_params = {
         'evalue': min_evalue,

@@ -22,6 +22,7 @@ STOP_CODONS = ['taa','tag','tta','tca','tga','aga','agg']
 class CharacterConstants:
     stop_codon: str = "*"
 
+
 #BLAST_TABLE_COLS = '''
 #qseqid
 #sseqid
@@ -161,6 +162,22 @@ DB_EXPECTED_FILES = {
     'protein':'protein.fasta',
 }
 
+@dataclass
+class MetadataFields:
+    num_seqs: int
+    is_cds: bool
+    trans_table: int
+    dna_min_len: int
+    dna_max_len: int
+    dna_min_ident: float
+    aa_min_len: int
+    aa_max_len: int
+    aa_min_ident: float
+    
+    def to_dict(self):
+        return asdict(self)
+
+
 
 class LocidexDBHeader(NamedTuple):
     seq_id: str
@@ -185,3 +202,4 @@ class LocidexDBHeader(NamedTuple):
     min_aa_match_cov: Optional[int]
     count_int_stops: int
     dna_ambig_count: int
+

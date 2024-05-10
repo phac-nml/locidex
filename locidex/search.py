@@ -10,8 +10,7 @@ from dataclasses import dataclass
 import pandas as pd
 from functools import partial
 
-#from locidex.classes.blast import blast_search, parse_blast, FilterOptions
-from locidex.classes.blast2 import BlastSearch, FilterOptions
+from locidex.classes.blast import BlastSearch, FilterOptions
 from locidex.classes.db import search_db_conf, db_config
 from locidex.manifest import DBData
 from locidex.classes.seq_intake import seq_intake, seq_store, HitFilters
