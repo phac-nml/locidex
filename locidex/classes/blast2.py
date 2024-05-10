@@ -43,7 +43,10 @@ class BlastMakeDB:
         if self.output_db_path != None:
             command +=['-out', str(self.output_db_path)]
         stdout, stderr = run_command(" ".join([str(x) for x in command]))
-        print(stdout, stderr)
+        if stdout:
+            logger.info("Blast makedb stdout: {}".format(stdout))
+        if stderr:
+            logger.info("Blast makedb stderr: {}".format(stderr))
         return self.output_db_path
 
 class BlastSearch:
@@ -69,8 +72,11 @@ class BlastSearch:
         """
         
         stdout, stderr = self._run_blast(db=db_path, output=output)
-        #logger.info("Blast stdout: {}".format(stdout))
-        #logger.info("Blast stderr: {}".format(stderr))
+        if stdout:
+            logger.info("Blast search stdout: {}".format(stdout))
+        if stderr:
+            logger.info("Blast search stderr: {}".format(stderr))
+
         blast_data = self.parse_blast(output_file=output)
         return blast_data
 
@@ -132,6 +138,8 @@ class BlastSearch:
         """
         db PAth: Path to the blast database to use,
         output Path: Path to file for blast output
+
+        TODO need to use classes db versoin or not pass it too the initializer
         """
         command = [
             self.blast_method,
@@ -144,7 +152,8 @@ class BlastSearch:
             if param == "parse_seqids":
                 command.append(f"-{param}")
             else:
-                command += [f'-{param}', f'{self.blast_params[param]}']  
+                command += [f'-{param}', f'{self.blast_params[param]}']
+        logger.info("Blast command: {}".format(" ".join([str(x) for x in command])))
         return run_command(" ".join([str(x) for x in command]))
 
 

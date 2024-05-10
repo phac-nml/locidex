@@ -183,15 +183,14 @@ def run_extract(config):
 
     hit_file = os.path.join(blast_dir_base, "hsps.txt")
     # TODO is this supposed to support nucleotide and amino acid?
-    #obj = BlastSearch(db_data=db_data.nucleotide_blast_db, 
-    print("NT DB", nt_db)
+
     obj = BlastSearch(db_data=contigs_db.output_db_path, 
                     query_path=nt_db, 
                     blast_params=blast_params, 
                     blast_method=BlastCommands.blastn,
                     blast_columns=BlastColumns._fields,
                     filter_options=filter_options)
-    hit_df = obj.get_blast_data(db_data.nucleotide_blast_db, Path(hit_file))
+    hit_df = obj.get_blast_data(contigs_db.output_db_path, Path(hit_file))
 
     hit_df['sseqid'] = hit_df['sseqid'].astype(str)
     hit_df['qseqid'] = hit_df['qseqid'].astype(str)
@@ -207,7 +206,7 @@ def run_extract(config):
     filt_trunc = True
     if keep_truncated:
         filt_trunc = False
-    #print(seq_data)
+
 
     exobj = extractor(hit_df,seq_data,sseqid_col='sseqid',queryid_col='qseqid',qstart_col='qstart',qend_col='qend',
                       qlen_col='qlen',sstart_col='sstart',send_col='send',slen_col='slen',sstrand_col='sstrand',
