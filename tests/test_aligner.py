@@ -1,7 +1,7 @@
 import pytest
 import os
 import locidex.classes.aligner
-from locidex.constants import BLAST_TABLE_COLS
+from locidex.constants import BlastColumns
 from dataclasses import dataclass
 
 PACKAGE_ROOT = os.path.dirname(locidex.__file__)

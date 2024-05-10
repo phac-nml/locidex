@@ -42,7 +42,9 @@ class BlastMakeDB:
             command.append('-parse_seqids')
         if self.output_db_path != None:
             command +=['-out', str(self.output_db_path)]
-        stdout, stderr = run_command(" ".join([str(x) for x in command]))
+        mk_db_cmd = " ".join([str(x) for x in command])
+        logger.info("Blast database command: {}".format(mk_db_cmd))
+        stdout, stderr = run_command(mk_db_cmd)
         if stdout:
             logger.info("Blast makedb stdout: {}".format(stdout))
         if stderr:
@@ -153,8 +155,9 @@ class BlastSearch:
                 command.append(f"-{param}")
             else:
                 command += [f'-{param}', f'{self.blast_params[param]}']
-        logger.info("Blast command: {}".format(" ".join([str(x) for x in command])))
-        return run_command(" ".join([str(x) for x in command]))
+        blast_search_cmd = " ".join([str(x) for x in command])
+        logger.info("Blast command: {}".format(blast_search_cmd))
+        return run_command(blast_search_cmd)
 
 
 

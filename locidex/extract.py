@@ -225,7 +225,6 @@ def run_extract(config):
     ext_seq_data = {}
     with open(os.path.join(outdir,'raw.extracted.seqs.fasta'), 'w') as oh:
         for idx,record in enumerate(exobj.seqs):
-            print(record)
             if min_dna_len > len(record['seq']):
                 continue
             seq_id = "{}:{}:{}:{}".format(record['locus_name'],record['query_id'],record['seqid'],record['id'])
