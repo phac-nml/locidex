@@ -61,7 +61,7 @@ def add_args(parser=None):
                         help='Format of query file [genbank,fasta]')
     parser.add_argument('--translation_table', type=int, required=False,
                         help='output directory', default=11)
-    parser.add_argument('-a', '--annotate', required=False, help='Perform annotation on unannotated input fasta',
+    parser.add_argument('-a', '--annotate', required=False, help='Perform annotation on unannotated input fasta (Do not use if you are taking in the output of extract)',
                         action='store_true')
     parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
     parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
