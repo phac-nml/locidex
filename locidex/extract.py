@@ -9,10 +9,12 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 from locidex.classes.extractor import extractor
-from locidex.classes.blast import blast_search, parse_blast
+#from locidex.classes.blast import blast_search, parse_blast
+from locidex.classes.blast2 import BlastSearch, FilterOptions, BlastMakeDB
+from locidex.manifest import DBData
 from locidex.classes.db import search_db_conf, db_config
 from locidex.classes.seq_intake import seq_intake, seq_store
-from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BLAST_TABLE_COLS, DBConfig, DB_EXPECTED_FILES, NT_SUB, EXTRACT_MODES, OPTION_GROUPS
+from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BlastColumns, BlastCommands, DBConfig, DB_EXPECTED_FILES, NT_SUB, EXTRACT_MODES, OPTION_GROUPS
 from locidex.version import __version__
 from locidex.classes.aligner import perform_alignment, aligner
 from locidex.utils import check_db_groups
@@ -76,8 +78,8 @@ def write_seq_info(seq_data,out_file):
 
 def run_extract(config):
     # Input Parameters
-    input_fasta = config['in_fasta']
-    outdir = config['outdir']
+    input_fasta = Path(config['in_fasta'])
+    outdir = Path(config['outdir'])
     db_dir = config['db']
     min_dna_ident = config['min_dna_ident']
     min_evalue = config['min_evalue']
@@ -90,6 +92,7 @@ def run_extract(config):
     sample_name = config['name']
     max_target_seqs = config['max_target_seqs']
     mode = config['mode'].lower()
+    db_data = DBData(db_dir=db_dir)
 
 
     if not mode in EXTRACT_MODES:
@@ -107,7 +110,7 @@ def run_extract(config):
     if format is None:
         for t in FILE_TYPES:
             for ext in FILE_TYPES[t]:
-                if re.search(f"{ext}$", input_fasta):
+                if ext == input_fasta.suffix:
                     format = t
     else:
         format = format.lower()
@@ -146,13 +149,16 @@ def run_extract(config):
     if not os.path.isdir(db_path):
         os.makedirs(db_path, 0o755)
 
-    db_path = os.path.join(db_path,'contigs.fasta')
+    contigs_path = os.path.join(db_path,'contigs.fasta')
     seq_data = {}
-    with open(db_path,'w') as oh:
+    with open(contigs_path,'w') as oh:
         for idx,seq in enumerate(seq_obj.seq_data):
-            seq_data[str(idx)] = {'id':str(seq['seq_id']),'seq':seq['dna_seq']}
-            oh.write(">{}\n{}\n".format(idx,seq['dna_seq']))
+            seq_data[str(idx)] = {'id':str(seq.seq_id),'seq':seq.dna_seq}
+            oh.write(">{}\n{}\n".format(idx,seq.dna_seq))
     del(seq_obj)
+    contigs_db = BlastMakeDB(contigs_path, DBData.nucleotide_db_type(), True, contigs_path)
+    contigs_db.makeblastdb()
+
 
     blast_dir_base = os.path.join(outdir, 'blast')
     if not os.path.isdir(blast_dir_base):
@@ -166,24 +172,29 @@ def run_extract(config):
         'num_threads': n_threads,
         'word_size':11
     }
-    nt_db = "{}.fasta".format(blast_database_paths['nucleotide'])
-    hit_file = os.path.join(blast_dir_base, "hsps.txt")
-    obj = blast_search(input_db_path=db_path, input_query_path=nt_db,
-                       output_results=hit_file, blast_params=blast_params, blast_method='blastn',
-                       blast_columns=BLAST_TABLE_COLS,create_db=True)
-
-    if obj.status == False:
-        print("Error something went wrong, please check error messages above")
-        sys.exit()
+    #nt_db = Path("{}.fasta".format(blast_database_paths['nucleotide']))
+    nt_db = Path("{}.fasta".format(db_data.nucleotide_blast_db))
+    if not nt_db.exists():
+        raise FileNotFoundError("Could not find nucleotide database: {}".format(nt_db))
 
     filter_options = {
-        'evalue': {'min': None, 'max': min_evalue, 'include': None},
-        'pident': {'min': min_dna_ident, 'max': None, 'include': None},
-        'qcovs': {'min': min_dna_match_cov, 'max': None, 'include': None},
-        'qcovhsp': {'min': min_dna_match_cov, 'max': None, 'include': None},
+        'evalue':  FilterOptions(min=None, max=min_evalue, include=None),
+        'pident':  FilterOptions(min=min_dna_ident, max=None, include=None),
+        'qcovs':   FilterOptions(min=min_dna_match_cov, max=None, include=None),
+        'qcovhsp': FilterOptions(min=min_dna_match_cov, max=None, include=None),
     }
 
-    hit_df = parse_blast(hit_file, BLAST_TABLE_COLS, filter_options).df
+    hit_file = os.path.join(blast_dir_base, "hsps.txt")
+    # TODO is this supposed to support nucleotide and amino acid?
+
+    obj = BlastSearch(db_data=contigs_db.output_db_path, 
+                    query_path=nt_db, 
+                    blast_params=blast_params, 
+                    blast_method=BlastCommands.blastn,
+                    blast_columns=BlastColumns._fields,
+                    filter_options=filter_options)
+    hit_df = obj.get_blast_data(contigs_db.output_db_path, Path(hit_file))
+
     hit_df['sseqid'] = hit_df['sseqid'].astype(str)
     hit_df['qseqid'] = hit_df['qseqid'].astype(str)
 
@@ -199,6 +210,7 @@ def run_extract(config):
     if keep_truncated:
         filt_trunc = False
 
+
     exobj = extractor(hit_df,seq_data,sseqid_col='sseqid',queryid_col='qseqid',qstart_col='qstart',qend_col='qend',
                       qlen_col='qlen',sstart_col='sstart',send_col='send',slen_col='slen',sstrand_col='sstrand',
                       bitscore_col='bitscore',filter_contig_breaks=filt_trunc)
@@ -209,7 +221,7 @@ def run_extract(config):
     nt_db_seq_obj = seq_intake(nt_db, 'fasta', 'source', translation_table, perform_annotation=False, skip_trans=True)
     nt_db_seq_data = {}
     for idx, seq in enumerate(nt_db_seq_obj.seq_data):
-        nt_db_seq_data[str(seq['seq_id'])] =  seq['dna_seq']
+        nt_db_seq_data[str(seq.seq_id)] =  seq.dna_seq
 
     del(nt_db_seq_obj)
 

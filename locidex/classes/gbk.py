@@ -6,8 +6,6 @@ import os
 from locidex.utils import revcomp,calc_md5
 
 class parse_gbk:
-    input_file = None
-    seq_obj = None
     status = True
     messages = []
 

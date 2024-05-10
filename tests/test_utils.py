@@ -6,6 +6,7 @@ import pytest
 from locidex import utils
 from locidex import manifest
 from argparse import Namespace
+from collections import namedtuple
 
 
 def test_check_db_groups_pass(monkeypatch):
@@ -13,7 +14,9 @@ def test_check_db_groups_pass(monkeypatch):
     analysis_params = {"db_group": "Db1", "db_name": "test_name", "db_version": "1.0.0"}
 
     def mockreturn(*args, **kwargs):
-        return True
+        ret_tup = namedtuple('stuff', ["db_path"])
+        ret_val = ret_tup(True)
+        return ret_val
     monkeypatch.setattr(manifest, "get_manifest_db", mockreturn)
     analysis_params = utils.check_db_groups(analysis_params, nm_group)
     assert analysis_params["db"]

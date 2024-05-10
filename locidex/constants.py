@@ -18,29 +18,61 @@ START_CODONS = ['atg','gtg','ctg','ttg','ata']
 STOP_CODONS = ['taa','tag','tta','tca','tga','aga','agg']
 
 
-BLAST_TABLE_COLS = '''
-qseqid
-sseqid
-qlen
-slen
-qstart
-qend
-sstart
-send
-length
-mismatch
-pident
-qcovhsp
-qcovs
-sstrand
-evalue
-bitscore
-'''.strip().split('\n')
+@dataclass(frozen=True)
+class CharacterConstants:
+    stop_codon: str = "*"
 
+#BLAST_TABLE_COLS = '''
+#qseqid
+#sseqid
+#qlen
+#slen
+#qstart
+#qend
+#sstart
+#send
+#length
+#mismatch
+#pident
+#qcovhsp
+#qcovs
+#sstrand
+#evalue
+#bitscore
+#'''.strip().split('\n')
+
+class BlastColumns(NamedTuple):
+    qseqid: str
+    sseqid: str
+    qlen: int
+    slen: int
+    qstart: int
+    qend: int
+    sstart: int
+    send: int
+    length: int
+    mismatch: str
+    pident: float
+    qcovhsp: float
+    qcovs: float
+    sstrand: str
+    evalue: float
+    bitscore: float
+
+@dataclass(frozen=True)
+class BlastCommands:
+    # upgrading this to a string enum would be nice
+    tblastn: str = "tblastn"
+    blastn: str = "blastn"
+    blastp: str = "blastp"
+
+    @classmethod
+    def _keys(cls) -> list:
+        return [i.name for i in fields(cls)]
 
 FILE_TYPES = {
-    'genbank': ["gbk","genbank","gbf","gbk.gz","genbank.gz","gbf.gz","gbff","gbff.gz"],
-    'fasta': ["fasta","fas","fa","ffn","fna","fasta.gz","fas.gz","fa.gz","ffn.gz","fna.gz"],
+    'genbank': [".gbk",".genbank",".gbf",".gbk.gz",".genbank.gz",".gbf.gz",".gbff",".gbff.gz"],
+    'fasta': [".fasta",".fas",".fa",".ffn",".fna",".fasta.gz",".fas.gz",".fa.gz",".ffn.gz",".fna.gz"],
 }
 
 
@@ -73,16 +105,16 @@ OPTION_GROUPS = {
 
 @dataclass
 class DBConfig:
-    db_name: Union[str, None] = None
-    db_version: Union[str, None] = None
-    db_date: Union[str, None] = None
-    db_author: Union[str, None] = None
-    db_desc: Union[str, None] = None
-    db_num_seqs: Union[str, int] = None
-    is_nucl: Union[bool, None] = None
-    is_prot: Union[bool, None] = None
-    nucleotide_db_name: Union[str, None] = None
-    protein_db_name: Union[str, None] = None
+    db_name: Optional[str] = None
+    db_version: Optional[str] = None
+    db_date: Optional[str] = None
+    db_author: Optional[str] = None
+    db_desc: Optional[str] = None
+    db_num_seqs: Optional[Union[str, int]] = None
+    is_nucl: Optional[bool] = None
+    is_prot: Optional[bool] = None
+    nucleotide_db_name: Optional[str] = None
+    protein_db_name: Optional[str] = None
 
     def __getitem__(self, name: str) -> Any:
         return getattr(self, str(name))
@@ -153,29 +185,3 @@ class LocidexDBHeader(NamedTuple):
     min_aa_match_cov: Optional[int]
     count_int_stops: int
     dna_ambig_count: int
-
-
-#LOCIDEX_DB_HEADER = [
-#    'seq_id',
-#    'locus_name',
-#    'locus_name_alt',
-#    'locus_product',
-#    'locus_description',
-#    'locus_uid',
-#    'dna_seq',
-#    'dna_seq_len',
-#    'dna_seq_hash',
-#    'aa_seq',
-#    'aa_seq_len',
-#    'aa_seq_hash',
-#    'dna_min_len',
-#    'dna_max_len',
-#    'aa_min_len',
-#    'aa_max_len',
-#    'dna_min_ident',
-#    'aa_min_ident',
-#    'min_dna_match_cov',
-#    'min_aa_match_cov',
-#    'count_int_stops',
-#    'dna_ambig_count'
-#]

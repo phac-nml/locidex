@@ -4,11 +4,17 @@ import os
 import argparse
 from collections import Counter
 from pathlib import Path
-
+from locidex.manifest import ManifestItem
 from Bio.Seq import Seq
-
+from typing import Dict, FrozenSet
 from locidex.constants import NT_SUB, PROTEIN_ALPHA, DNA_ALPHA, OPTION_GROUPS
 import locidex.manifest as manifest 
+
+def slots(annotations: Dict[str, object]) -> FrozenSet[str]:
+    """
+    Thank you for this: https://stackoverflow.com/a/63658478
+    """
+    return frozenset(annotations.keys())
 
 def check_db_groups(analysis_params: dict, cmd_args: argparse.Namespace, param_db: str = "db") -> dict:
     """
@@ -21,7 +27,8 @@ def check_db_groups(analysis_params: dict, cmd_args: argparse.Namespace, param_d
                     raise AttributeError("Missing required parameter: {}".format(option))
     
     if cmd_args.db_group is not None:
-        analysis_params[param_db] = str(manifest.get_manifest_db(input_file=Path(cmd_args.db_group), name=cmd_args.db_name, version=cmd_args.db_version))
+        manifest_data = manifest.get_manifest_db(input_file=Path(cmd_args.db_group), name=cmd_args.db_name, version=cmd_args.db_version)
+        analysis_params[param_db] = str(manifest_data.db_path)
 
     return analysis_params
 
@@ -127,6 +134,7 @@ def write_seq_dict(data,output_file):
     with open(output_file, 'w') as oh:
         for id in data:
             oh.write(f">{id}\n{data[id]}\n")
+    return output_file
 
 
 def validate_dict_keys(data_dict,required_keys):
