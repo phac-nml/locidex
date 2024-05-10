@@ -21,7 +21,8 @@ logging.basicConfig(filemode=sys.stderr, level=logging.INFO)
 class locidex_build:
 
 
-    def __init__(self, input_file: os.PathLike, outdir: os.PathLike, config: DBConfig, seq_columns={'nucleotide':'dna_seq','protein':'aa_seq'},force=False,parse_seqids=False,translation_table: int = 11):
+    def __init__(self, input_file: os.PathLike, outdir: os.PathLike, config: DBConfig, 
+                seq_columns={DBData.nucleotide_name():'dna_seq',DBData.protein_name():'aa_seq'},force=False,parse_seqids=False,translation_table: int = 11):
         self.input_file = input_file
         self.translation_table = translation_table
         self.outdir = outdir

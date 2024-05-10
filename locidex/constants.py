@@ -22,6 +22,7 @@ STOP_CODONS = ['taa','tag','tta','tca','tga','aga','agg']
 class CharacterConstants:
     stop_codon: str = "*"
 
+
 #BLAST_TABLE_COLS = '''
 #qseqid
 #sseqid
@@ -201,3 +202,4 @@ class LocidexDBHeader(NamedTuple):
     min_aa_match_cov: Optional[int]
     count_int_stops: int
     dna_ambig_count: int
+
