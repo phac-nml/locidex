@@ -237,7 +237,6 @@ def run_merge(config):
 
 
 def run(cmd_args=None):
-    #cmd_args = parse_args()
     if cmd_args is None:
         parser = add_args()
         cmd_args = parser.parse_args()
