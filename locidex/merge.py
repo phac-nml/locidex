@@ -208,8 +208,9 @@ def run_merge(config):
     del(df)
     run_data['result_file'] = os.path.join(outdir,"profile.tsv")
     
-    #create alignment
-    # TODO  Bring this back in when test data is provided
+    ######### create alignment ###############
+    # Bring this back in when test data is provided
+    ############################################
     #sample_names = list(df['sample_id'])
     #loci_lengths = {}
     #invalid_loci = set()
