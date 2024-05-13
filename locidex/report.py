@@ -4,12 +4,61 @@ import sys
 from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
 from copy import deepcopy
 from datetime import datetime
-
+from dataclasses import dataclass, asdict, fields
 import pandas as pd
+from typing import Any
 from locidex.classes.seq_intake import seq_intake
-from locidex.constants import SEARCH_RUN_DATA, START_CODONS, STOP_CODONS
+from locidex.constants import SEARCH_RUN_DATA, START_CODONS, STOP_CODONS, DBConfig
 from locidex.utils import calc_md5
 from locidex.version import __version__
+
+
+
+@dataclass
+class Parameters:
+    mode: str 
+    min_match_ident: str
+    min_match_cov: str 
+    max_ambiguous: str 
+    max_internal_stops: str
+
+@dataclass
+class Data:
+    sample_name: str
+    profile: dict
+    seq_data: dict
+
+    def __getitem__(self, name: str) -> Any:
+        return getattr(self, str(name))
+    
+    def __setitem__(self, key: str, value: str) -> None:
+        setattr(self, key, value)
+
+@dataclass
+class ReportData:
+    db_info: DBConfig
+    parameters: Parameters
+    data: Data
+
+    def __getitem__(self, name: str) -> Any:
+        return getattr(self, str(name))
+    
+    def __setitem__(self, key: str, value: str) -> None:
+        setattr(self, key, value)
+
+    @classmethod
+    def fields(cls):
+        return fields(cls)
+
+    @classmethod
+    def deseriealize(cls, input: dict):
+        """
+        Return a ReportData object from deserialized json data
+        """
+        return cls(db_info=DBConfig(**input["db_info"]), 
+            parameters=Parameters(**input["parameters"]), 
+            data=Data(**input["data"]))
+
 
 
 def add_args(parser=None):
@@ -385,41 +434,42 @@ def run_report(config):
     allele_obj.extract_hit_data('protein').to_csv(os.path.join(outdir, "protein.hits.txt"), header=True, sep="\t", index=False)
 
 
-    profile = {
-        "db_info":seq_store_dict["db_info"],
-        'parameters':{
-            'mode':mode,
-            'min_match_ident':match_ident,
-            'min_match_cov':match_cov,
-            'max_ambiguous':max_ambig,
-            'max_internal_stops':max_int_stop
-        },
-        'data':{
-            'sample_name':sample_name,
-            'profile':{sample_name: allele_obj.profile},
-            'seq_data':seq_data
-        }
-    }
+    profile = ReportData(
+        db_info=DBConfig(**seq_store_dict["db_info"]),
+        parameters= Parameters(
+            mode=mode,
+            min_match_ident=match_ident,
+            min_match_cov=match_cov,
+            max_ambiguous=max_ambig,
+            max_internal_stops=max_int_stop
+        ),
+        data = Data(
+            sample_name = sample_name,
+            profile = {sample_name: allele_obj.profile},
+            seq_data=seq_data
+        )
+    )
+
     
-    if len(profile['data']['seq_data']) > 0:
+    if len(profile.data.seq_data) > 0:
         # add locus information to seq_data
         look_up = {}
-        for locus_name in profile['data']['profile'][sample_name]:
-            h = profile['data']['profile'][sample_name][locus_name]
+        for locus_name in profile.data.profile[sample_name]:
+            h = profile.data.profile[sample_name][locus_name]
             if h not in look_up:
                 look_up[h] = []
             look_up[h].append(locus_name)
         
-        for seq_id in profile['data']['seq_data']:
-            h = profile['data']['seq_data'][seq_id]['dna_hash']
+        for seq_id in profile.data.seq_data:
+            h = profile.data.seq_data[seq_id]['dna_hash']
             if h in look_up:
-                profile['data']['seq_data'][seq_id]['locus_name'] = ",".join([str(x) for x in look_up[h]])
+                profile.data.seq_data[seq_id]['locus_name'] = ",".join([str(x) for x in look_up[h]])
             else:
-                profile['data']['seq_data'][seq_id]['locus_name'] = ''
+                profile.data.seq_data[seq_id]['locus_name'] = ''
 
 
     with open(os.path.join(outdir,"report.json"),"w") as out:
-        json.dump(profile,out,indent=4)
+        json.dump(profile,out,indent=4, default=lambda o: o.__dict__)
 
     run_data['result_file'] = os.path.join(outdir,"report.json")
     run_data['analysis_end_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
@@ -428,7 +478,6 @@ def run_report(config):
 
 
 def run(cmd_args=None):
-    #cmd_args = parse_args()
     if cmd_args is None:
         parser = add_args()
         cmd_args = parser.parse_args()
