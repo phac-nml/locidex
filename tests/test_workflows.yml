@@ -39,3 +39,9 @@
   files:
     - path: format_out/locidex.txt
     - path: format_out/results.json
+  
+- name: Run Merge
+  command: locidex merge -i locidex/example/merge/merge_in/report.json locidex/example/merge/merge_in/report1.json -o merged_out/
+  files:
+    - path: merged_out/profile.tsv
+      md5sum: 4cb7a14f4b4e7d0ef4992d477d773275
