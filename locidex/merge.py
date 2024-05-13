@@ -8,10 +8,13 @@ from datetime import datetime
 from functools import partial
 from mimetypes import guess_type
 from multiprocessing import Pool, cpu_count
+import logging
 import pandas as pd
 from locidex.classes.aligner import align, parse_align
 from locidex.version import __version__
 
+logger = logging.getLogger(__name__)
+logging.basicConfig(filemode=sys.stderr, level=logging.INFO)
 
 def add_args(parser=None):
     if parser is None:
@@ -42,7 +45,7 @@ def get_file_list(input_files):
             file_list = input_files
         else:
             if not os.path.isfile(input_files[0]):
-                print(f'Error the supplied file {input_files[0]} does not exist')
+                logger.critical(f'Error the supplied file {input_files[0]} does not exist')
                 sys.exit()
             encoding = guess_type(input_files[0])[1]
             _open = partial(gzip.open, mode='rt') if encoding == 'gzip' else open
@@ -50,7 +53,7 @@ def get_file_list(input_files):
                 for line in f:
                     line = line.rstrip()
                     if not os.path.isfile(line):
-                        print(f'Error the supplied file {line} does not exist')
+                        logger.critical(f'Error the supplied file {line} does not exist')
                         sys.exit()
                     file_list.append(line)
     return file_list
@@ -60,8 +63,8 @@ def read_file_list(file_list,perform_validation=False):
     db_info = {}
     for f in file_list:
         if not os.path.isfile(f):
-            print(f"Error cannot open input file {f}")
-            sys.exit
+            logger.critical(f"Error cannot open input file {f}")
+            sys.exit()
         encoding = guess_type(f)[1]
         _open = partial(gzip.open, mode='rt') if encoding == 'gzip' else open
         with _open(f) as fh:
