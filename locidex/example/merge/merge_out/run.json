@@ -1,0 +1,24 @@
+{
+    "analysis_start_time": "13/05/2024 14:53:14",
+    "parameters": {
+        "command": "merge",
+        "input": [
+            [
+                "./locidex/example/merge/merge_in/report.json",
+                "./locidex/example/merge/merge_in/report1.json"
+            ]
+        ],
+        "outdir": "./locidex/example/merge/merge_out/",
+        "n_threads": 1,
+        "linker": "NNNNNNNNNNNNNNNNNNNN",
+        "strict": false,
+        "align": false,
+        "force": true
+    },
+    "result_file": "./locidex/example/merge/merge_out/profile.tsv",
+    "count_valid_loci": 0,
+    "count_invalid_loci": 0,
+    "valid_loci": "",
+    "invalid_loci": "",
+    "analysis_end_time": "13/05/2024 14:53:15"
+}
