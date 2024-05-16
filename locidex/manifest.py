@@ -9,8 +9,11 @@ from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescript
 from datetime import datetime
 from locidex.version import __version__
 from locidex.constants import DBConfig, DBFiles
+import logging
+import errno
 
-
+logger = logging.getLogger(__name__)
+logging.basicConfig(filemode=sys.stderr, level=logging.DEBUG)
 
 class DBData:
     """
@@ -54,13 +57,15 @@ class DBData:
     @property
     def nucleotide_blast_db(self):
         if self.nucleotide is None:
-            raise ValueError("Nucleotide blast database does not exist")
+            logger.critical("Nucleotide blast database does not exist.")
+            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(self.nucleotide))
         return self.nucleotide / self.__nucleotide_path
     
     @property
     def protein_blast_db(self):
         if self.protein is None:
-            raise ValueError("Protein blast database does not exist")
+            logger.critical("Protein blast database does not exist.")
+            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(self.protein))
         return self.protein / self.__protein_path
 
     def _get_config(self, db_dir: pathlib.Path) -> DBConfig:
@@ -72,7 +77,8 @@ class DBData:
     def _get_metadata(self, db_dir: pathlib.Path) -> dict:
         metadata_file = db_dir.joinpath(DBFiles.meta_file)
         if not metadata_file.exists():
-            raise FileNotFoundError("Metadata file does not exist. Database path maybe incorrect: {}".format(db_dir))
+            logger.critical("Metadata file does not appear to exist in db: {}".format(db_dir))
+            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(metadata_file))
         md_data = None
         with open(metadata_file, 'r') as md:
             md_data = json.load(md)
@@ -84,15 +90,18 @@ class DBData:
         nucleotide: Optional[pathlib.Path] = None
         protein: Optional[pathlib.Path] = None
         if not blast_db.exists():
-            raise OSError("blast directory not found. Database path maybe incorrect: {}".format(db_dir))
+            logger.critical("blast directory not found. Database path maybe incorrect: {}".format(db_dir))
+            raise NotADirectoryError(errno.ENOTDIR, os.strerror(errno.ENOTDIR), str(db_dir))
         if config_data.is_nucl:
             nucleotide = blast_db.joinpath(self.__nucleotide_path)
             if not nucleotide.exists():
-                raise FileNotFoundError("Cannot find nucleotide database, but it should exist. {}".format(nucleotide))
+                logger.critical("Cannot find nucleotide database, but it should exist. {}".format(nucleotide))
+                raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(nucleotide))
         if config_data.is_prot:
             protein = blast_db.joinpath(self.__protein_path)
             if not protein.exists():
-                raise FileNotFoundError("Cannot find protein database, but it should exist. {}".format(protein))
+                logger.critical("Cannot find protein database, but it should exist. {}".format(protein))
+                raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(protein))
         return nucleotide, protein
 
 
@@ -146,7 +155,7 @@ def add_args(parser=None):
     if parser is None:
         parser = ArgumentParser(
             description="Locidex manifest: Setup directory of databases for use with search")
-    parser.add_argument('-i','--input', type=str, required=True,help='Input directory containing multiplie locidex databases')
+    parser.add_argument('-i','--input', type=str, required=True,help='Input directory containing multiple locidex databases')
     parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
     return parser
 
@@ -160,7 +169,9 @@ def check_config(directory: pathlib.Path) -> DBConfig:
     """
 
     config_dir = pathlib.Path(directory).joinpath(DBFiles.config_file)
-    config_data: Optional[DBConfig] = None 
+    config_data: Optional[DBConfig] = None
+    if not config_dir.exists():
+        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(config_dir))
     with open(config_dir, 'r') as conf:
         config_data = DBConfig(**json.load(conf))
         for k, v in config_data.to_dict().items():
