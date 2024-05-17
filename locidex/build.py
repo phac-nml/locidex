@@ -11,7 +11,7 @@ from locidex.constants import DBConfig, MetadataFields
 from locidex.classes.blast import BlastMakeDB
 from locidex.manifest import DBData
 import getpass
-
+import errno
 import logging
 import sys
 
@@ -71,7 +71,7 @@ class locidex_build:
             d.mkdir(parents=True, exist_ok=self.force, mode=0o755)
         except FileExistsError:
             logger.critical("Database file {} already exists. To overwrite please run with --force".format(d))
-            sys.exit(17)
+            raise FileExistsError(errno.EEXIST, os.strerror(errno.EEXIST), str(d))
         return True
     
 
@@ -163,14 +163,14 @@ def run(cmd_args=None):
     )
 
     if not os.path.isfile(input_file):
-        print(f'Error {input_file} does not exist, please check path and try again')
-        sys.exit()
+        logger.critical(f'Error {input_file} does not exist, please check path and try again')
+        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(input_file))
 
     obj = locidex_build(Path(input_file), Path(outdir),config=config,seq_columns={'nucleotide':'dna_seq','protein':'aa_seq'},force=force)
 
     if obj.status == False:
-        print(f'Error something went wrong building the db, check error messages {obj.messages}')
-        sys.exit()
+        logger.critical(f'Error something went wrong building the db.')
+        raise ValueError("Something went wrong building db.")
 
     run_data['analysis_end_time'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(os.path.join(outdir,DBFiles.config_file),"w") as oh:

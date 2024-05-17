@@ -9,7 +9,8 @@ from functools import partial
 from mimetypes import guess_type
 from dataclasses import dataclass
 from typing import List, Tuple
-
+import logging
+import errno
 import pandas as pd
 from Bio import SeqIO
 from Bio.Seq import Seq
@@ -18,6 +19,9 @@ from pyrodigal import GeneFinder
 from locidex.constants import FILE_TYPES, LocidexDBHeader, CharacterConstants
 from locidex.utils import six_frame_translation, revcomp, calc_md5
 from locidex.version import __version__
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(filemode=sys.stderr, level=logging.INFO)
 
 class locidex_format:
 
@@ -80,6 +84,7 @@ class locidex_format:
         elif os.path.isdir(self.input):
             self.input_type = self.__dir_input
         else:
+            logger.critical("Could not determine input type for: {}".format(self.input))
             raise AttributeError("Unknown input type could not be determined for: {}".format(self.input))
 
     def get_dir_files(self, input_dir):
@@ -220,19 +225,20 @@ def run(cmd_args=None):
     run_data['parameters'] = vars(cmd_args)
 
     if os.path.isdir(outdir) and not force:
-        print(f'Error {outdir} exists, if you would like to overwrite, then specify --force')
-        sys.exit()
+        logger.critical(f'Error {outdir} exists, if you would like to overwrite, then specify --force')
+        raise FileExistsError(errno.EEXIST, os.strerror(errno.EEXIST), str(outdir))
+
 
     if not os.path.isdir(outdir):
         os.makedirs(outdir, 0o755)
 
     if not os.path.isdir(input) and not os.path.isfile(input):
-        print(f'Error {input} does not exist as a file or directory')
-        sys.exit()
-
+        logger.critical(f'Error {input} does not exist as a file or directory')
+        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(input))
+    logger.info("Beginning format operation.")
     obj = locidex_format(input=input,header=LocidexDBHeader._fields,is_protein=is_coding,min_len_frac=min_len_frac,max_len_frac=max_len_frac, min_ident_perc=min_ident,
             min_cov_perc=min_match_cov,trans_table=trans_table,valid_ext=FILE_TYPES['fasta'])
-
+    logger.info("Finished format.")
     run_data['result_file'] = os.path.join(outdir,"locidex.txt")
     pd.DataFrame.from_dict(obj.data,orient='index').to_csv(run_data['result_file'],sep="\t",index=False,header=True)
 

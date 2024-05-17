@@ -2,7 +2,12 @@
 
 import sys
 import argparse
+import traceback
+import logging
 from . import format, extract, report, merge, search, build, manifest
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(filemode=sys.stderr, level=logging.DEBUG)
 
 tasks = {
     'search': (search, 'Query set of Loci/Genes against a database to produce a sequence store for downstream processing'),
@@ -33,4 +38,13 @@ def main(argv=None):
 
 # call main function
 if __name__ == '__main__':
-    sys.exit(main())
+    error_file = "error.txt"
+    try:
+        main()
+    except Exception as e:
+        with open(error_file, "w") as f:
+            traceback.TracebackException.from_exception(e).print(file=f)
+        logger.critical("Program exited with errors, please review logs. For the full traceback please see file: {}".format(error_file))
+        sys.exit(-1)
+    else:
+        sys.exit("Program finished without errors.")

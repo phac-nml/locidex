@@ -8,8 +8,9 @@ from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescript
 from datetime import datetime
 import numpy as np
 import pandas as pd
+import logging
+import errno
 from locidex.classes.extractor import extractor
-
 from locidex.classes.blast import BlastSearch, FilterOptions, BlastMakeDB
 from locidex.manifest import DBData
 from locidex.classes.db import search_db_conf, db_config
@@ -18,6 +19,9 @@ from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BlastColumns, BlastCo
 from locidex.version import __version__
 from locidex.classes.aligner import perform_alignment, aligner
 from locidex.utils import check_db_groups
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(filemode=sys.stderr, level=logging.INFO)
 
 def add_args(parser=None):
     if parser is None:
@@ -117,25 +121,26 @@ def run_extract(config):
 
     if format is None or format not in FILE_TYPES:
         if format is None:
-            print(f'Could not guess format for {input_fasta}')
+            logger.critical(f'Could not guess format for {input_fasta}')
+            raise ValueError("Could not guess input type for: {}".format(str(input_fasta)))
         else:
-            print(f'Format for query file must be one of {list(FILE_TYPES.keys())}, you supplied {format}')
-        sys.exit()
+            logger.critical(f'Format for query file must be one of {list(FILE_TYPES.keys())}, you supplied {format}')
+            raise ValueError(f'Format for query file must be one of {list(FILE_TYPES.keys())}, you supplied {format}')
 
     seq_obj = seq_intake(input_fasta, format, 'source', translation_table, perform_annotation=False,skip_trans=True)
 
     # Validate database is valid
     db_database_config = search_db_conf(db_dir, DB_EXPECTED_FILES, DBConfig._keys())
     if db_database_config.status == False:
-        print(f'There is an issue with provided db directory: {db_dir}\n {db_database_config.messages}')
-        sys.exit()
+        logger.critical(f'There is an issue with provided db directory: {db_dir}\n {db_database_config.messages}')
+        raise ValueError("There is an issue with the provided database: {}".format(db_dir))
 
     metadata_path = db_database_config.meta_file_path
     metadata_obj = db_config(metadata_path, ['meta', 'info'])
 
     if os.path.isdir(outdir) and not force:
-        print(f'Error {outdir} exists, if you would like to overwrite, then specify --force')
-        sys.exit()
+        logger.critical(f'Error {outdir} exists, if you would like to overwrite, then specify --force')
+        raise FileExistsError(errno.EEXIST, os.strerror(errno.EEXIST), str(outdir))
 
     db_path = os.path.join(outdir, 'blast_db')
 
@@ -176,7 +181,8 @@ def run_extract(config):
     #nt_db = Path("{}.fasta".format(blast_database_paths['nucleotide']))
     nt_db = Path("{}.fasta".format(db_data.nucleotide_blast_db))
     if not nt_db.exists():
-        raise FileNotFoundError("Could not find nucleotide database: {}".format(nt_db))
+        logger.critical("Could not find file: {}".format(nt_db))
+        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(nt_db))
 
     filter_options = {
         'evalue':  FilterOptions(min=None, max=min_evalue, include=None),

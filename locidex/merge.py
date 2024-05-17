@@ -52,7 +52,7 @@ def get_file_list(input_files):
         else:
             if not os.path.isfile(input_files[0]):
                 logger.critical(f'Error the supplied file {input_files[0]} does not exist')
-                sys.exit(errno.ENOENT)
+                raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(input_files[0]))
             encoding = guess_type(input_files[0])[1]
             _open = partial(gzip.open, mode='rt') if encoding == 'gzip' else open
             with _open(input_files[0]) as f:
@@ -60,7 +60,7 @@ def get_file_list(input_files):
                     line = line.rstrip()
                     if not os.path.isfile(line):
                         logger.critical(f'Error the supplied file {line} does not exist')
-                        sys.exit(errno.ENOENT)
+                        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(line))
                     file_list.append(line)
     return file_list
 
@@ -73,16 +73,17 @@ def validate_input_file(data_in: dict, db_version: str, db_name: str, perform_va
         sq_data = ReportData.deseriealize(data_in)
     except KeyError:
         logger.critical("Missing fields in configuration required fields in in reported allele file. Fields required: {}".format(ReportData.fields()))
-        sys.exit()
+        raise ValueError("Missing fields in configuration required fields in in reported allele file. Fields required: {}".format(ReportData.fields()))
+        
     else:
 
         if db_version is not None and sq_data.db_info.db_version != db_version and perform_validation:
             logger.critical("You are attempting to merge files that were created using different database versions.")
-            sys.exit()
+            raise ValueError("You are attempting to merge files that were created using different database versions.")
         
         if db_name is not None and sq_data.db_info.db_name != db_name and perform_validation:
             logger.critical("You are attempting to merge files that have different names.")
-            sys.exit()
+            raise ValueError("You are attempting to merge files that have different names. {} {}".format(sq_data.db_info.db_name, db_name))
     
     return sq_data, sq_data.db_info.db_version, sq_data.db_info.db_name
 
@@ -93,7 +94,7 @@ def check_files_exist(file_list: list[os.PathLike]) -> None:
     for file in file_list:
         if not os.path.isfile(file):
             logger.critical(f"Error cannot open input file {file}")
-            sys.exit(errno.ENOENT)
+            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(file))
 
 
 def read_file_list(file_list,perform_validation=False):
@@ -118,7 +119,7 @@ def read_file_list(file_list,perform_validation=False):
                 records[sample_name] = sq_data
             else:
                 logger.critical("Duplicate sample name detected: {}".format(sq_data.data.sample_name))
-                sys.exit("Attempting to merge allele profiles with the same sample name: {}".format(sq_data.data.sample_name))
+                raise ValueError("Attempting to merge allele profiles with the same sample name: {}".format(sq_data.data.sample_name))
     return records
 
 def extract_profiles(records):
@@ -191,7 +192,7 @@ def run_merge(config):
 
     if os.path.isdir(outdir) and not force:
         logger.critical(f'Error {outdir} exists, if you would like to overwrite, then specify --force')
-        sys.exit(errno.EEXIST)
+        raise FileExistsError(errno.EEXIST, os.strerror(errno.EEXIST), str(outdir))
 
     if not os.path.isdir(outdir):
         os.makedirs(outdir, 0o755)
