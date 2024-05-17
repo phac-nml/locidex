@@ -16,7 +16,7 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from pyrodigal import GeneFinder
 
-from locidex.constants import FILE_TYPES, LocidexDBHeader, CharacterConstants
+from locidex.constants import FILE_TYPES, LocidexDBHeader, CharacterConstants, raise_file_not_found_e
 from locidex.utils import six_frame_translation, revcomp, calc_md5
 from locidex.version import __version__
 
@@ -234,7 +234,8 @@ def run(cmd_args=None):
 
     if not os.path.isdir(input) and not os.path.isfile(input):
         logger.critical(f'Error {input} does not exist as a file or directory')
-        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(input))
+        raise_file_not_found_e(input, logger)
+    
     logger.info("Beginning format operation.")
     obj = locidex_format(input=input,header=LocidexDBHeader._fields,is_protein=is_coding,min_len_frac=min_len_frac,max_len_frac=max_len_frac, min_ident_perc=min_ident,
             min_cov_perc=min_match_cov,trans_table=trans_table,valid_ext=FILE_TYPES['fasta'])

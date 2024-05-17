@@ -6,11 +6,11 @@ import os
 from locidex.utils import revcomp,calc_md5
 
 class parse_gbk:
-    status = True
     messages = []
 
     def __init__(self,input_file):
         self.input_file= input_file
+        self.status = True
         if not os.path.isfile(self.input_file):
             self.messages.append(f'Error {self.input_file} does not exist')
             self.status = False

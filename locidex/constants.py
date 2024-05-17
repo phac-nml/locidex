@@ -1,6 +1,9 @@
 
 from dataclasses import dataclass, asdict, fields
 import pathlib
+import logging
+import os
+import errno
 from typing import Any, Union, NamedTuple, Optional
 
 DNA_AMBIG_CHARS = ['b', 'd', 'e', 'f', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 'u', 'v', 'w', 'x',
@@ -23,24 +26,13 @@ class CharacterConstants:
     stop_codon: str = "*"
 
 
-#BLAST_TABLE_COLS = '''
-#qseqid
-#sseqid
-#qlen
-#slen
-#qstart
-#qend
-#sstart
-#send
-#length
-#mismatch
-#pident
-#qcovhsp
-#qcovs
-#sstrand
-#evalue
-#bitscore
-#'''.strip().split('\n')
+def raise_file_not_found_e(file: Union[str, pathlib.Path], logger: logging.Logger):
+    """
+    Raise a file not found error.
+    """
+    logger.critical("File supplied does not exist: {}".format(str(file)))
+    raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(file))
+
 
 class BlastColumns(NamedTuple):
     qseqid: str

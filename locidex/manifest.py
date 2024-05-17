@@ -8,7 +8,7 @@ import sys
 from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
 from datetime import datetime
 from locidex.version import __version__
-from locidex.constants import DBConfig, DBFiles
+from locidex.constants import DBConfig, DBFiles, raise_file_not_found_e
 import logging
 import errno
 
@@ -58,14 +58,14 @@ class DBData:
     def nucleotide_blast_db(self):
         if self.nucleotide is None:
             logger.critical("Nucleotide blast database does not exist.")
-            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(self.nucleotide))
+            raise_file_not_found_e(self.nucleotide, logger)
         return self.nucleotide / self.__nucleotide_path
     
     @property
     def protein_blast_db(self):
         if self.protein is None:
             logger.critical("Protein blast database does not exist.")
-            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(self.protein))
+            raise_file_not_found_e(self.protein, logger)
         return self.protein / self.__protein_path
 
     def _get_config(self, db_dir: pathlib.Path) -> DBConfig:
@@ -78,7 +78,7 @@ class DBData:
         metadata_file = db_dir.joinpath(DBFiles.meta_file)
         if not metadata_file.exists():
             logger.critical("Metadata file does not appear to exist in db: {}".format(db_dir))
-            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(metadata_file))
+            raise_file_not_found_e(str(metadata_file), logger)
         md_data = None
         with open(metadata_file, 'r') as md:
             md_data = json.load(md)
@@ -96,12 +96,12 @@ class DBData:
             nucleotide = blast_db.joinpath(self.__nucleotide_path)
             if not nucleotide.exists():
                 logger.critical("Cannot find nucleotide database, but it should exist. {}".format(nucleotide))
-                raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(nucleotide))
+                raise_file_not_found_e(nucleotide, logger)
         if config_data.is_prot:
             protein = blast_db.joinpath(self.__protein_path)
             if not protein.exists():
                 logger.critical("Cannot find protein database, but it should exist. {}".format(protein))
-                raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(protein))
+                raise_file_not_found_e(protein, logger)
         return nucleotide, protein
 
 
@@ -171,7 +171,9 @@ def check_config(directory: pathlib.Path) -> DBConfig:
     config_dir = pathlib.Path(directory).joinpath(DBFiles.config_file)
     config_data: Optional[DBConfig] = None
     if not config_dir.exists():
-        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(config_dir))
+        logger.critical("Could not find config file: {}".format(config_dir))
+        raise_file_not_found_e(config_dir, logger)
+    
     with open(config_dir, 'r') as conf:
         config_data = DBConfig(**json.load(conf))
         for k, v in config_data.to_dict().items():
@@ -193,7 +195,7 @@ def validate_db_files(allele_dir: List[pathlib.Path], file_in: pathlib.Path) -> 
         for k, v in DBFiles.items():
             if not pathlib.Path(a_dir / v).exists():
                 logger.critical("Required file {} does not exist.".format(k))
-                raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(a_dir / v))
+                raise_file_not_found_e(str(a_dir / v), logger)
             
         db_configs.append((a_dir.relative_to(file_in), check_config(a_dir)))
     return db_configs

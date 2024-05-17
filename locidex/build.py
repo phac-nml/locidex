@@ -7,7 +7,7 @@ from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescript
 from locidex.version import __version__
 from locidex.constants import DBFiles
 from locidex.classes import run_command
-from locidex.constants import DBConfig, MetadataFields
+from locidex.constants import DBConfig, MetadataFields, raise_file_not_found_e
 from locidex.classes.blast import BlastMakeDB
 from locidex.manifest import DBData
 import getpass
@@ -164,7 +164,7 @@ def run(cmd_args=None):
 
     if not os.path.isfile(input_file):
         logger.critical(f'Error {input_file} does not exist, please check path and try again')
-        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(input_file))
+        raise_file_not_found_e(input_file, logger)
 
     obj = locidex_build(Path(input_file), Path(outdir),config=config,seq_columns={'nucleotide':'dna_seq','protein':'aa_seq'},force=force)
 

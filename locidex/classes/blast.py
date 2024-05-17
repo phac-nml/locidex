@@ -52,7 +52,7 @@ class BlastMakeDB:
             logger.debug("Blast makedb stdout: {}".format(stdout))
         if stderr:
             logger.debug("Blast makedb stderr: {}".format(stderr))
-            
+        
         self.checkblastdb(self.output_db_path)
         return self.output_db_path
     
@@ -142,6 +142,7 @@ class BlastSearch:
     def _check_blast_files(self, db_dir: Path, extensions: frozenset):
         """
         """
+        logger.info("Verifying blast database: {}".format(str(db_dir)))
         extensions_ = set([i.suffix for i in db_dir.iterdir()])
         if not extensions_.issuperset(extensions):
             raise ValueError("Missing required blast files. {}".format([i for i in extensions_ if i not in extensions]))

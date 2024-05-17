@@ -12,7 +12,7 @@ from multiprocessing import Pool, cpu_count
 import logging
 import pandas as pd
 from locidex.classes.aligner import align, parse_align
-from locidex.constants import DBConfig
+from locidex.constants import DBConfig, raise_file_not_found_e
 from locidex.report import ReportData, Data, Parameters
 from locidex.version import __version__
 
@@ -51,16 +51,17 @@ def get_file_list(input_files):
             file_list = input_files
         else:
             if not os.path.isfile(input_files[0]):
-                logger.critical(f'Error the supplied file {input_files[0]} does not exist')
-                raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(input_files[0]))
+                logger.critical("File {} does not exists".format(input_files[0]))
+                raise_file_not_found_e(input_files[0], logger=logger)
+
             encoding = guess_type(input_files[0])[1]
             _open = partial(gzip.open, mode='rt') if encoding == 'gzip' else open
             with _open(input_files[0]) as f:
                 for line in f:
                     line = line.rstrip()
                     if not os.path.isfile(line):
-                        logger.critical(f'Error the supplied file {line} does not exist')
-                        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(line))
+                        logger.critical("Could not find file: {}".format(line))
+                        raise_file_not_found_e(line, logger)
                     file_list.append(line)
     return file_list
 
@@ -93,8 +94,8 @@ def check_files_exist(file_list: list[os.PathLike]) -> None:
     """
     for file in file_list:
         if not os.path.isfile(file):
-            logger.critical(f"Error cannot open input file {file}")
-            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(file))
+            logger.critical("Could not find file: {}".format(file))
+            raise_file_not_found_e(file, logger)
 
 
 def read_file_list(file_list,perform_validation=False):
