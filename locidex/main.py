@@ -43,8 +43,9 @@ if __name__ == '__main__':
         main()
     except Exception as e:
         with open(error_file, "w") as f:
-            traceback.TracebackException.from_exception(e).print(file=f)
+            f.write(traceback.format_exc())
+        error_number = e.errno if hasattr(e, "errno") else -1
         logger.critical("Program exited with errors, please review logs. For the full traceback please see file: {}".format(error_file))
-        sys.exit(-1)
+        raise SystemExit(error_number)
     else:
         sys.exit("Program finished without errors.")
