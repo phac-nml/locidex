@@ -100,7 +100,7 @@ def run_extract(config):
 
 
     if not mode in EXTRACT_MODES:
-        print(f'Provided mode for allele extraction is not valid: {mode}, needs to be one of (snps, trim, extend, raw)')
+        logger.critical('Provided mode for allele extraction is not valid: {}, needs to be one of ({})'.format(mode, ", ".join(EXTRACT_MODES)))
         sys.exit()
 
     if sample_name == None:
