@@ -9,14 +9,18 @@ from typing import Optional
 from dataclasses import dataclass
 import pandas as pd
 from functools import partial
-
+import logging
+import errno
 from locidex.classes.blast import BlastSearch, FilterOptions
 from locidex.classes.db import search_db_conf, db_config
 from locidex.manifest import DBData
 from locidex.classes.seq_intake import seq_intake, seq_store, HitFilters
-from locidex.constants import BlastCommands, SEARCH_RUN_DATA, FILE_TYPES, BlastColumns, DB_EXPECTED_FILES, OPTION_GROUPS, DBConfig
+from locidex.constants import BlastCommands,  SEARCH_RUN_DATA, FILE_TYPES, BlastColumns, DB_EXPECTED_FILES, OPTION_GROUPS, DBConfig
 from locidex.utils import write_seq_dict, check_db_groups, slots
 from locidex.version import __version__
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(filemode=sys.stderr, level=logging.DEBUG)
 
 def add_args(parser=None):
     if parser is None:
@@ -63,10 +67,6 @@ def add_args(parser=None):
     parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
                         action='store_true')
     return parser
-
-
-#def perform_search(query_file,results_file,db_path,blast_prog,blast_params,columns):
-#    return blast_search(db_path,query_file,results_file,blast_params,blast_prog,columns)
 
 
 def create_fasta_from_df(df,label_col,seq_col,out_file):
@@ -144,8 +144,8 @@ def run_search(config):
     db_data = DBData(db_dir=db_dir)
 
     if os.path.isdir(outdir) and not force:
-        print(f'Error {outdir} exists, if you would like to overwrite, then specify --force')
-        sys.exit()
+        logger.critical(f'Error {outdir} exists, if you would like to overwrite, then specify --force')
+        raise FileExistsError(errno.EEXIST, os.strerror(errno.EEXIST), str(outdir))
 
     if not os.path.isdir(outdir):
         os.makedirs(outdir, 0o755)
@@ -160,10 +160,11 @@ def run_search(config):
 
     if format is None or format not in FILE_TYPES:
         if format is None:
-            print(f'Could not guess format for {query_file}')
+            logger.critical(f'Could not guess format for {query_file}')
+            raise ValueError("Could not determine input type for: {}".format(query_file))
         else:
-            print(f'Format for query file must be one of {list(FILE_TYPES.keys())}, you supplied {format}')
-        sys.exit()
+            logger.critical(f'Format for query file must be one of {list(FILE_TYPES.keys())}, you supplied {format}')
+            raise ValueError("Format supplied for {} is incorrect.".format(format))
 
     seq_obj = seq_intake(input_file=query_file, file_type=format, feat_key='CDS', 
                         translation_table=translation_table, perform_annotation=perform_annotation)

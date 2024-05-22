@@ -8,9 +8,12 @@ import sys
 from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
 from datetime import datetime
 from locidex.version import __version__
-from locidex.constants import DBConfig, DBFiles
+from locidex.constants import DBConfig, DBFiles, raise_file_not_found_e
+import logging
+import errno
 
-
+logger = logging.getLogger(__name__)
+logging.basicConfig(filemode=sys.stderr, level=logging.DEBUG)
 
 class DBData:
     """
@@ -54,13 +57,15 @@ class DBData:
     @property
     def nucleotide_blast_db(self):
         if self.nucleotide is None:
-            raise ValueError("Nucleotide blast database does not exist")
+            logger.critical("Nucleotide blast database does not exist.")
+            raise_file_not_found_e(self.nucleotide, logger)
         return self.nucleotide / self.__nucleotide_path
     
     @property
     def protein_blast_db(self):
         if self.protein is None:
-            raise ValueError("Protein blast database does not exist")
+            logger.critical("Protein blast database does not exist.")
+            raise_file_not_found_e(self.protein, logger)
         return self.protein / self.__protein_path
 
     def _get_config(self, db_dir: pathlib.Path) -> DBConfig:
@@ -72,7 +77,8 @@ class DBData:
     def _get_metadata(self, db_dir: pathlib.Path) -> dict:
         metadata_file = db_dir.joinpath(DBFiles.meta_file)
         if not metadata_file.exists():
-            raise FileNotFoundError("Metadata file does not exist. Database path maybe incorrect: {}".format(db_dir))
+            logger.critical("Metadata file does not appear to exist in db: {}".format(db_dir))
+            raise_file_not_found_e(str(metadata_file), logger)
         md_data = None
         with open(metadata_file, 'r') as md:
             md_data = json.load(md)
@@ -84,15 +90,18 @@ class DBData:
         nucleotide: Optional[pathlib.Path] = None
         protein: Optional[pathlib.Path] = None
         if not blast_db.exists():
-            raise OSError("blast directory not found. Database path maybe incorrect: {}".format(db_dir))
+            logger.critical("blast directory not found. Database path maybe incorrect: {}".format(str(db_dir)))
+            raise NotADirectoryError(errno.ENOTDIR, os.strerror(errno.ENOTDIR), str(db_dir))
         if config_data.is_nucl:
             nucleotide = blast_db.joinpath(self.__nucleotide_path)
             if not nucleotide.exists():
-                raise FileNotFoundError("Cannot find nucleotide database, but it should exist. {}".format(nucleotide))
+                logger.critical("Cannot find nucleotide database, but it should exist. {}".format(nucleotide))
+                raise_file_not_found_e(nucleotide, logger)
         if config_data.is_prot:
             protein = blast_db.joinpath(self.__protein_path)
             if not protein.exists():
-                raise FileNotFoundError("Cannot find protein database, but it should exist. {}".format(protein))
+                logger.critical("Cannot find protein database, but it should exist. {}".format(protein))
+                raise_file_not_found_e(protein, logger)
         return nucleotide, protein
 
 
@@ -146,7 +155,7 @@ def add_args(parser=None):
     if parser is None:
         parser = ArgumentParser(
             description="Locidex manifest: Setup directory of databases for use with search")
-    parser.add_argument('-i','--input', type=str, required=True,help='Input directory containing multiplie locidex databases')
+    parser.add_argument('-i','--input', type=str, required=True,help='Input directory containing multiple locidex databases')
     parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
     return parser
 
@@ -160,11 +169,16 @@ def check_config(directory: pathlib.Path) -> DBConfig:
     """
 
     config_dir = pathlib.Path(directory).joinpath(DBFiles.config_file)
-    config_data: Optional[DBConfig] = None 
+    config_data: Optional[DBConfig] = None
+    if not config_dir.exists():
+        logger.critical("Could not find config file: {}".format(config_dir))
+        raise_file_not_found_e(config_dir, logger)
+    
     with open(config_dir, 'r') as conf:
         config_data = DBConfig(**json.load(conf))
         for k, v in config_data.to_dict().items():
             if v is None or v == '':
+                logger.critical("Missing value in config file for key {} which has value {}".format(k, v))
                 raise AttributeError("Config cannot have missing values: {}".format(k))
     return config_data
 
@@ -180,7 +194,9 @@ def validate_db_files(allele_dir: List[pathlib.Path], file_in: pathlib.Path) -> 
     for a_dir in allele_dir:
         for k, v in DBFiles.items():
             if not pathlib.Path(a_dir / v).exists():
-                raise FileNotFoundError("Required file {} does not exist.".format(k))
+                logger.critical("Required file {} does not exist.".format(k))
+                raise_file_not_found_e(str(a_dir / v), logger)
+            
         db_configs.append((a_dir.relative_to(file_in), check_config(a_dir)))
     return db_configs
 
@@ -191,7 +207,11 @@ def check_dbs(file_in: pathlib.Path) -> List[pathlib.PosixPath]:
 
     file_in: A path to a directory of databases
     """
+    logger.debug("Checking that the following databases exist in: {}".format(file_in))
     db_dirs = [p for p in file_in.iterdir() if p.is_dir()]
+    if not db_dirs:
+        logger.critical("No valid databases found in: {}".format(file_in))
+        raise AssertionError("No valid databases found in: {}".format(file_in))
     return db_dirs
 
 def create_manifest(file_in: pathlib.Path) -> Dict[str, List[Dict[str, str]]]:
@@ -204,12 +224,13 @@ def create_manifest(file_in: pathlib.Path) -> Dict[str, List[Dict[str, str]]]:
     validated_dbs: List[Tuple[pathlib.Path, DBConfig]] = validate_db_files(allele_dirs, file_in)
     db_manifest = dict()
     for path, conf in validated_dbs:
-
+        logger.info("Adding database: {} to manifest.".format(str(path)))
         if db_manifest.get(conf.db_name) is None:
             db_manifest[conf.db_name] = []
             
         if db_manifest[conf.db_name] and (versions := [i.db_version for i in db_manifest[conf.db_name]]):
             if conf.db_version in versions:
+                logger.critical("Databases with the same name and version have been specified (name: {}, path: {}, version: {})".format(conf.db_name, path, conf.db_version))
                 raise KeyError("Databases with the same name and version have been specified (name: {}, path: {}, version: {})".format(conf.db_name, path, conf.db_version))
             
         db_manifest[conf.db_name].append(ManifestItem(db=path, config=conf, root_db=file_in).to_dict())
@@ -225,7 +246,9 @@ def write_manifest(file_in: pathlib.Path, manifest: Dict[str, List[Dict[str, str
     """
 
     manifest_file = _Constants.manifest_name
+    logger.debug("Creating manifest file in directory: {} with name: {}".format(file_in, manifest_file))
     path_out = file_in.joinpath(manifest_file)
+    logger.info("Writing manifest file to: {}".format(str(path_out)))
     with open(path_out, 'w', encoding='utf8') as m_out:
         json.dump(manifest, m_out, indent=2)
     return path_out
@@ -236,7 +259,10 @@ def run(cmd_args=None):
         parser = add_args()
         cmd_args = parser.parse_args()
     directory_in = pathlib.Path(cmd_args.input)
-    directory_in.exists()
+    if not directory_in.exists():
+        logger.critical("Directory: {} does not appear to exist.".format(str(directory_in)))
+        raise NotADirectoryError(errno.ENOTDIR, os.strerror(errno.ENOTDIR), str(directory_in))
+
     manifest = create_manifest(directory_in)
     return write_manifest(directory_in, manifest)
 
@@ -250,11 +276,13 @@ def select_db(manifest_data: Dict[str, List[ManifestItem]], name: str, version: 
     """
     db_data = manifest_data.get(name)
     if db_data is None:
+        logger.critical("Could not find database with specified name: {}".format(name))
         raise KeyError("Could not find database with specified name: {}".format(name))
     
     try:
         db = next(filter(lambda x: x.config.db_version == version, db_data))
     except StopIteration:
+        logger.critical("No database entry with version: {}".format(version))
         raise ValueError("No database entry with version: {}".format(version))
     
     return db
@@ -264,6 +292,7 @@ def read_manifest(input_file: pathlib.Path) -> dict:
     input_file Path: Manifest file to be parsed
     """
     if not input_file.is_dir():
+        logger.critical("Please pass the database directory, not a file.")
         raise AssertionError("Allele database directory must be passed directly.")
     
     manifest_file = input_file / _Constants.manifest_name

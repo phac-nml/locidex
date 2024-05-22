@@ -6,12 +6,18 @@ from copy import deepcopy
 from datetime import datetime
 from dataclasses import dataclass, asdict, fields
 import pandas as pd
+import logging
+import errno
 from typing import Any
 from locidex.classes.seq_intake import seq_intake
 from locidex.constants import SEARCH_RUN_DATA, START_CODONS, STOP_CODONS, DBConfig
 from locidex.utils import calc_md5
 from locidex.version import __version__
 
+
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(filemode=sys.stderr, level=logging.DEBUG)
 
 
 @dataclass
@@ -126,7 +132,7 @@ class seq_reporter:
             if self.mode == 'conservative':
                 count_internal_stop = self.query_seq_data[seq_id]['count_internal_stop']
                 start_codon = self.query_seq_data[seq_id]["start_codon"]
-                stop_codon = self.query_seq_data[seq_id]["stop_codon"]
+                stop_codon = self.query_seq_data[seq_id]["end_codon"]
                 if start_codon not in START_CODONS or stop_codon not in STOP_CODONS or count_internal_stop > 0:
                     failed_seqids.add(seq_id)
                 
@@ -386,8 +392,8 @@ def run_report(config):
     run_data['parameters'] = analysis_parameters
 
     if os.path.isdir(outdir) and not force:
-        print(f'Error {outdir} exists, if you would like to overwrite, then specify --force')
-        sys.exit()
+        logger.critical(f'Error {outdir} exists, if you would like to overwrite, then specify --force')
+        raise FileExistsError(errno.EEXIST, os.strerror(errno.EEXIST), str(outdir))
 
     if not os.path.isdir(outdir):
         os.makedirs(outdir, 0o755)
@@ -397,7 +403,8 @@ def run_report(config):
         seq_store_dict = json.load(fh)
 
     if len(seq_store_dict) == 0:
-        sys.exit()
+        logger.critical("seq_store from file: {} is empty".format(input_file))
+        raise ValueError("seq_store from file: {} is empty".format(input_file))
 
     if sample_name is None:
         sample_name = seq_store_dict["query_data"]["sample_name"]
@@ -408,20 +415,20 @@ def run_report(config):
         seq_info = seq_store_dict["query_data"]["query_seq_data"]
         seq_obj = seq_intake(fasta_file, 'fasta', 'CDS', translation_table, perform_annotation=False)
         if len(seq_info) != len(seq_obj.seq_data):
-            print(f'Error the supplied fasta file: {fasta_file} ({len(seq_obj.seq_data)}) seq_store file: {input_file} ({len(seq_info)}) \
+            logger.critical(f'Error the supplied fasta file: {fasta_file} ({len(seq_obj.seq_data)}) seq_store file: {input_file} ({len(seq_info)}) \
                    do not have the same number of sequences. These files must be matched')
-            sys.exit()
+            raise ValueError(f"Supplied fasta and seq_store have different numbers of sequences: {str(fasta_file)}, {str(input_file)}")
 
         for i in range(0,len(seq_obj.seq_data)):
             id = str(i)
             if id not in seq_info:
-                print(f'Error {id} key from fasta file not in seq_store')
-                sys.exit()
+                logger.critical(f'Error {id} key from fasta file not in seq_store')
+                raise KeyError(f'Error {id} key from fasta file not in seq_store')
             pid_1 = seq_info[id]["seq_id"]
             pid_2 = seq_obj.seq_data[i]["seq_id"]
             if pid_1 != pid_2:
-                print(f'Error seq_store key for {id}: {pid_1} mismatched to input fasta {id}: {pid_2}. These files must be matched')
-                sys.exit()
+                logger.critical(f'Error seq_store key for {id}: {pid_1} mismatched to input fasta {id}: {pid_2}. These files must be matched')
+                raise KeyError(f'Error seq_store key for {id}: {pid_1} mismatched to input fasta {id}: {pid_2}. These files must be matched')
             seq_data[id] = seq_obj.seq_data[i]
 
     allele_obj = seq_reporter(seq_store_dict, method='nucleotide', mode=mode, label=label, filters={},max_ambig=max_ambig,max_int_stop=max_int_stop,match_ident=match_ident)

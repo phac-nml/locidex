@@ -16,7 +16,7 @@ MERGE_SUCCESSFULLY = [
 def test_throws_duplicate_error():
     """
     """
-    with pytest.raises(SystemExit, match="Attempting to merge allele profiles with the same sample name: 1"):
+    with pytest.raises(ValueError, match="Attempting to merge allele profiles with the same sample name: 1"):
         merge.read_file_list(DUPLICATE_NAMES, perform_validation=True)
 
 def test_merge_profiles_no_error():
@@ -24,7 +24,7 @@ def test_merge_profiles_no_error():
     
 
 def test_check_files_exist():
-    with pytest.raises(SystemExit, match=str(errno.ENOENT)):
+    with pytest.raises(FileNotFoundError, match=str(errno.ENOENT)):
         fail = "dne.txt"
         merge.check_files_exist([fail])
     

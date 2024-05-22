@@ -5,9 +5,13 @@ from locidex.classes.gbk import parse_gbk
 from locidex.classes.fasta import ParseFasta
 from locidex.utils import guess_alphabet, calc_md5, six_frame_translation, slots
 from locidex.classes.prodigal import gene_prediction
-from locidex.constants import DNA_AMBIG_CHARS, DNA_IUPAC_CHARS, CharacterConstants, DBConfig
+from locidex.constants import DNA_AMBIG_CHARS, DNA_IUPAC_CHARS, CharacterConstants, DBConfig, raise_file_not_found_e
+import logging
 from typing import NamedTuple, Optional, List
 from dataclasses import dataclass, asdict
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(filemode=sys.stderr, level=logging.INFO)
 
 @dataclass
 class HitFilters:
@@ -50,7 +54,8 @@ class seq_intake:
 
     def __init__(self,input_file,file_type,feat_key='CDS',translation_table=11,perform_annotation=False,num_threads=1,skip_trans=False):
         if not input_file.exists():
-            raise FileNotFoundError("File {} does not exist.".format(input_file))
+            logger.critical("Seq_intake file {} could not be found".format(input_file))
+            raise_file_not_found_e(input_file, logger)
         
         self.input_file = input_file
         self.file_type = file_type

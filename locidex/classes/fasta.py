@@ -4,8 +4,14 @@ from mimetypes import guess_type
 from functools import partial
 import os
 from locidex.utils import calc_md5, slots
+import logging
+from locidex.constants import raise_file_not_found_e
 from dataclasses import dataclass
 from pathlib import Path
+import sys
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(filemode=sys.stderr, level=logging.DEBUG)
 
 @dataclass
 class Fasta:
@@ -24,7 +30,7 @@ class ParseFasta:
     def __init__(self, input_file: Path,parse_def=False,seq_type=None,delim="|"):
         self.input_file = input_file
         if not self.input_file.exists():
-            raise FileNotFoundError("Input file: {} not found.".format(self.input_file))
+            raise_file_not_found_e(self.input_file, logger)
 
         self.delim = delim
         self.seq_type = seq_type
