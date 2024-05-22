@@ -132,7 +132,7 @@ class seq_reporter:
             if self.mode == 'conservative':
                 count_internal_stop = self.query_seq_data[seq_id]['count_internal_stop']
                 start_codon = self.query_seq_data[seq_id]["start_codon"]
-                stop_codon = self.query_seq_data[seq_id]["stop_codon"]
+                stop_codon = self.query_seq_data[seq_id]["end_codon"]
                 if start_codon not in START_CODONS or stop_codon not in STOP_CODONS or count_internal_stop > 0:
                     failed_seqids.add(seq_id)
                 
