@@ -485,6 +485,7 @@ def run_report(config):
 
 
 def run(cmd_args=None):
+    logger.info("Beginning report")
     if cmd_args is None:
         parser = add_args()
         cmd_args = parser.parse_args()
@@ -501,6 +502,7 @@ def run(cmd_args=None):
             config[p] = analysis_parameters[p]
 
     run_report(config)
+    logger.info("Finishing report workflow.")
 
 
 # call main function
