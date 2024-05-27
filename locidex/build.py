@@ -150,9 +150,7 @@ def run(cmd_args=None):
     input_file = cmd_args.input_file
     outdir = cmd_args.outdir
     force = cmd_args.force
-    run_data = dict()
-    run_data['analysis_start_time'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    run_data['parameters'] = vars(cmd_args)
+
 
     config = DBConfig(
         db_name=cmd_args.name,
@@ -161,6 +159,12 @@ def run(cmd_args=None):
         db_author=cmd_args.author,
         db_date=datetime.now().strftime("%Y/%d/%m"),
     )
+
+    run_params = vars(cmd_args)
+    run_params = run_params | config.to_dict()
+    run_data = dict()
+    run_data['analysis_start_time'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    run_data['parameters'] = vars(cmd_args)
 
     if not os.path.isfile(input_file):
         logger.critical(f'Error {input_file} does not exist, please check path and try again')
