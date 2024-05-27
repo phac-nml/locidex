@@ -6,8 +6,8 @@ from collections import Counter
 from pathlib import Path
 from locidex.manifest import ManifestItem
 from Bio.Seq import Seq
-from typing import Dict, FrozenSet
-from locidex.constants import NT_SUB, PROTEIN_ALPHA, DNA_ALPHA, OPTION_GROUPS
+from typing import Dict, FrozenSet, Optional
+from locidex.constants import NT_SUB, PROTEIN_ALPHA, DNA_ALPHA, OPTION_GROUPS, FILE_TYPES
 import locidex.manifest as manifest 
 
 def slots(annotations: Dict[str, object]) -> FrozenSet[str]:
@@ -150,3 +150,15 @@ def filter_hsps_df(df):
     return
 
 
+def get_format(file: Path) -> Optional[str]:
+    """
+    Return file type based on suffix used
+    """
+    format: str = None
+    file_exts = file.suffixes
+    for k, extensions in FILE_TYPES.items():
+        for ext in file_exts:
+            if ext in extensions:
+                format = k
+                break
+    return format

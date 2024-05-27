@@ -238,7 +238,7 @@ def run(cmd_args=None):
     
     logger.info("Beginning format operation.")
     obj = locidex_format(input=input,header=LocidexDBHeader._fields,is_protein=is_coding,min_len_frac=min_len_frac,max_len_frac=max_len_frac, min_ident_perc=min_ident,
-            min_cov_perc=min_match_cov,trans_table=trans_table,valid_ext=FILE_TYPES['fasta'])
+            min_cov_perc=min_match_cov,trans_table=trans_table,valid_ext=list(FILE_TYPES['fasta']))
     logger.info("Finished format.")
     run_data['result_file'] = os.path.join(outdir,"locidex.txt")
     pd.DataFrame.from_dict(obj.data,orient='index').to_csv(run_data['result_file'],sep="\t",index=False,header=True)

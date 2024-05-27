@@ -18,7 +18,7 @@ from locidex.classes.seq_intake import seq_intake, seq_store
 from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BlastColumns, BlastCommands, DBConfig, DB_EXPECTED_FILES, EXTRACT_MODES, raise_file_not_found_e
 from locidex.version import __version__
 from locidex.classes.aligner import perform_alignment, aligner
-from locidex.utils import check_db_groups
+from locidex.utils import check_db_groups, get_format
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filemode=sys.stderr, level=logging.INFO)
@@ -112,10 +112,7 @@ def run_extract(config):
 
     format = None
     if format is None:
-        for t in FILE_TYPES:
-            for ext in FILE_TYPES[t]:
-                if ext == input_fasta.suffix:
-                    format = t
+        format = get_format(input_fasta)
     else:
         format = format.lower()
 
