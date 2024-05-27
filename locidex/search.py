@@ -16,7 +16,7 @@ from locidex.classes.db import search_db_conf, db_config
 from locidex.manifest import DBData
 from locidex.classes.seq_intake import seq_intake, seq_store, HitFilters
 from locidex.constants import BlastCommands,  SEARCH_RUN_DATA, FILE_TYPES, BlastColumns, DB_EXPECTED_FILES, OPTION_GROUPS, DBConfig
-from locidex.utils import write_seq_dict, check_db_groups, slots
+from locidex.utils import write_seq_dict, check_db_groups, slots, get_format
 from locidex.version import __version__
 
 logger = logging.getLogger(__name__)
@@ -151,10 +151,7 @@ def run_search(config):
         os.makedirs(outdir, 0o755)
 
     if format is None:
-        for t in FILE_TYPES:
-            for ext in FILE_TYPES[t]:
-                if query_file.suffix == ext:
-                    format = t
+        format = get_format(query_file)
     else:
         format = format.lower()
 
