@@ -106,7 +106,8 @@ def run_extract(config):
     if sample_name == None:
         sample_name = os.path.basename(input_fasta)
 
-    run_data = SEARCH_RUN_DATA
+    config = config | db_data.config_data.to_dict() # update config data to use db data
+    run_data = dict()
     run_data['analysis_start_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     run_data['parameters'] = config
 

@@ -136,12 +136,11 @@ def run_search(config):
     if sample_name == None:
         sample_name = query_file.stem
 
-
-    run_data = SEARCH_RUN_DATA
+    db_data = DBData(db_dir=db_dir)
+    config = config | db_data.config_data.to_dict()
+    run_data = dict()
     run_data['analysis_start_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     run_data['parameters'] = config
-
-    db_data = DBData(db_dir=db_dir)
 
     if os.path.isdir(outdir) and not force:
         logger.critical(f'Error {outdir} exists, if you would like to overwrite, then specify --force')
