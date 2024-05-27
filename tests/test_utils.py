@@ -49,6 +49,7 @@ def test_check_db_groups_fail():
         ("test.gbf.gz", "genbank"),
         ("test.gbff.gz", "genbank"),
         ("test.gbff", "genbank"),
+        ("test.1.fasta.gz", "fasta"),
     ])
 def test_get_format(file_in, type):
     """

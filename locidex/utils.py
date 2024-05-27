@@ -155,9 +155,10 @@ def get_format(file: Path) -> Optional[str]:
     Return file type based on suffix used
     """
     format: str = None
-    file_ext = "".join(file.suffixes).lower()
+    file_exts = file.suffixes
     for k, extensions in FILE_TYPES.items():
-        if file_ext in extensions:
-            format = k
-            break
+        for ext in file_exts:
+            if ext in extensions:
+                format = k
+                break
     return format

@@ -64,8 +64,8 @@ class BlastCommands:
         return [i.name for i in fields(cls)]
 
 FILE_TYPES = {
-    'genbank': [".gbk",".genbank",".gbf",".gbk.gz",".genbank.gz",".gbf.gz",".gbff",".gbff.gz"],
-    'fasta': [".fasta",".fas",".fa",".ffn",".fna",".fasta.gz",".fas.gz",".fa.gz",".ffn.gz",".fna.gz"],
+    'genbank': frozenset([".gbk",".genbank",".gbf",".gbk.gz",".genbank.gz",".gbf.gz",".gbff",".gbff.gz"]),
+    'fasta': frozenset([".fasta",".fas",".fa",".ffn",".fna",".fasta.gz",".fas.gz",".fa.gz",".ffn.gz",".fna.gz"]),
 }
 
 
