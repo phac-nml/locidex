@@ -46,7 +46,7 @@ def main(argv=None):
         logger.critical("Program exited with errors, please review logs. For the full traceback please see file: {}".format(error_file))
         SystemExit(error_number)
     else:
-        sys.exit("Program finished without errors.")
+        logger.info("Program finished without errors.")
 
 # call main function
 if __name__ == '__main__':
