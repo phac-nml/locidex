@@ -15,7 +15,7 @@ from locidex.classes.blast import BlastSearch, FilterOptions, BlastMakeDB
 from locidex.manifest import DBData
 from locidex.classes.db import search_db_conf, db_config
 from locidex.classes.seq_intake import seq_intake, seq_store
-from locidex.constants import SEARCH_RUN_DATA, FILE_TYPES, BlastColumns, BlastCommands, DBConfig, DB_EXPECTED_FILES, EXTRACT_MODES, raise_file_not_found_e
+from locidex.constants import FILE_TYPES, BlastColumns, BlastCommands, DBConfig, DB_EXPECTED_FILES, EXTRACT_MODES, raise_file_not_found_e
 from locidex.version import __version__
 from locidex.classes.aligner import perform_alignment, aligner
 from locidex.utils import check_db_groups, get_format
