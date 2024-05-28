@@ -69,17 +69,17 @@ class locidex_format:
         else:
             self.parse_fasta(self.input)
 
-    def process_dir(self):
+    def process_dir(self) -> None:
         files = self.get_dir_files(self.input)
         for f in files[self.__file_input]:
             for e in self.valid_ext:
-                # Finding and replacing wrong output to early
-                #! Need to get maximum overlap here
-                if e in f[1]:
-                    ## over writing this variable with wrong input
+                if f[1].endswith(e):
                     self.gene_name = f[1].replace(f'{e}','')
                     self.parse_fasta(f[0])
                     break
+            else:
+                logger.critical("File: {} does not have a valid extension. Valid extensions are: {}".format(e, str(self.valid_ext)))
+                raise ValueError("Extension for file: {} is not allowed.".format())
 
     def set_input_type(self):
         if os.path.isfile(self.input):
