@@ -6,7 +6,7 @@ from collections import Counter
 from pathlib import Path
 from locidex.manifest import ManifestItem
 from Bio.Seq import Seq
-from typing import Dict, FrozenSet, Optional
+from typing import Dict, FrozenSet, Optional, List
 from locidex.constants import NT_SUB, PROTEIN_ALPHA, DNA_ALPHA, OPTION_GROUPS, FILE_TYPES
 import locidex.manifest as manifest 
 
@@ -80,7 +80,7 @@ def translate_dna(dna_seq,trans_table=11):
         s = ''.join(list(dna_seq)[:-r])
     return str(Seq(s).translate(table=trans_table))
 
-def six_frame_translation(dna_seq,trans_table):
+def six_frame_translation(dna_seq,trans_table) -> List[str]:
     fwd = []
     rev = []
     for i in range(0,3):
@@ -132,8 +132,8 @@ def write_seq_list(seqs,output_file,format='json',seq_type='dna',seq_id_key='ind
 
 def write_seq_dict(data,output_file):
     with open(output_file, 'w') as oh:
-        for id in data:
-            oh.write(f">{id}\n{data[id]}\n")
+        for fid, seq in data.items():
+            oh.write(f">{fid}\n{seq}\n")
     return output_file
 
 
