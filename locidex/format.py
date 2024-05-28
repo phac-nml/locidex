@@ -69,14 +69,17 @@ class locidex_format:
         else:
             self.parse_fasta(self.input)
 
-    def process_dir(self):
+    def process_dir(self) -> None:
         files = self.get_dir_files(self.input)
         for f in files[self.__file_input]:
             for e in self.valid_ext:
-                if e in f[1]:
+                if f[1].endswith(e):
                     self.gene_name = f[1].replace(f'{e}','')
                     self.parse_fasta(f[0])
                     break
+            else:
+                logger.critical("File: {} does not have a valid extension. Valid extensions are: {}".format(e, str(self.valid_ext)))
+                raise ValueError("Extension for file: {} is not allowed.".format())
 
     def set_input_type(self):
         if os.path.isfile(self.input):
@@ -133,9 +136,9 @@ class locidex_format:
         _open = partial(gzip.open, mode='rt') if encoding == 'gzip' else open
         with _open(input_file) as f:
             for record in SeqIO.parse(f, 'fasta'):
-                id = str(record.id)
+                id_in = str(record.id)
                 if self.input_type == self.__file_input:
-                    gene_name = "_".join(id.split(self.delim)[:-1])
+                    gene_name = "_".join(id_in.split(self.delim)[:-1])
                 else:
                     gene_name = self.gene_name
                 dna_seq = str(record.seq).lower().replace('-','')
@@ -153,10 +156,10 @@ class locidex_format:
                 row = LocidexDBHeader(
                     seq_id=self.seq_idx,
                     locus_name=gene_name,
-                    locus_name_alt=id,
+                    locus_name_alt=id_in,
                     locus_product='',
                     locus_description='',
-                    locus_uid=id.split(self.delim)[-1],
+                    locus_uid=id_in.split(self.delim)[-1],
                     dna_seq=dna_seq,
                     dna_seq_len=dna_len,
                     dna_seq_hash=calc_md5([dna_seq])[0],
@@ -174,7 +177,6 @@ class locidex_format:
                     dna_min_ident=self.min_ident_perc,
                     min_dna_match_cov=self.min_cov_perc
                 )
-
                 self.data[self.seq_idx] = row
                 self.seq_idx += 1
 

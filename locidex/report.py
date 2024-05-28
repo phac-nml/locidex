@@ -10,7 +10,7 @@ import logging
 import errno
 from typing import Any
 from locidex.classes.seq_intake import seq_intake
-from locidex.constants import SEARCH_RUN_DATA, START_CODONS, STOP_CODONS, DBConfig
+from locidex.constants import START_CODONS, STOP_CODONS, DBConfig
 from locidex.utils import calc_md5
 from locidex.version import __version__
 
@@ -387,7 +387,7 @@ def run_report(config):
     translation_table = config['translation_table']
 
 
-    run_data = SEARCH_RUN_DATA
+    run_data = dict()
     run_data['analysis_start_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     run_data['parameters'] = analysis_parameters
 

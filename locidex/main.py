@@ -33,7 +33,9 @@ def main(argv=None):
     if args.command is None:
         parser.print_help()
         sys.exit()
+    logger.info("Running {}".format(args.command))
     tasks[args.command][module_idx].run(args)
+    logger.info("Finished: {}".format(args.command))
 
 
 # call main function

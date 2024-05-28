@@ -15,7 +15,7 @@ from locidex.classes.blast import BlastSearch, FilterOptions
 from locidex.classes.db import search_db_conf, db_config
 from locidex.manifest import DBData
 from locidex.classes.seq_intake import seq_intake, seq_store, HitFilters
-from locidex.constants import BlastCommands,  SEARCH_RUN_DATA, FILE_TYPES, BlastColumns, DB_EXPECTED_FILES, OPTION_GROUPS, DBConfig
+from locidex.constants import BlastCommands, FILE_TYPES, BlastColumns, DB_EXPECTED_FILES, OPTION_GROUPS, DBConfig
 from locidex.utils import write_seq_dict, check_db_groups, slots, get_format
 from locidex.version import __version__
 
@@ -136,12 +136,11 @@ def run_search(config):
     if sample_name == None:
         sample_name = query_file.stem
 
-
-    run_data = SEARCH_RUN_DATA
+    db_data = DBData(db_dir=db_dir)
+    config = config | db_data.config_data.to_dict()
+    run_data = dict()
     run_data['analysis_start_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     run_data['parameters'] = config
-
-    db_data = DBData(db_dir=db_dir)
 
     if os.path.isdir(outdir) and not force:
         logger.critical(f'Error {outdir} exists, if you would like to overwrite, then specify --force')

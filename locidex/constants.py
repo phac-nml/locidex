@@ -142,9 +142,6 @@ class ManifestFields:
     db_path: str = "path"
     config_data: str = "config"
 
-SEARCH_RUN_DATA = {
-
-}
 
 
 DB_EXPECTED_FILES = {
