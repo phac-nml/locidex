@@ -138,7 +138,7 @@ def run_extract(config):
 
     if os.path.isdir(outdir) and not force:
         logger.critical(f'Error {outdir} exists, if you would like to overwrite, then specify --force')
-        raise FileExistsError(errno.EEXIST, os.strerror(errno.EEXIST), str(outdir))
+        raise IsADirectoryError(errno.EISDIR, os.strerror(errno.EISDIR), str(outdir))
 
     db_path = os.path.join(outdir, 'blast_db')
 
@@ -176,7 +176,7 @@ def run_extract(config):
         'num_threads': n_threads,
         'word_size':11
     }
-    #nt_db = Path("{}.fasta".format(blast_database_paths['nucleotide']))
+
     nt_db = Path("{}.fasta".format(db_data.nucleotide_blast_db))
     if not nt_db.exists():
         logger.critical("Could not find file: {}".format(nt_db))
