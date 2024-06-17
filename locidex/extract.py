@@ -101,7 +101,7 @@ def run_extract(config):
 
     if not mode in EXTRACT_MODES:
         logger.critical('Provided mode for allele extraction is not valid: {}, needs to be one of ({})'.format(mode, ", ".join(EXTRACT_MODES)))
-        sys.exit()
+        raise ValueError('Extraction  mode is not valid: {}, needs to be one of ({})'.format(mode))
 
     if sample_name == None:
         sample_name = os.path.basename(input_fasta)
@@ -279,9 +279,7 @@ def run(cmd_args=None):
         cmd_args = parser.parse_args()
 
     analysis_parameters = vars(cmd_args)
-
     analysis_parameters = check_db_groups(analysis_params=analysis_parameters, cmd_args=cmd_args)
-
     config_file = cmd_args.config
 
     config = {}

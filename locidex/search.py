@@ -90,14 +90,16 @@ def create_outputs(output_dir: Path, db_data: DBData, blast_params: dict, config
 
     This function will have some needed clean up once the cli is tidied
     """
-    hsps_out = "hsps.txt" #? Need to follow up on what hsps stands for
+    hsps_out = "hsps.txt" #? Need to follow up on what hsps stands for, hsps is a blast that needs to included
     label_col = 'index'
-    query_fasta = output_dir.joinpath("queries.fasta")
-    output_hsps = output_dir.joinpath(hsps_out)
-    if not output_dir.exists() or not output_dir.is_dir():
-        os.makedirs(output_dir, 0o755)
+    output_directory = output_dir.joinpath(configuration.output_dir)
+    query_fasta = output_directory.joinpath("queries.fasta")
+    output_hsps = output_directory.joinpath(hsps_out)
+    if not output_directory.exists() or not output_directory.is_dir():
+        os.makedirs(output_directory, 0o755, exist_ok=True) # exist okay is true, as the program will error out before it clobbers the directory
 
     output_file = create_fasta_from_df(filtered_df, label_col=label_col, seq_col=configuration.seq_col, out_file=query_fasta)
+    #! Blast search output columns should be showing up
     search_data = BlastSearch(db_data, output_file, blast_params, configuration.program, BlastColumns._fields, filter_options)
     searched_df = search_data.get_blast_data(configuration.db_dir, output_hsps)
     return searched_df

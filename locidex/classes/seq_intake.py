@@ -211,7 +211,7 @@ class seq_intake:
                 if self.skip_trans:
                     aa_seq = ''
                 else:
-                    aa_seq = six_frame_translation(dna_seq, self.translation_table)[0][0]
+                    aa_seq = six_frame_translation(dna_seq, self.translation_table)[0]
                 aa_hash = calc_md5([aa_seq])[0]
                 aa_len = len(aa_seq)
             else:

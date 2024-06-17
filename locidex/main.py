@@ -28,26 +28,26 @@ def main(argv=None):
     for k, v in tasks.items():
         format_parser = sub_parsers.add_parser(k, description=v[help_msg], help=v[help_msg])
         v[module_idx].add_args(format_parser)
-
+        
     args = parser.parse_args(argv)
     if args.command is None:
         parser.print_help()
         sys.exit()
-    logger.info("Running {}".format(args.command))
-    tasks[args.command][module_idx].run(args)
-    logger.info("Finished: {}".format(args.command))
 
-
-# call main function
-if __name__ == '__main__':
-    error_file = "error.txt"
+    error_file = "errors.txt"
     try:
-        main()
+        logger.info("Running {}".format(args.command))
+        tasks[args.command][module_idx].run(args)
+        logger.info("Finished: {}".format(args.command))
     except Exception as e:
         with open(error_file, "w") as f:
             f.write(traceback.format_exc())
         error_number = e.errno if hasattr(e, "errno") else -1
         logger.critical("Program exited with errors, please review logs. For the full traceback please see file: {}".format(error_file))
-        raise SystemExit(error_number)
+        SystemExit(error_number)
     else:
-        sys.exit("Program finished without errors.")
+        logger.info("Program finished without errors.")
+
+# call main function
+if __name__ == '__main__':
+    main()
