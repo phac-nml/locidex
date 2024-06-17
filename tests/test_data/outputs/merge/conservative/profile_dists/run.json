@@ -1,0 +1,38 @@
+{
+    "profile_dists": "version: 1.0.0",
+    "analysis_start_time": "10/06/2024 11:14:41",
+    "analysis_end_time": "10/06/2024 11:14:48",
+    "parameters": {
+        "query": "locidex/merge/conservative/profile.tsv",
+        "ref": "locidex/merge/conservative/profile.tsv",
+        "outdir": "locidex/merge/conservative/profile_dists",
+        "outfmt": "matrix",
+        "file_type": "text",
+        "distm": "hamming",
+        "missing_thresh": 1.0,
+        "sample_qual_thresh": 1.0,
+        "match_threshold": -1,
+        "mapping_file": null,
+        "batch_size": null,
+        "max_mem": null,
+        "force": false,
+        "skip": false,
+        "columns": null,
+        "count_missing": false,
+        "cpus": 1
+    },
+    "query_profile_info": {
+        "num_samples": 14,
+        "num_samples_pass": 14,
+        "failed_samples": [],
+        "parsed_file_path": "locidex/merge/conservative/profile_dists/query_profile.text"
+    },
+    "ref_profile_info": {
+        "num_samples": 14,
+        "num_samples_pass": 14,
+        "failed_samples": [],
+        "parsed_file_path": "locidex/merge/conservative/profile_dists/ref_profile.text"
+    },
+    "loci_removed": [],
+    "result_file": "locidex/merge/conservative/profile_dists/results.text"
+}
