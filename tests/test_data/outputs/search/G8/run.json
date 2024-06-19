@@ -1,11 +1,15 @@
 {
-    "analysis_start_time": "10/06/2024 11:12:15",
+    "analysis_start_time": "19/06/2024 10:43:51",
     "parameters": {
-        "query": "locidex/extract/G8/raw.extracted.seqs.fasta",
-        "outdir": "locidex/search/G8",
+        "command": "search",
+        "query": "test_dev/extract/G8/raw.extracted.seqs.fasta",
+        "outdir": "test_dev/search/G8",
+        "db": "test_set/db",
+        "db_group": null,
         "name": "G8",
-        "db": "locidex/db",
         "config": null,
+        "db_name": "Locidex Test Database",
+        "db_version": "1.0.0",
         "min_evalue": 0.0001,
         "min_dna_len": 1,
         "min_aa_len": 1,
@@ -20,8 +24,16 @@
         "format": null,
         "translation_table": 11,
         "annotate": false,
-        "force": true
+        "force": true,
+        "db_date": "2024/06/06",
+        "db_author": "James Robertson",
+        "db_desc": "Using Salmonella GCA_000007545.2 as source data",
+        "db_num_seqs": 20,
+        "is_nucl": true,
+        "is_prot": true,
+        "nucleotide_db_name": "nucleotide",
+        "protein_db_name": "protein"
     },
-    "result_file": "locidex/search/G8/seq_store.json",
-    "analysis_end_time": "10/06/2024 11:12:17"
+    "result_file": "test_dev/search/G8/seq_store.json",
+    "analysis_end_time": "19/06/2024 10:43:52"
 }

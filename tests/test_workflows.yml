@@ -60,7 +60,9 @@
     - path: test_out/search/G1/seq_store.json
       md5sum: 9e33a22323f939371a203c47ebeede0d
     - path: test_out/report/conservative/G1/report.json
+      md5sum: e048b379915dc91e93d048cd89c78ae2
     - path: test_out/report/normal/G1/report.json
+      md5sum: b5f39c7aceee1ce8062f32b66ef9d9f3 
 
 
 - name: Test G2
@@ -77,7 +79,9 @@
       - path: test_out/search/G2/seq_store.json
         md5sum: 735c90328b01180800056f63e983c5a4
       - path: test_out/report/conservative/G2/report.json
+        md5sum: b5999c77be20fef1f681a620cb5b071c
       - path: test_out/report/normal/G2/report.json
+        md5sum: b0e2c03eeb5ce19fca5ecf5980053dbf
   
 
 - name: Test G3
@@ -94,7 +98,9 @@
       - path: test_out/search/G3/seq_store.json
         md5sum: 9a5b510de5cd2f5e454f7bf9dc10accf
       - path: test_out/report/conservative/G3/report.json
+        md5sum: 30bf0e9d8198b05d639b4a3ab04f7cff
       - path: test_out/report/normal/G3/report.json
+        md5sum: ac66a45d13640cbe65c8445ac42d73a4
   
 
 - name: Test G4
@@ -111,7 +117,9 @@
       - path: test_out/search/G4/seq_store.json
         md5sum: 1c150a532cbb42efe4794130b5fb5f5d
       - path: test_out/report/conservative/G4/report.json
+        md5sum: c4e56ec3a72f97a164dcdde217795434
       - path: test_out/report/normal/G4/report.json
+        md5sum: 772fe43da898ad3bf4d59ae0463e72f9
   
 
 - name: Test G5
@@ -128,7 +136,9 @@
       - path: test_out/search/G5/seq_store.json
         md5sum: a0bab6959b2c9294292f4499d8c4563c
       - path: test_out/report/conservative/G5/report.json
+        md5sum: 09a5009eedc1a898448078a54f8e28a8
       - path: test_out/report/normal/G5/report.json
+        md5sum: 1eafef6baebe88c84ea8b7a82183d6f5
   
 
 - name: Test G6
@@ -145,7 +155,9 @@
       - path: test_out/search/G6/seq_store.json
         md5sum: def35eb2b6301b8ab6fb31ecaf995d78
       - path: test_out/report/conservative/G6/report.json
+        md5sum: a9bfc3bf4a32a181fa56f037a1265347
       - path: test_out/report/normal/G6/report.json
+        md5sum: 1195e0a8d01aa8bc160061631c8198ac 
   
 
 - name: Test G7
@@ -162,7 +174,9 @@
       - path: test_out/search/G7/seq_store.json
         md5sum: 8e8ed91f9baaffc0ab27a2a26df7a647
       - path: test_out/report/conservative/G7/report.json
+        md5sum: 16b7d2a1e6e8888b57bbc11cab682492
       - path: test_out/report/normal/G7/report.json
+        md5sum: b6eab54e2d17a8eb0fc8fb275af54003
   
 
 - name: Test G8
@@ -179,7 +193,9 @@
       - path: test_out/search/G8/seq_store.json
         md5sum: 95673d95dcd5bd54afc81f8788e5ef97 
       - path: test_out/report/conservative/G8/report.json
+        md5sum: 312756f9eaf90483c95252daa92bea65
       - path: test_out/report/normal/G8/report.json
+        md5sum: 3f4bb8c104469f7a07d7f3fe9dd0ed1d
   
 
 - name: Test G9
@@ -196,7 +212,9 @@
       - path: test_out/search/G9/seq_store.json
         md5sum: c502a31310f6584a10b4378c5a1c2d82
       - path: test_out/report/conservative/G9/report.json
+        md5sum: 55ab5181170966ead133c425fded1060
       - path: test_out/report/normal/G9/report.json
+        md5sum: 6db1d3e7ae26152f8d041cecc1ac847b 
   
 
 - name: Test G10
@@ -213,7 +231,9 @@
       - path: test_out/search/G10/seq_store.json
         md5sum: cd28ea213bd681c7abba59e6cf68bdb8 
       - path: test_out/report/conservative/G10/report.json
+        md5sum: c22f72415ec2eac72c3260edfc099dca
       - path: test_out/report/normal/G10/report.json
+        md5sum: e30f1282431bb9923ace156acc89321c
   
 
 - name: Test G11
@@ -230,7 +250,9 @@
       - path: test_out/search/G11/seq_store.json
         md5sum: 439b41382a87960e7d123afc060aaae8
       - path: test_out/report/conservative/G11/report.json
+        md5sum: 2a36a4242d2742d7c0cfac39eefd482c
       - path: test_out/report/normal/G11/report.json
+        md5sum: 5f170a44fadf72ab35d5b2de8b2ef343
   
 
 - name: Test G12
@@ -247,7 +269,9 @@
       - path: test_out/search/G12/seq_store.
         md5sum: ba3cd7d9e5e243b85cf5cb8347fb1c3f 
       - path: test_out/report/conservative/G12/report.json
+        md5sum: 05cb031b16a5e40299d0f7ccefe7ac8c
       - path: test_out/report/normal/G12/report.json
+        md5sum: b4a398254e55838aaeeb3a97a9b51181
   
 
 - name: Test G13
@@ -264,7 +288,9 @@
       - path: test_out/search/G13/seq_store.json
         md5sum: c5f24a2fcdc2b118485db8373f239ac5
       - path: test_out/report/conservative/G13/report.json
+        md5sum: 6b2d0b51683274983ea117d84a1113ee
       - path: test_out/report/normal/G13/report.json
+        md5sum: fc00bd027755743198d97355354b53d1
   
 
 - name: Test G14
@@ -281,4 +307,6 @@
       - path: test_out/search/G14/seq_store.json
         md5sum: 35aab22a5e554b3db63940b873e267b9
       - path: test_out/report/conservative/G14/report.json
+        md5sum: 1de0c6f82e484fb6a14a438e256b058b
       - path: test_out/report/normal/G14/report.json
+        md5sum: 212127f73816ffc3450958e23d26aa50
