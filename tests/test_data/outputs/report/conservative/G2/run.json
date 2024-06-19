@@ -1,0 +1,21 @@
+{
+    "analysis_start_time": "19/06/2024 10:44:11",
+    "parameters": {
+        "command": "report",
+        "input": "test_dev/search/G2/seq_store.json",
+        "fasta": null,
+        "config": null,
+        "outdir": "test_dev/report/conservative/G2",
+        "name": "G2",
+        "mode": "conservative",
+        "prop": "locus_name",
+        "max_ambig": 0,
+        "max_stop": 0,
+        "match_ident": 100,
+        "match_cov": 100,
+        "translation_table": 11,
+        "force": true
+    },
+    "result_file": "test_dev/report/conservative/G2/report.json",
+    "analysis_end_time": "19/06/2024 10:44:11"
+}
