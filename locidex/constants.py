@@ -192,3 +192,11 @@ class LocidexDBHeader(NamedTuple):
     count_int_stops: int
     dna_ambig_count: int
 
+UTILITIES_CHECK = [
+    "makeblastdb",
+    BlastCommands.tblastn,
+    BlastCommands.blastn,
+    BlastCommands.blastp,
+    "mafft",
+    "blastdbcheck"
+]

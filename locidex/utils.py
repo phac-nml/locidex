@@ -1,14 +1,18 @@
 import hashlib
 import json
 import os
+import shutil
 import argparse
+import logging
+import errno
 from collections import Counter
 from pathlib import Path
 from locidex.manifest import ManifestItem
 from Bio.Seq import Seq
 from typing import Dict, FrozenSet, Optional, List
-from locidex.constants import NT_SUB, PROTEIN_ALPHA, DNA_ALPHA, OPTION_GROUPS, FILE_TYPES
+from locidex.constants import NT_SUB, PROTEIN_ALPHA, DNA_ALPHA, OPTION_GROUPS, FILE_TYPES, raise_file_not_found_e
 import locidex.manifest as manifest 
+
 
 def slots(annotations: Dict[str, object]) -> FrozenSet[str]:
     """
@@ -162,3 +166,29 @@ def get_format(file: Path) -> Optional[str]:
                 format = k
                 break
     return format
+
+def check_utility_installed(utility: str) -> Optional[str]:
+    """
+    utility str: The name of an executable to verify installation of
+    return None if the utility is installed | Message if utility is not installed
+    """
+    out_string: Optional[str]  = None
+    utility_path: Optional[str] = shutil.which(utility)
+    if utility_path is None:
+        out_string = f"Utility {utility} is not installed or is not executable."
+    return out_string
+
+
+def check_utilities(logger: logging.Logger, utilities: List[str]):
+    """
+    Check all utilites are installed
+    """
+    missing_utilities: List[str] = []
+    for i in utilities:
+        output = check_utility_installed(i)
+        if output is not None:
+            missing_utilities.append(i)
+            logger.critical("Missing: {}".format(output))
+    
+    if missing_utilities:
+        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), ",".join(missing_utilities))

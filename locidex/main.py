@@ -4,7 +4,7 @@ import sys
 import argparse
 import traceback
 import logging
-from . import format, extract, report, merge, search, build, manifest
+from . import format, extract, report, merge, search, build, manifest, utils, constants
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filemode=sys.stderr, level=logging.DEBUG)
@@ -28,14 +28,19 @@ def main(argv=None):
     for k, v in tasks.items():
         format_parser = sub_parsers.add_parser(k, description=v[help_msg], help=v[help_msg])
         v[module_idx].add_args(format_parser)
-        
+    
     args = parser.parse_args(argv)
     if args.command is None:
         parser.print_help()
+        try:
+            utils.check_utilities(logger, constants.UTILITIES_CHECK)
+        except FileNotFoundError:
+            pass
         sys.exit()
 
     error_file = "errors.txt"
     try:
+        utils.check_utilities(logger, constants.UTILITIES_CHECK)
         logger.info("Running {}".format(args.command))
         tasks[args.command][module_idx].run(args)
         logger.info("Finished: {}".format(args.command))
