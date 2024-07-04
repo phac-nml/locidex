@@ -3,41 +3,49 @@ import json
 import os
 import pathlib
 import sys
-from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
+from argparse import ArgumentParser
 from datetime import datetime
 from functools import partial
 from mimetypes import guess_type
-
+from dataclasses import dataclass
+from typing import List, Tuple
+import logging
+import errno
 import pandas as pd
 from Bio import SeqIO
+from Bio.Seq import Seq
+from pyrodigal import GeneFinder
 
-from locidex.constants import LOCIDEX_DB_HEADER, FILE_TYPES, FORMAT_RUN_DATA
+from locidex.constants import FILE_TYPES, LocidexDBHeader, CharacterConstants, raise_file_not_found_e
 from locidex.utils import six_frame_translation, revcomp, calc_md5
 from locidex.version import __version__
-from locidex.constants import DNA_AMBIG_CHARS, DNA_IUPAC_CHARS
 
+logger = logging.getLogger(__name__)
+logging.basicConfig(filemode=sys.stderr, level=logging.INFO)
 
 class locidex_format:
-    input = None
-    input_type = None
-    data = {}
-    is_protein_coding = True
-    header = []
-    seq_idx = 0
-    delim = '_'
-    translation_table = 11
-    min_len_frac = 0.7
-    max_len_frac = 1.3
-    min_cov_perc = 80
-    min_ident_perc = 80
-    gene_name = None
-    valid_ext = ['.fasta','.fasta.gz','.fa','.fa.gz','.fas','.fas.gz']
-    status = True
-    messages = []
 
-    def __init__(self, input, header,is_protein,delim="_",trans_table=11,
-                 min_len_frac=0.7,max_len_frac=1.3,min_cov_perc=80,min_ident_perc=80,valid_ext=None):
+    input_type = None
+    delim = '_'
+    status = True
+    __stop_codon = CharacterConstants.stop_codon
+
+    # ? These two parameters below can probably be cleaned up
+    __file_input = "file"
+    __dir_input = "dir"
+
+    @dataclass
+    class FrameSelection:
+        offset: int
+        seq: str
+        count_int_stops: int
+        revcomp: bool
+
+    def __init__(self,input,header,is_protein=False,delim="_",trans_table=11,
+                min_len_frac=0.7,max_len_frac=1.3,min_cov_perc=80.0,min_ident_perc=80.0,valid_ext=None):
         self.input = input
+        self.seq_idx = 0
+        self.gene_name = None
         self.header = header
         self.delim = delim
         self.translation_table = trans_table
@@ -46,6 +54,8 @@ class locidex_format:
         self.min_cov_perc = min_cov_perc
         self.min_ident_perc = min_ident_perc
         self.is_protein_coding = is_protein
+        self.data = dict()
+        self.valid_ext = valid_ext
 
         if valid_ext is not None:
             if isinstance(valid_ext,list):
@@ -54,158 +64,127 @@ class locidex_format:
                 self.valid_ext = [valid_ext]
 
         self.set_input_type()
-        if self.input_type == 'dir':
+        if self.input_type == self.__dir_input:
             self.process_dir()
         else:
             self.parse_fasta(self.input)
 
-    def get_data(self):
-        return self.data
-
-    def process_dir(self):
+    def process_dir(self) -> None:
         files = self.get_dir_files(self.input)
-        for f in files['file']:
+        for f in files[self.__file_input]:
             for e in self.valid_ext:
-                if e in f[1]:
-                    self.gene_name = f[1].replace(f'.{e}','')
+                if f[1].endswith(e):
+                    self.gene_name = f[1].replace(f'{e}','')
                     self.parse_fasta(f[0])
                     break
-
+            else:
+                logger.critical("File: {} does not have a valid extension. Valid extensions are: {}".format(e, str(self.valid_ext)))
+                raise ValueError("Extension for file: {} is not allowed.".format())
 
     def set_input_type(self):
         if os.path.isfile(self.input):
-            self.input_type = 'file'
+            self.input_type = self.__file_input
         elif os.path.isdir(self.input):
-            self.input_type = 'dir'
+            self.input_type = self.__dir_input
+        else:
+            logger.critical("Could not determine input type for: {}".format(self.input))
+            raise AttributeError("Unknown input type could not be determined for: {}".format(self.input))
 
     def get_dir_files(self, input_dir):
-        files = {'file': [], 'dir': []}
+        files = {self.__file_input: [], self.__dir_input: []}
         d = pathlib.Path(input_dir)
         for item in d.iterdir():
-            type = 'file'
+            type = self.__file_input
             if item.is_dir():
-                type = 'dir'
+                type = self.__dir_input
 
             files[type].append([f"{item.resolve()}", os.path.basename(item)])
         return files
 
-    def pick_frame(self, six_frame_translation):
-        count_internal_stops = []
-        terminal_stop_codon_present = []
-        for i in range(0, len(six_frame_translation)):
-            for k in range(0, len(six_frame_translation[i])):
-                count_internal_stops.append(six_frame_translation[i][k][:-1].count('*'))
-                terminal_stop_codon_present.append(six_frame_translation[i][k][-1] == '*')
+    def pick_frame(self, six_frame_translation) -> FrameSelection:
+        """
+        Reducing the complexity of this function now only checking if the allele is reverse complimented
+        """
 
-        min_int_stop = min(count_internal_stops)
-        idx = count_internal_stops.index(min_int_stop)
-        i = 0
-        k = 0
-        offset = 0
-        r = False
-        s = 1
+        reversed_frame_idx = 3 # all frames above this index are reverse complimented
+        fwd_idx, rev_idx = 0, 3
+        reverse_p = False
 
-        if min_int_stop == 0 and (terminal_stop_codon_present[idx] == 1):
-            s = idx + 1
-            if s == 1 or s == 4:
-                offset = 0
-            elif s == 2 or s == 5:
-                offset = 1
-            else:
-                offset = 2
-            if idx > 2:
-                r = True
-            k = offset
-        elif min_int_stop == 0 and max(terminal_stop_codon_present) == 1:
-            best_idx = [0, min_int_stop, False]
-            for idx, value in enumerate(count_internal_stops):
-                if value != min_int_stop:
-                    continue
-                if best_idx[2] == False and terminal_stop_codon_present[idx]:
-                    best_idx = [idx, min_int_stop, terminal_stop_codon_present[idx]]
-            s = best_idx[0] + 1
-            if s == 1 or s == 4:
-                offset = 0
-            elif s == 2 or s == 5:
-                offset = 1
-            else:
-                offset = 2
-            if idx > 2:
-                r = True
-            k = offset
+        rev = six_frame_translation[fwd_idx] # frame 1
+        fwd = six_frame_translation[rev_idx] # frame 2
 
-        if idx > 2:
-            i = 1
+        fwd_stop_counts = fwd[:-1].count(self.__stop_codon)
 
-        seq = six_frame_translation[i][k]
-        return {'offset': offset, 'revcomp': r, 'frame': s, 'seq': seq.lower(), 'count_int_stops': min_int_stop}
+        output_seq = fwd
+        idx = fwd_idx
+        min_int_stop = fwd_stop_counts
 
+        if rev[-1] == self.__stop_codon and (stop_counts := rev[:-1].count(self.__stop_codon)) == 1 and fwd_stop_counts > 0:
+            idx = rev_idx
+            output_seq = rev
+            min_int_stop = stop_counts
 
-    def create_row(self):
-        row = {}
-        for f in self.header:
-            row[f] = ''
-        return row
+        offset = idx % reversed_frame_idx # gives offset for both revcomp and seq
+        if idx >= reversed_frame_idx:
+            reverse_p = True
+
+        return self.FrameSelection(offset=offset, seq=output_seq.lower(), count_int_stops=min_int_stop, revcomp=reverse_p)
+
 
     def parse_fasta(self, input_file):
         encoding = guess_type(input_file)
         _open = partial(gzip.open, mode='rt') if encoding == 'gzip' else open
         with _open(input_file) as f:
             for record in SeqIO.parse(f, 'fasta'):
-                id = str(record.id)
-                if self.input_type == 'file':
-                    gene_name = "_".join(id.split(self.delim)[:-1])
+                id_in = str(record.id)
+                if self.input_type == self.__file_input:
+                    gene_name = "_".join(id_in.split(self.delim)[:-1])
                 else:
                     gene_name = self.gene_name
                 dna_seq = str(record.seq).lower().replace('-','')
                 if self.is_protein_coding:
                     t = self.pick_frame(six_frame_translation(dna_seq, trans_table=self.translation_table))
-                    aa_seq = t['seq'].lower()
-                    dna_seq = dna_seq[t['offset']:]
-                    if t['revcomp']:
+                    aa_seq = t.seq
+                    dna_seq = dna_seq[t.offset:]
+                    if t.revcomp:
                         dna_seq = revcomp(dna_seq)
 
                 dna_len = len(dna_seq)
                 aa_len = len(aa_seq)
-                row = self.create_row()
-                row['seq_id'] = self.seq_idx
-                row['locus_name'] = gene_name
-                row['locus_name_alt'] = id
-                row['locus_product'] = ''
-                row['locus_description'] = ''
-                row['locus_uid'] = id.split(self.delim)[-1]
-                row['dna_seq'] = dna_seq
-                row['dna_seq_len'] = dna_len
-                row['dna_seq_hash'] = calc_md5([dna_seq])[0]
-                row['dna_ambig_count'] =dna_seq.count('n')
 
-
-                if self.is_protein_coding:
-                    row['aa_seq'] = aa_seq
-                    row['aa_seq_len'] = len(aa_seq)
-                    row['aa_seq_hash'] = calc_md5([aa_seq])[0]
-                    row['aa_min_ident'] = self.min_ident_perc * 0.8
-                    row['aa_min_len'] = aa_len * self.min_len_frac
-                    row['aa_max_len'] = aa_len * self.max_len_frac
-                    row['min_aa_match_cov'] = self.min_cov_perc
-                    row['count_int_stops'] = t['count_int_stops']
-
-                row['dna_min_len'] = dna_len*self.min_len_frac
-                row['dna_max_len'] = dna_len*self.max_len_frac
-                row['dna_min_ident'] = self.min_ident_perc
-                row['min_dna_match_cov'] = self.min_cov_perc
-
+                aa_encoding_p = lambda x: x if self.is_protein_coding else None
+                row = LocidexDBHeader(
+                    seq_id=self.seq_idx,
+                    locus_name=gene_name,
+                    locus_name_alt=id_in,
+                    locus_product='',
+                    locus_description='',
+                    locus_uid=id_in.split(self.delim)[-1],
+                    dna_seq=dna_seq,
+                    dna_seq_len=dna_len,
+                    dna_seq_hash=calc_md5([dna_seq])[0],
+                    dna_ambig_count=dna_seq.count('n'),
+                    aa_seq = aa_encoding_p(aa_seq),
+                    aa_seq_len=aa_encoding_p(len(aa_seq)),
+                    aa_seq_hash= aa_encoding_p(calc_md5([aa_seq])[0]),
+                    aa_min_ident=aa_encoding_p(self.min_ident_perc * (self.min_ident_perc /100)),
+                    aa_min_len=aa_encoding_p(aa_len * self.min_len_frac),
+                    aa_max_len=aa_encoding_p( aa_len * self.max_len_frac),
+                    min_aa_match_cov=aa_encoding_p(self.min_cov_perc),
+                    count_int_stops=aa_encoding_p(t.count_int_stops),
+                    dna_min_len=dna_len*self.min_len_frac,
+                    dna_max_len=dna_len*self.max_len_frac,
+                    dna_min_ident=self.min_ident_perc,
+                    min_dna_match_cov=self.min_cov_perc
+                )
                 self.data[self.seq_idx] = row
                 self.seq_idx += 1
 
 
-def parse_args():
-    class CustomFormatter(ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter):
-        pass
-
-    parser = ArgumentParser(
-        description="Locidex: Format an existing allele database into Locidex build tsv format",
-        formatter_class=CustomFormatter)
+def add_args(parser=None):
+    if parser is None:
+        parser = ArgumentParser(
+            description="Locidex: Format sequences for a database.",)
     parser.add_argument('-i','--input', type=str, required=True,help='Input directory of fasta files or input fasta')
     parser.add_argument('-o', '--outdir', type=str, required=True, help='Output directory to put results')
     parser.add_argument('--min_len_frac', type=int, required=False, help='Used to calculate individual sequence minimum acceptable length (0 - 1)',
@@ -223,12 +202,13 @@ def parse_args():
     parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
     parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
                         action='store_true')
+    return parser
 
-    return parser.parse_args()
+def run(cmd_args=None):
+    if cmd_args is None:
+        parser = add_args()
+        cmd_args = parser.parse_args()
 
-
-def run():
-    cmd_args = parse_args()
     input = cmd_args.input
     outdir = cmd_args.outdir
     min_len_frac = cmd_args.min_len_frac
@@ -242,35 +222,32 @@ def run():
     if cmd_args.not_coding:
         is_coding = False
 
-    run_data = FORMAT_RUN_DATA
+    run_data = dict()
     run_data['analysis_start_time'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     run_data['parameters'] = vars(cmd_args)
 
     if os.path.isdir(outdir) and not force:
-        print(f'Error {outdir} exists, if you would like to overwrite, then specify --force')
-        sys.exit()
+        logger.critical(f'Error {outdir} exists, if you would like to overwrite, then specify --force')
+        raise FileExistsError(errno.EEXIST, os.strerror(errno.EEXIST), str(outdir))
+
 
     if not os.path.isdir(outdir):
         os.makedirs(outdir, 0o755)
 
     if not os.path.isdir(input) and not os.path.isfile(input):
-        print(f'Error {input} does not exist as a file or directory')
-        sys.exit()
-
-
-    obj = locidex_format(input=input,header=LOCIDEX_DB_HEADER,is_protein=is_coding,min_len_frac=min_len_frac,max_len_frac=max_len_frac, min_ident_perc=min_ident,
-                   min_cov_perc=min_match_cov,trans_table=trans_table,valid_ext=FILE_TYPES['fasta'])
-
+        logger.critical(f'Error {input} does not exist as a file or directory')
+        raise_file_not_found_e(input, logger)
+    
+    logger.info("Beginning format operation.")
+    obj = locidex_format(input=input,header=LocidexDBHeader._fields,is_protein=is_coding,min_len_frac=min_len_frac,max_len_frac=max_len_frac, min_ident_perc=min_ident,
+            min_cov_perc=min_match_cov,trans_table=trans_table,valid_ext=list(FILE_TYPES['fasta']))
+    logger.info("Finished format.")
     run_data['result_file'] = os.path.join(outdir,"locidex.txt")
-    pd.DataFrame.from_dict(obj.get_data(),orient='index').to_csv(run_data['result_file'],sep="\t",index=False,header=True)
+    pd.DataFrame.from_dict(obj.data,orient='index').to_csv(run_data['result_file'],sep="\t",index=False,header=True)
 
     run_data['analysis_end_time'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(os.path.join(outdir,"results.json"),"w") as oh:
         oh.write(json.dumps(run_data,indent=4))
-
-
-
-
 
 
 # call main function

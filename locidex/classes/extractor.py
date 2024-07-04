@@ -25,7 +25,6 @@ class extractor:
         self.df = self.recursive_filter_redundant_queries(self.df, 'locus_name', sseqid_col, bitscore_col, 
                                                           sort_cols, ascending_cols, overlap_threshold=1)
 
-
         self.df = self.extend(self.df,sseqid_col, queryid_col, qstart_col, qend_col, sstart_col,send_col,slen_col, qlen_col, bitscore_col, overlap_threshold=overlap_thresh)
         self.df = self.set_extraction_pos(self.df, sstart_col, send_col)
         loci_ranges = self.group_by_locus(self.df,sseqid_col, queryid_col,qlen_col,extend_threshold_ratio)
@@ -338,10 +337,10 @@ class extractor:
         id = 0
         for locus_name in loci_data:
             for row in loci_data[locus_name]:
-                query_id = row['query_id']
+                query_id = str(row['query_id'])
                 start = row['start']
                 end = row['end'] + 1
-                seqid = row['seqid']
+                seqid = str(row['seqid'])
                 is_reverse = row['reverse']
                 is_complement = row['complement']
                 is_extended = row['is_extended']
@@ -359,10 +358,8 @@ class extractor:
                 threep_trunc = row['is_3prime_boundary']
                 is_trunc = False
                 if fivep_trunc or threep_trunc:
-                    is_trunc = True
-
+                    is_trunc = True        
                 if seqid in seq_data:
-
                     seq = seq_data[seqid]['seq'][start:end]
                     if is_reverse and not is_complement:
                         seq = seq[::-1].translate(NT_SUB)
@@ -415,7 +412,6 @@ class extractor:
         df = df.sort_values(sort_cols, ascending=ascending_cols).reset_index(drop=True)
         queries = df[queryid_col].to_list()
 
-
         #Remove incomplete hits when complete ones are present
         filtered = []
         for query in queries:
@@ -427,10 +423,6 @@ class extractor:
             else:
                 filtered.append(subset)
         df = pd.concat(filtered, ignore_index=True)
-        trunc_records = df[df['is_complete'] == False]
-        if len(trunc_records) == 0:
-            return df
-
         is_extended = []
         five_p_ext = []
         three_p_ext = []

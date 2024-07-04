@@ -1,0 +1,21 @@
+{
+    "analysis_start_time": "19/06/2024 10:44:56",
+    "parameters": {
+        "command": "report",
+        "input": "test_dev/search/G11/seq_store.json",
+        "fasta": null,
+        "config": null,
+        "outdir": "test_dev/report/normal/G11",
+        "name": "G11",
+        "mode": "normal",
+        "prop": "locus_name",
+        "max_ambig": 0,
+        "max_stop": 0,
+        "match_ident": 100,
+        "match_cov": 100,
+        "translation_table": 11,
+        "force": true
+    },
+    "result_file": "test_dev/report/normal/G11/report.json",
+    "analysis_end_time": "19/06/2024 10:44:56"
+}

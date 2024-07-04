@@ -11,7 +11,7 @@ class assignment:
         self.df = df
         self.columns = df.columns.tolist()
         self.loci_metadata = loci_metadata
-        self.queries = df[query_id_col].unique.tolist()
+        self.queries = df[query_id_col].unique().tolist()
 
 
 

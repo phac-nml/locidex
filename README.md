@@ -21,6 +21,7 @@
     + [Merge](#merge)
     + [Format](#format)
     + [Build](#build)
+    + [Manifest](#manifest)
   * [Example workflow](#example-workflow)
   * [Database structure](#database-structure)
     + [config.json](#configjson)
@@ -67,7 +68,10 @@ Install the latest master branch version directly from Github:
 
 ### Compatibility
 
-[List out Dependencies and/or packages as appropriate]
+The following list of dependencies also need to be installed in the environment:
+
+- [mafft](https://mafft.cbrc.jp/alignment/software/source.html)
+- [blast](https://www.metagenomics.wiki/tools/blast/install) (requires version 2.15.0)
 
 # Getting Started
 
@@ -179,7 +183,7 @@ EXAMPLE: to extract loci sequences from an input genome, reporting just extracte
 
 ### Report
 
-Produce loci hash profiles in multiple formats (json, tsv, parquet)
+Produce loci hash profiles in multiple formats (json, tsv)
 
 - Filter results based on user criteria
 - Multi-copy loci handling
@@ -211,12 +215,10 @@ A Sequence store (`seq_store.json`) object produced by the 'search' function.
 
 ```
 {out folder name}
-├── profile.json   
-└── results.json  
+├── nucleotide.hits.txt
+├── profile.json
+└── protein.hits.txt  
 ```
-
-
-
 
 ### Merge
 
@@ -274,8 +276,6 @@ Builds locidex db folder structure
 #### Input
 
 Takes the output of **locidex format** (may or may not have additional columns added). There are specific fields being looked for in the file which either or both are required depending on the type of db being built "dna_seq", "aa_seq".
-[I THINK THIS NEEDS LOOKING AT]
-
 
 		locidex build -i ./example/build_db_mlst_in/senterica.mlst.txt -o ./example/mlst_out_db/ 
 
@@ -283,6 +283,75 @@ Takes the output of **locidex format** (may or may not have additional columns a
 
 This command extracts the sequence data (nucleotide|protein) and initializes the config.json, meta.json and blast db structure which locidex search requires.
 See - [Database structure](/README.md#Database) for further information.
+
+### Manifest
+
+Takes a directory containing multiple locidex databases and creates a manifest file that can be passed to locidex command (extract or search), along with a name and version of a specifec database to use. 
+
+#### Input
+
+takes a directory of databases e.g.
+
+        `locidex manifest -i ./example/directory/of/databases`
+
+    An example of the directory inputs are shown below:
+
+    ./locidex/example/manifest_in/passes/pass_multiple/
+        ├── pass_one_db
+        │   ├── blast
+        │   │   ├── nucleotide
+        │   │   │   ├── nucleotide.fasta
+        │   │   │   ├── nucleotide.ndb
+        │   │   │   ├── nucleotide.nhr
+        │   │   │   ├── nucleotide.nin
+        │   │   │   ├── nucleotide.njs
+        │   │   │   ├── nucleotide.not
+        │   │   │   ├── nucleotide.nsq
+        │   │   │   ├── nucleotide.ntf
+        │   │   │   └── nucleotide.nto
+        │   │   └── protein
+        │   │       └── protein.fasta
+        │   ├── config.json
+        │   ├── meta.json
+        │   └── results.json
+        ├── pass_three_db
+        │   ├── blast
+        │   │   ├── nucleotide
+        │   │   │   ├── nucleotide.fasta
+        │   │   │   ├── nucleotide.ndb
+        │   │   │   ├── nucleotide.nhr
+        │   │   │   ├── nucleotide.nin
+        │   │   │   ├── nucleotide.njs
+        │   │   │   ├── nucleotide.not
+        │   │   │   ├── nucleotide.nsq
+        │   │   │   ├── nucleotide.ntf
+        │   │   │   └── nucleotide.nto
+        │   │   └── protein
+        │   │       └── protein.fasta
+        │   ├── config.json
+        │   ├── meta.json
+        │   └── results.json
+        └── pass_two_db
+            ├── blast
+            │   ├── nucleotide
+            │   │   ├── nucleotide.fasta
+            │   │   ├── nucleotide.ndb
+            │   │   ├── nucleotide.nhr
+            │   │   ├── nucleotide.nin
+            │   │   ├── nucleotide.njs
+            │   │   ├── nucleotide.not
+            │   │   ├── nucleotide.nsq
+            │   │   ├── nucleotide.ntf
+            │   │   └── nucleotide.nto
+            │   └── protein
+            │       └── protein.fasta
+            ├── config.json
+            ├── meta.json
+            └── results.json
+
+#### Output
+
+The output is a `manifest.json` file in the base directory of the database folders.
 
 ## Example workflow
 

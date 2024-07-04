@@ -1,0 +1,49 @@
+{
+    "db_info": {
+        "db_name": "Locidex Test Database",
+        "db_version": "1.0.0",
+        "db_date": "2024/06/06",
+        "db_author": "James Robertson",
+        "db_desc": "Using Salmonella GCA_000007545.2 as source data",
+        "db_num_seqs": 20,
+        "is_nucl": true,
+        "is_prot": true,
+        "nucleotide_db_name": "nucleotide",
+        "protein_db_name": "protein"
+    },
+    "parameters": {
+        "mode": "normal",
+        "min_match_ident": 100,
+        "min_match_cov": 100,
+        "max_ambiguous": 0,
+        "max_internal_stops": 0
+    },
+    "data": {
+        "sample_name": "G6",
+        "profile": {
+            "G6": {
+                "locus_1": "a47cc24760462371e919143c5cc81376",
+                "locus_2": "e35184c8ff18e9116fc8faef20532f56",
+                "locus_3": "670705cd2a59c4a23a897ac656a888fe",
+                "locus_4": "ac1b21798c0f672ad26f5a91ea278590",
+                "locus_5": "d00defcca8588f21ce16fa1d0ac13389",
+                "locus_6": "a11561f2804e2c32c78049f8b9aeb517",
+                "locus_7": "dc94bf1ec4ff9bed2a1f460cbd958656",
+                "locus_8": "7ebe74afecf146ec4db816c8deced64f",
+                "locus_9": "41ebb36872854b2b33c8c028e23d8ad1",
+                "locus_10": "fe04d17ec353c08b903c85fc0ca4dc02",
+                "locus_11": "5b128d659955716833ce42f2bb060212",
+                "locus_12": "eb72da68c159497d5f0c8eeddc51b5ae",
+                "locus_13": "8f300259dcb46224bdc1fe5273107324",
+                "locus_14": "b9060019038526aa6fc38d2f7510edc6",
+                "locus_15": "bc98c2fe196a68a79036814396513a8d",
+                "locus_16": "16e55766c603fe33c9e75d8e81743ae2",
+                "locus_17": "a0d97d985483413f3c18bfe5833ae9ce",
+                "locus_18": "b3021e979faa7600756c06dfadfcf14c",
+                "locus_19": "a012eee23637b48e39b00808a057e35d",
+                "locus_20": "4461918e985715e4a2b07494e1f91326"
+            }
+        },
+        "seq_data": {}
+    }
+}
