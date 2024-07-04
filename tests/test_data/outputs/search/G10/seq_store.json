@@ -1,0 +1,1723 @@
+{
+    "db_info": {
+        "db_name": "Locidex Test Database",
+        "db_version": "1.0.0",
+        "db_date": "2024/06/06",
+        "db_author": "James Robertson",
+        "db_desc": "Using Salmonella GCA_000007545.2 as source data",
+        "db_num_seqs": 20,
+        "is_nucl": true,
+        "is_prot": true,
+        "nucleotide_db_name": "nucleotide",
+        "protein_db_name": "protein"
+    },
+    "db_seq_info": {
+        "0": {
+            "seq_id": 0,
+            "locus_name": "locus_1",
+            "locus_name_alt": "SALM_11273",
+            "locus_product": "!",
+            "locus_description": "hypothetical protein",
+            "locus_uid": "1",
+            "dna_seq_len": 102,
+            "dna_seq_hash": "d17b02d12afa7f832ee37df6f24a8f55",
+            "aa_seq_len": 34,
+            "aa_seq_hash": "84ac553cb45dd790c497c27152888f02",
+            "dna_min_len": 71.4,
+            "dna_max_len": 132.6,
+            "aa_min_len": 23.8,
+            "aa_max_len": 44.2,
+            "dna_min_ident": 80,
+            "aa_min_ident": 64,
+            "min_dna_match_cov": 80,
+            "min_aa_match_cov": 80,
+            "count_int_stops": 0,
+            "dna_ambig_count": 0
+        },
+        "1": {
+            "seq_id": 1,
+            "locus_name": "locus_2",
+            "locus_name_alt": "SALM_120",
+            "locus_product": "@",
+            "locus_description": "outer membrane protein",
+            "locus_uid": "B",
+            "dna_seq_len": 285,
+            "dna_seq_hash": "e35184c8ff18e9116fc8faef20532f56",
+            "aa_seq_len": 95,
+            "aa_seq_hash": "2d9e7f7f0d11bf02db860b0799e7924d",
+            "dna_min_len": 199.5,
+            "dna_max_len": 370.5,
+            "aa_min_len": 66.5,
+            "aa_max_len": 123.5,
+            "dna_min_ident": 80,
+            "aa_min_ident": 64,
+            "min_dna_match_cov": 80,
+            "min_aa_match_cov": 80,
+            "count_int_stops": 0,
+            "dna_ambig_count": 0
+        },
+        "2": {
+            "seq_id": 2,
+            "locus_name": "locus_3",
+            "locus_name_alt": "SALM_2016",
+            "locus_product": "#",
+            "locus_description": "tRNA (guanosine(46)-N7)-methyltransferase TrmB",
+            "locus_uid": "C",
+            "dna_seq_len": 327,
+            "dna_seq_hash": "670705cd2a59c4a23a897ac656a888fe",
+            "aa_seq_len": 109,
+            "aa_seq_hash": "4277f8bbf1fd6682001da089fea83d04",
+            "dna_min_len": 228.9,
+            "dna_max_len": 425.1,
+            "aa_min_len": 76.3,
+            "aa_max_len": 141.7,
+            "dna_min_ident": 80,
+            "aa_min_ident": 64,
+            "min_dna_match_cov": 80,
+            "min_aa_match_cov": 80,
+            "count_int_stops": 0,
+            "dna_ambig_count": 0
+        },
+        "3": {
+            "seq_id": 3,
+            "locus_name": "locus_4",
+            "locus_name_alt": "SALM_8644",
+            "locus_product": "$",
+            "locus_description": "AZ624_004720",
+            "locus_uid": "AZ624_004720",
+            "dna_seq_len": 417,
+            "dna_seq_hash": "ac1b21798c0f672ad26f5a91ea278590",
+            "aa_seq_len": 139,
+            "aa_seq_hash": "0c25367401155278f34832f184ab44e6",
+            "dna_min_len": 291.9,
+            "dna_max_len": 542.1,
+            "aa_min_len": 97.3,
+            "aa_max_len": 180.7,
+            "dna_min_ident": 80,
+            "aa_min_ident": 64,
+            "min_dna_match_cov": 80,
+            "min_aa_match_cov": 80,
+            "count_int_stops": 0,
+            "dna_ambig_count": 0
+        },
+        "4": {
+            "seq_id": 4,
+            "locus_name": "locus_5",
+            "locus_name_alt": "SALM_1876",
+            "locus_product": "%",
+            "locus_description": "SPI-1 type III secretion system invasion lipoprotein InvH",
+            "locus_uid": "E",
+            "dna_seq_len": 444,
+            "dna_seq_hash": "d00defcca8588f21ce16fa1d0ac13389",
+            "aa_seq_len": 148,
+            "aa_seq_hash": "c8bf12a8057fc5e541fcd4924136a40d",
+            "dna_min_len": 310.8,
+            "dna_max_len": 577.2,
+            "aa_min_len": 103.6,
+            "aa_max_len": 192.4,
+            "dna_min_ident": 80,
+            "aa_min_ident": 64,
+            "min_dna_match_cov": 80,
+            "min_aa_match_cov": 80,
+            "count_int_stops": 0,
+            "dna_ambig_count": 0
+        },
+        "5": {
+            "seq_id": 5,
+            "locus_name": "locus_6",
+            "locus_name_alt": "SALM_640",
+            "locus_product": "^",
+            "locus_description": "MOSC domain-containing protein",
+            "locus_uid": "F",
+            "dna_seq_len": 543,
+            "dna_seq_hash": "a11561f2804e2c32c78049f8b9aeb517",
+            "aa_seq_len": 181,
+            "aa_seq_hash": "1f6a45ea291940ef2c17ec1cfdd5fbdd",
+            "dna_min_len": 380.1,
+            "dna_max_len": 705.9,
+            "aa_min_len": 126.7,
+            "aa_max_len": 235.3,
+            "dna_min_ident": 80,
+            "aa_min_ident": 64,
+            "min_dna_match_cov": 80,
+            "min_aa_match_cov": 80,
+            "count_int_stops": 0,
+            "dna_ambig_count": 0
+        },
+        "6": {
+            "seq_id": 6,
+            "locus_name": "locus_7",
+            "locus_name_alt": "SALM_1501",
+            "locus_product": "&",
+            "locus_description": "India: Vellore",
+            "locus_uid": "G",
+            "dna_seq_len": 606,
+            "dna_seq_hash": "dc94bf1ec4ff9bed2a1f460cbd958656",
+            "aa_seq_len": 202,
+            "aa_seq_hash": "62252b3326997117f127efb88ff09294",
+            "dna_min_len": 424.2,
+            "dna_max_len": 787.8,
+            "aa_min_len": 141.4,
+            "aa_max_len": 262.6,
+            "dna_min_ident": 80,
+            "aa_min_ident": 64,
+            "min_dna_match_cov": 80,
+            "min_aa_match_cov": 80,
+            "count_int_stops": 0,
+            "dna_ambig_count": 0
+        },
+        "7": {
+            "seq_id": 7,
+            "locus_name": "locus_8",
+            "locus_name_alt": "SALM_756",
+            "locus_product": "*",
+            "locus_description": "DNA polymerase III subunit delta'",
+            "locus_uid": "H",
+            "dna_seq_len": 642,
+            "dna_seq_hash": "7ebe74afecf146ec4db816c8deced64f",
+            "aa_seq_len": 214,
+            "aa_seq_hash": "2449629747a7c58f0f2cad411db87178",
+            "dna_min_len": 449.4,
+            "dna_max_len": 834.6,
+            "aa_min_len": 149.8,
+            "aa_max_len": 278.2,
+            "dna_min_ident": 80,
+            "aa_min_ident": 64,
+            "min_dna_match_cov": 80,
+            "min_aa_match_cov": 80,
+            "count_int_stops": 0,
+            "dna_ambig_count": 0
+        },
+        "8": {
+            "seq_id": 8,
+            "locus_name": "locus_9",
+            "locus_name_alt": "SALM_7353",
+            "locus_product": "1",
+            "locus_description": "fimbrial assembly chaperone",
+            "locus_uid": "I",
+            "dna_seq_len": 684,
+            "dna_seq_hash": "41ebb36872854b2b33c8c028e23d8ad1",
+            "aa_seq_len": 228,
+            "aa_seq_hash": "a75a93991228940fb46d917f238beb5a",
+            "dna_min_len": 478.8,
+            "dna_max_len": 889.2,
+            "aa_min_len": 159.6,
+            "aa_max_len": 296.4,
+            "dna_min_ident": 80,
+            "aa_min_ident": 64,
+            "min_dna_match_cov": 80,
+            "min_aa_match_cov": 80,
+            "count_int_stops": 0,
+            "dna_ambig_count": 0
+        },
+        "9": {
+            "seq_id": 9,
+            "locus_name": "locus_10",
+            "locus_name_alt": "SALM_1891",
+            "locus_product": "200.96",
+            "locus_description": "5'/3'-nucleotidase SurE",
+            "locus_uid": "J",
+            "dna_seq_len": 762,
+            "dna_seq_hash": "fe04d17ec353c08b903c85fc0ca4dc02",
+            "aa_seq_len": 254,
+            "aa_seq_hash": "bd09702e070040e0fc8d2ec3b830812c",
+            "dna_min_len": 533.4,
+            "dna_max_len": 990.6,
+            "aa_min_len": 177.8,
+            "aa_max_len": 330.2,
+            "dna_min_ident": 80,
+            "aa_min_ident": 64,
+            "min_dna_match_cov": 80,
+            "min_aa_match_cov": 80,
+            "count_int_stops": 0,
+            "dna_ambig_count": 0
+        },
+        "10": {
+            "seq_id": 10,
+            "locus_name": "locus_11",
+            "locus_name_alt": "SALM_1452",
+            "locus_product": "|",
+            "locus_description": "1-phosphofructokinase",
+            "locus_uid": "K",
+            "dna_seq_len": 858,
+            "dna_seq_hash": "5b128d659955716833ce42f2bb060212",
+            "aa_seq_len": 286,
+            "aa_seq_hash": "4daecf1a6ccae76e1d97a4ce9ee4ff0b",
+            "dna_min_len": 600.6,
+            "dna_max_len": 1115.4,
+            "aa_min_len": 200.2,
+            "aa_max_len": 371.8,
+            "dna_min_ident": 80,
+            "aa_min_ident": 64,
+            "min_dna_match_cov": 80,
+            "min_aa_match_cov": 80,
+            "count_int_stops": 0,
+            "dna_ambig_count": 0
+        },
+        "11": {
+            "seq_id": 11,
+            "locus_name": "locus_12",
+            "locus_name_alt": "SALM_11020",
+            "locus_product": "_",
+            "locus_description": "1",
+            "locus_uid": "L",
+            "dna_seq_len": 972,
+            "dna_seq_hash": "eb72da68c159497d5f0c8eeddc51b5ae",
+            "aa_seq_len": 324,
+            "aa_seq_hash": "a1f16dd269dc295e715f2d00f9c26b43",
+            "dna_min_len": 680.4,
+            "dna_max_len": 1263.6,
+            "aa_min_len": 226.8,
+            "aa_max_len": 421.2,
+            "dna_min_ident": 80,
+            "aa_min_ident": 64,
+            "min_dna_match_cov": 80,
+            "min_aa_match_cov": 80,
+            "count_int_stops": 0,
+            "dna_ambig_count": 0
+        },
+        "12": {
+            "seq_id": 12,
+            "locus_name": "locus_13",
+            "locus_name_alt": "SALM_1934",
+            "locus_product": "-",
+            "locus_description": "3.9",
+            "locus_uid": "M",
+            "dna_seq_len": 1098,
+            "dna_seq_hash": "8f300259dcb46224bdc1fe5273107324",
+            "aa_seq_len": 366,
+            "aa_seq_hash": "b16bc26e42f5bc4327504b1ec8b2d53d",
+            "dna_min_len": 768.6,
+            "dna_max_len": 1427.4,
+            "aa_min_len": 256.2,
+            "aa_max_len": 475.8,
+            "dna_min_ident": 80,
+            "aa_min_ident": 64,
+            "min_dna_match_cov": 80,
+            "min_aa_match_cov": 80,
+            "count_int_stops": 0,
+            "dna_ambig_count": 0
+        },
+        "13": {
+            "seq_id": 13,
+            "locus_name": "locus_14",
+            "locus_name_alt": "SALM_2871",
+            "locus_product": "+",
+            "locus_description": "@",
+            "locus_uid": "N",
+            "dna_seq_len": 1281,
+            "dna_seq_hash": "b9060019038526aa6fc38d2f7510edc6",
+            "aa_seq_len": 427,
+            "aa_seq_hash": "ed11561b2bedaa12c7a28eb0e9346101",
+            "dna_min_len": 896.7,
+            "dna_max_len": 1665.3,
+            "aa_min_len": 298.9,
+            "aa_max_len": 555.1,
+            "dna_min_ident": 80,
+            "aa_min_ident": 64,
+            "min_dna_match_cov": 80,
+            "min_aa_match_cov": 80,
+            "count_int_stops": 0,
+            "dna_ambig_count": 0
+        },
+        "14": {
+            "seq_id": 14,
+            "locus_name": "locus_15",
+            "locus_name_alt": "SALM_583",
+            "locus_product": "=",
+            "locus_description": "DMT family transporter",
+            "locus_uid": "O",
+            "dna_seq_len": 1434,
+            "dna_seq_hash": "bc98c2fe196a68a79036814396513a8d",
+            "aa_seq_len": 478,
+            "aa_seq_hash": "16cb2acec887d5861327e04f2705b8ce",
+            "dna_min_len": 1003.8,
+            "dna_max_len": 1864.2,
+            "aa_min_len": 334.6,
+            "aa_max_len": 621.4,
+            "dna_min_ident": 80,
+            "aa_min_ident": 64,
+            "min_dna_match_cov": 80,
+            "min_aa_match_cov": 80,
+            "count_int_stops": 0,
+            "dna_ambig_count": 0
+        },
+        "15": {
+            "seq_id": 15,
+            "locus_name": "locus_16",
+            "locus_name_alt": "SALM_780",
+            "locus_product": "<",
+            "locus_description": "murein transglycosylase A",
+            "locus_uid": "P",
+            "dna_seq_len": 1464,
+            "dna_seq_hash": "16e55766c603fe33c9e75d8e81743ae2",
+            "aa_seq_len": 488,
+            "aa_seq_hash": "b20314e55f9713235e9c4ea5817b56df",
+            "dna_min_len": 1024.8,
+            "dna_max_len": 1903.2,
+            "aa_min_len": 341.6,
+            "aa_max_len": 634.4,
+            "dna_min_ident": 80,
+            "aa_min_ident": 64,
+            "min_dna_match_cov": 80,
+            "min_aa_match_cov": 80,
+            "count_int_stops": 0,
+            "dna_ambig_count": 0
+        },
+        "16": {
+            "seq_id": 16,
+            "locus_name": "locus_17",
+            "locus_name_alt": "SALM_1937",
+            "locus_product": ">",
+            "locus_description": "GTPase HflX",
+            "locus_uid": "Q",
+            "dna_seq_len": 1836,
+            "dna_seq_hash": "a0d97d985483413f3c18bfe5833ae9ce",
+            "aa_seq_len": 612,
+            "aa_seq_hash": "d6012eddc7a6e8d7d40761d00ed71a5a",
+            "dna_min_len": 1285.2,
+            "dna_max_len": 2386.8,
+            "aa_min_len": 428.4,
+            "aa_max_len": 795.6,
+            "dna_min_ident": 80,
+            "aa_min_ident": 64,
+            "min_dna_match_cov": 80,
+            "min_aa_match_cov": 80,
+            "count_int_stops": 0,
+            "dna_ambig_count": 0
+        },
+        "17": {
+            "seq_id": 17,
+            "locus_name": "locus_18",
+            "locus_name_alt": "SALM_1997",
+            "locus_product": "?",
+            "locus_description": "biosynthetic arginine decarboxylase",
+            "locus_uid": "R",
+            "dna_seq_len": 1914,
+            "dna_seq_hash": "b3021e979faa7600756c06dfadfcf14c",
+            "aa_seq_len": 638,
+            "aa_seq_hash": "e68e83956ee1d4c685571e5348c8def1",
+            "dna_min_len": 1339.8,
+            "dna_max_len": 2488.2,
+            "aa_min_len": 446.6,
+            "aa_max_len": 829.4,
+            "dna_min_ident": 80,
+            "aa_min_ident": 64,
+            "min_dna_match_cov": 80,
+            "min_aa_match_cov": 80,
+            "count_int_stops": 0,
+            "dna_ambig_count": 0
+        },
+        "18": {
+            "seq_id": 18,
+            "locus_name": "locus_19",
+            "locus_name_alt": "SALM_9926",
+            "locus_product": ",",
+            "locus_description": "https://www.ncbi.nlm.nih.gov/nucleotide/CP053702.1?report=genbank&log$=nuclalign&blast_rank=1&RID=63EMBCM3013&from=74626&to=76662",
+            "locus_uid": "S",
+            "dna_seq_len": 2037,
+            "dna_seq_hash": "a012eee23637b48e39b00808a057e35d",
+            "aa_seq_len": 679,
+            "aa_seq_hash": "1302fea1dbd5bb756db34e09b863ad44",
+            "dna_min_len": 1425.9,
+            "dna_max_len": 2648.1,
+            "aa_min_len": 475.3,
+            "aa_max_len": 882.7,
+            "dna_min_ident": 80,
+            "aa_min_ident": 64,
+            "min_dna_match_cov": 80,
+            "min_aa_match_cov": 80,
+            "count_int_stops": 0,
+            "dna_ambig_count": 0
+        },
+        "19": {
+            "seq_id": 19,
+            "locus_name": "locus_20",
+            "locus_name_alt": "SALM_6064",
+            "locus_product": ".",
+            "locus_description": "alpha-2-macroglobulin family protein",
+            "locus_uid": "T",
+            "dna_seq_len": 4935,
+            "dna_seq_hash": "4461918e985715e4a2b07494e1f91326",
+            "aa_seq_len": 1645,
+            "aa_seq_hash": "12ff39a1933fa478729b142976b0a659",
+            "dna_min_len": 3454.5,
+            "dna_max_len": 6415.5,
+            "aa_min_len": 1151.5,
+            "aa_max_len": 2138.5,
+            "dna_min_ident": 80,
+            "aa_min_ident": 64,
+            "min_dna_match_cov": 80,
+            "min_aa_match_cov": 80,
+            "count_int_stops": 0,
+            "dna_ambig_count": 0
+        }
+    },
+    "query_data": {
+        "sample_name": "G10",
+        "query_seq_data": {
+            "0": {
+                "parent_id": "locus_1:0:0:0",
+                "locus_name": "locus_1:0:0:0",
+                "seq_id": "locus_1:0:0:0",
+                "dna_seq": "atgtacgatccaccgtttcttgaagcgctgatgataacagcgtcgtttttcgccatttttatcattattgttgtgtctgtattgctccttgaaggggactaa",
+                "dna_ambig_count": 0,
+                "dna_hash": "d17b02d12afa7f832ee37df6f24a8f55",
+                "dna_len": 102,
+                "aa_seq": "MYDPPFLEALMITASFFAIFIIIVVSVLLLEGD*",
+                "aa_hash": "a931d1f75114576e60538364eb01a05f",
+                "aa_len": 34,
+                "start_codon": "atg",
+                "end_codon": "taa",
+                "count_internal_stop": 0
+            },
+            "1": {
+                "parent_id": "locus_10:9:0:1",
+                "locus_name": "locus_10:9:0:1",
+                "seq_id": "locus_10:9:0:1",
+                "dna_seq": "atgcgcatattgctgagtaacgatgacggggttcacgcgcccggtatacaaacgctggcgaaagcgctgcgtgagtttgctgatgtacaggtcgtagccccggatcgtaaccgcagcggcgcgtctaattccctcacgctggaatcttcgcttcgtacttttacctttgataatggcgatatcgctgtacagatggggacgccgaccgattgcgtctatctgggcgttaatgccttaatgcgtccgcgtccggatattgtcgtttccggtattaacgcgggtccgaatctgggcgatgatgtgatctattccggtactgtcgccgcggcgatggaaggtcgtcatctcggctttccggcattagcggtctcccttaacggctatcagcattatgatacggctgcagccgtgacttgcgcgcttttgcgagggttaagccgggagccgttgcgtaccgggcgtattctcaacgtgaatgtcccggatctaccgttagcgcaggttaaaggcatccgcgtgactcgctgcggtagccgccatccagcggataaagtgatcccgcaggaagatccacgcggtaatacattgtactggattggcccgccgggtgataaatacgatgccgggccggataccgatttcgcggcggtggatgaaggctacgtctccgtcacgccgttgcatgtggatttaaccgcgcacagcgcgcatgatgtggtttcagactggttagacagcgtgggagttggcacgcaatggtaa",
+                "dna_ambig_count": 0,
+                "dna_hash": "fe04d17ec353c08b903c85fc0ca4dc02",
+                "dna_len": 762,
+                "aa_seq": "MRILLSNDDGVHAPGIQTLAKALREFADVQVVAPDRNRSGASNSLTLESSLRTFTFDNGDIAVQMGTPTDCVYLGVNALMRPRPDIVVSGINAGPNLGDDVIYSGTVAAAMEGRHLGFPALAVSLNGYQHYDTAAAVTCALLRGLSREPLRTGRILNVNVPDLPLAQVKGIRVTRCGSRHPADKVIPQEDPRGNTLYWIGPPGDKYDAGPDTDFAAVDEGYVSVTPLHVDLTAHSAHDVVSDWLDSVGVGTQW*",
+                "aa_hash": "988bf512f0362e276b0e5622fbaa7079",
+                "aa_len": 254,
+                "start_codon": "atg",
+                "end_codon": "taa",
+                "count_internal_stop": 0
+            },
+            "2": {
+                "parent_id": "locus_12:11:0:2",
+                "locus_name": "locus_12:11:0:2",
+                "seq_id": "locus_12:11:0:2",
+                "dna_seq": "atgaacaagaataagtactcaacccccttactgatgcttgccaccatcttagccggtatgctttccccgatgcagtctgccgttaatgggcagttaggacattggttacaagacggtaatgcttgcgcagtaatctcgtttgccagcggtctggtcgtcatgttttttattattattgcgcgcaaagaaacacgccagcaattcgcctcaatccctactctgattaaaaagagaaaaatcccgctatggaattggtttgcaggattatgcggggcgatggtcgtattttctgaaggcgcatccgccagcgcgctgggcgttgccacctttcaaacggcattaatttccgctctgcttctttccggcctgctgtgcgaccgttttggcatcggcgtggaggagaaaaaatattttacgccatggcgcattactggcgcattgttcgccgttatcgccaccatttttgtcgtgtcgccacagtggcactcaacctcgtttatcctgctcgctatcctcccctttttggcagggttactcgctggctggcagcctgcggggaatgcgaaagtcgccgaggcaacgggctccatgctggtgtccattacatggaacttcatcgtcggcttttgtgtcctgggcgcggcgctggcgatacgtatcgcattaggccatgtcaccatccagttacccgatacatggtggatgtatctcggtggtccgctgggtctgctatccatcgggctaatggcgattctggtgagaggcttagggctattgatgctgggcgtagcgtcaacagcaggccaactgcttggctcagtgctaattgatgaattgatcccttcattaggcaatacggtctacctggtcaccatcatcggtacgctgttcgcgttagtcggtgcgattgtgaccaccatccctgaatacagagcatccaaaatggcgcaaaaaatggaggtgtcagaatga",
+                "dna_ambig_count": 0,
+                "dna_hash": "eb72da68c159497d5f0c8eeddc51b5ae",
+                "dna_len": 972,
+                "aa_seq": "MNKNKYSTPLLMLATILAGMLSPMQSAVNGQLGHWLQDGNACAVISFASGLVVMFFIIIARKETRQQFASIPTLIKKRKIPLWNWFAGLCGAMVVFSEGASASALGVATFQTALISALLLSGLLCDRFGIGVEEKKYFTPWRITGALFAVIATIFVVSPQWHSTSFILLAILPFLAGLLAGWQPAGNAKVAEATGSMLVSITWNFIVGFCVLGAALAIRIALGHVTIQLPDTWWMYLGGPLGLLSIGLMAILVRGLGLLMLGVASTAGQLLGSVLIDELIPSLGNTVYLVTIIGTLFALVGAIVTTIPEYRASKMAQKMEVSE*",
+                "aa_hash": "2fb77f6d0f615a030a08af74f3eda277",
+                "aa_len": 324,
+                "start_codon": "atg",
+                "end_codon": "tga",
+                "count_internal_stop": 0
+            },
+            "3": {
+                "parent_id": "locus_13:12:0:3",
+                "locus_name": "locus_13:12:0:3",
+                "seq_id": "locus_13:12:0:3",
+                "dna_seq": "atgaaaggacgttgggcaaaatatgtggcgacaggcgtaatgctggcaatgctggctgcctgttcatcaaaaccgaccgatcgcggtcagcaatataaggacgggaaatttacccagcccttctccctggtaaaccagccggacgcggtgggcgcgccgattaatgctggtgactttgccgagcaggtcgaccagatccgttccgcgtcgccgcgtttatacaccaatcaaagcaacgtctataacgctgtccagaactggttacgttccggaggcgatacgcgcactatgcgtcagtttggtatcgatgcctggcagatggaaggcaccgacaactacggtaacgtccagttcacgggctactatacgcccgtcgttcaggctcgccatacgcgccagggcgcgttccagtaccctatctatagtatgccgccaaaacgcggacgcttaccgtcccgcgcccagatctacgcaggcgcgctgagcgataagtacatcctggcctggagtaattcgctgatggataactttattatggatgtccagggcagcggttatattgatttcggtgatggtagtccgctgaacttctttagttatgccggtaaaaatggctggccttatcgcagtattggtaaagtgcttatcgatcgcggtgaagtgaaaaaagaagatatgtcgatgcaggctatacgcgaatggggagagaagcacagcgaagcggaagtgcgtgaattactggagcagaacccgtcgttcgtcttctttaaaccgcaatcttttgcgccggtcaaaggcgccagcgctgtaccgctgattgggcgagcatccgtcgcctccgaccgcagcatcattccgccgggcacaaccttgttggcggaagtaccgttgctggataacaacggtaaatttagcggtcagtatgagctacgtttgatggtcgcactggatgtcggcggagcgattaaaggccagcactttgatatttaccaggggattggcccggatgccgggcatcgtgccggatggtataatcactatggtcgcgtctgggtgttaaaaagcgcgccgggcgccggtaacgtgtttagcggctga",
+                "dna_ambig_count": 0,
+                "dna_hash": "8f300259dcb46224bdc1fe5273107324",
+                "dna_len": 1098,
+                "aa_seq": "MKGRWAKYVATGVMLAMLAACSSKPTDRGQQYKDGKFTQPFSLVNQPDAVGAPINAGDFAEQVDQIRSASPRLYTNQSNVYNAVQNWLRSGGDTRTMRQFGIDAWQMEGTDNYGNVQFTGYYTPVVQARHTRQGAFQYPIYSMPPKRGRLPSRAQIYAGALSDKYILAWSNSLMDNFIMDVQGSGYIDFGDGSPLNFFSYAGKNGWPYRSIGKVLIDRGEVKKEDMSMQAIREWGEKHSEAEVRELLEQNPSFVFFKPQSFAPVKGASAVPLIGRASVASDRSIIPPGTTLLAEVPLLDNNGKFSGQYELRLMVALDVGGAIKGQHFDIYQGIGPDAGHRAGWYNHYGRVWVLKSAPGAGNVFSG*",
+                "aa_hash": "fd5140611af6e0d9f95426bf9beaa8b1",
+                "aa_len": 366,
+                "start_codon": "atg",
+                "end_codon": "tga",
+                "count_internal_stop": 0
+            },
+            "4": {
+                "parent_id": "locus_14:13:0:4",
+                "locus_name": "locus_14:13:0:4",
+                "seq_id": "locus_14:13:0:4",
+                "dna_seq": "ttgtttgaccgttatgatgccggtgagcaggcggtactggtacacatctatttttcgcaagacaaagatatggaagacctccaggagtttgaatctctggtctattacgccggtgtcgaagcaatgcaggtgattaccggtagccgtaaagcaccgcacccgaagtactttgtaggtgaaggtaaggcagttgaaattgcggaagccgtgaaagcgactggcgcagcggtcgtattgtttgatcatgcattgagtccagcccaggagcgaaacctggagcgtttgtgcgagtgccgggttatcgatcgcaccggtcttatcttagatatttttgcccagcgtgcgcgtacccatgaaggtaagttgcaggttgagctggcgcagctacgccatctggctacgcgtctggtgcgtggctggacccaccttgaacgtcggaaaggcgggattggttcgcgcggtccgggtgaaacccagctcgaagccgaccgtcgtttactgcgtaatcgcattgtgcagattcagtcgcgcctggagaaagttgagaagcaacgtgagcaggggcggcagtcgcgcatcaaggccgacgttccgacggtatcgctggtgggctataccaacgccggaaaatccaccctttttaatcagatcactgaagcgcgggtctatgcggcagatcagctatttgcgacgctggaccccacgttacgtcgtattgatgtagcggatgtcggtgagaccgttctggcggatacggtaggctttatccgccatttaccgtacgatctggtggctgcctttaaagctaccctgcaggagacgcgtcaggcgacgcagctgctgcatgtggtcgatgcggcggatgttcgtgtgcaggaaaacatcgaggcggtaaacaccgttcttgaagagattgacgctcacgaattccccaccttaatggtgatgaacaaaatcgatatgctggacgactttgaaccgcgtatcgacagagatgaagagaataaacccatccgcgtttggctttcagcgcaaagcggcgtgggaataccacagctttttcaggctttgacggagcgtctttccggcgaggtggcgcagcatacgctgcgtttgctgccgcaggaagggcgtctgagaagccggttttatcagcttcaggcaatagaaaaagagtggatggaggaagacggtagcgtcagtccgcaggtacgaatgccgattgtcgactggcgtcgcttctgtaaacaagaaccagcgttgatcgaatacgtgatctag",
+                "dna_ambig_count": 0,
+                "dna_hash": "b9060019038526aa6fc38d2f7510edc6",
+                "dna_len": 1281,
+                "aa_seq": "LFDRYDAGEQAVLVHIYFSQDKDMEDLQEFESLVYYAGVEAMQVITGSRKAPHPKYFVGEGKAVEIAEAVKATGAAVVLFDHALSPAQERNLERLCECRVIDRTGLILDIFAQRARTHEGKLQVELAQLRHLATRLVRGWTHLERRKGGIGSRGPGETQLEADRRLLRNRIVQIQSRLEKVEKQREQGRQSRIKADVPTVSLVGYTNAGKSTLFNQITEARVYAADQLFATLDPTLRRIDVADVGETVLADTVGFIRHLPYDLVAAFKATLQETRQATQLLHVVDAADVRVQENIEAVNTVLEEIDAHEFPTLMVMNKIDMLDDFEPRIDRDEENKPIRVWLSAQSGVGIPQLFQALTERLSGEVAQHTLRLLPQEGRLRSRFYQLQAIEKEWMEEDGSVSPQVRMPIVDWRRFCKQEPALIEYVI*",
+                "aa_hash": "05bc7823b1abc2e6d4e2c08ca5325134",
+                "aa_len": 427,
+                "start_codon": "ttg",
+                "end_codon": "tag",
+                "count_internal_stop": 0
+            },
+            "5": {
+                "parent_id": "locus_15:14:0:5",
+                "locus_name": "locus_15:14:0:5",
+                "seq_id": "locus_15:14:0:5",
+                "dna_seq": "gtggcgcaacgcattctggtcctcggcgccagcggctatatcggtcagcacctggtctttgcgctaagtcagcaaggacatcaggtgcgggcggcggcgcggcgcgtggaacgtctggaaaaacatcgcctcgccaacgtcagttgtcataaggtcgatctgcactggccggaaaatttacccgcgctgcttcgcgacattgataccgtttactatctggtacacggcatgggcgaaggcggcgactttatcgcccatgagcgtcaggcggcgctcaacgtgcgcgacgcgctgcgccagacgccggttaaacaacttattttcctcagttcattgcaggcgccggcgcatgagcaatccgatcacctgcgcgcccgccagcttacggctgacacgctgcgcgacgcaggcgtaccggtgacggaattacgcgccgggatcatcgtcggcgcaggctccgccgcctttgaggtcatgcgcgacatggtttacaacctgccaatactcacgccgccgcgctgggtgcgttcgcgcaccacgcccatcgccctggaaaatttactctactacctggtcggcttactggagcaccctgcgcacgagcatcgtattctggaagccgccgggccgcaggtattaagttatcagcagcagtttgaacgttttatggccgtcagcggtaaacggcgtccgctgatcccggtgccttttccgacccgctggatttcggtctggtttttaaacgtcattacctccgtgccgccaactaccgcaaaagcgttaatccagggattaaggcacgatttgctggccgatgacgccgcgttaaaaaagttgatcccccaaacgcttatcacctttgatgacgccgttcgccgcacgctgaaagaagaagaaaaactggtgaactccagcgactggggctacgacgcgctggccttcgcccgctggcgtcccgaatacggctattttccaaagcaggcgggctttaccgcgcagaccccggccagcctatcggcgctatggcaggtcgtaaatcggctgggtggcaaagagggctattttttcggcaatattttgtggcagacgcgcgccgcgatggaccgtctggtggggcataaactggcgaaaggccgcccgtcgcataccttgctcaagcctggcgatacggtagatagctggaaagtgatcattgtcgaaccagaaaaacagctcacgctcttgtttggcatgaaagcgccgggtctggggcggcttagcttcacgctgcacgataaaggccgctaccgcgaaattgacgtgcgcgcctggtggcatccacacggaatgccgggcctgatttactggctactgatgatcccggcgcacctgtttattttccggggaatggcaaggcgtattgcccgacttgcagaacaaatcacagaaaaatga",
+                "dna_ambig_count": 0,
+                "dna_hash": "bc98c2fe196a68a79036814396513a8d",
+                "dna_len": 1434,
+                "aa_seq": "VAQRILVLGASGYIGQHLVFALSQQGHQVRAAARRVERLEKHRLANVSCHKVDLHWPENLPALLRDIDTVYYLVHGMGEGGDFIAHERQAALNVRDALRQTPVKQLIFLSSLQAPAHEQSDHLRARQLTADTLRDAGVPVTELRAGIIVGAGSAAFEVMRDMVYNLPILTPPRWVRSRTTPIALENLLYYLVGLLEHPAHEHRILEAAGPQVLSYQQQFERFMAVSGKRRPLIPVPFPTRWISVWFLNVITSVPPTTAKALIQGLRHDLLADDAALKKLIPQTLITFDDAVRRTLKEEEKLVNSSDWGYDALAFARWRPEYGYFPKQAGFTAQTPASLSALWQVVNRLGGKEGYFFGNILWQTRAAMDRLVGHKLAKGRPSHTLLKPGDTVDSWKVIIVEPEKQLTLLFGMKAPGLGRLSFTLHDKGRYREIDVRAWWHPHGMPGLIYWLLMIPAHLFIFRGMARRIARLAEQITEK*",
+                "aa_hash": "5d8c3cf06444c3741ebfc57cc92db0d3",
+                "aa_len": 478,
+                "start_codon": "gtg",
+                "end_codon": "tga",
+                "count_internal_stop": 0
+            },
+            "6": {
+                "parent_id": "locus_16:15:0:6",
+                "locus_name": "locus_16:15:0:6",
+                "seq_id": "locus_16:15:0:6",
+                "dna_seq": "atgaataaatttgctcgccattttctgccgctgtcgctgcgggttcgttttttgctggcgacagccggcgtcgtgctcgtgctttctctggcatatggcatagtggcgctggtcggctatagcgtaagttttgataaaaccacgtttcgtctgctgcgcggcgaaagcaacctgttttataccctcgccaaatgggaaaataataaaatctgcgttgagctgcctgaaaatctggacatgcaaagcccgaccatgacggtgatttacgatgaaacgggcaaattattatggacgcagcgcaacatcccctggctgattaaaagcactcaaccggaagggttaaaaacgaacggcttccatgaaattgaaaccaacgtagacgccaccagcacgctgttgagcgaggaccattccgcgcaggaaaaactcaaagaagtacgtgaagatgacgatgatgcggagatgacccactcggtagcggtaaatatttatcctgccacgacgcggatgccgcagttaaccatcgtggtggtcgataccattccgatagagctaaaaggctcctatatggtgtggagctggttcgtatacgtgctggccgccaatttactgttagtcattcctttactgtggatcgccgcctggtggagcttacgccctatcgatgcgctgtcgcgggaagtccgcgaacttgaagatcatcaccgcgaaatgctcaatccggagacgacgcgtaagctgatcagccttgtgcgcaaccttaatcaactgctcaaaagcgagcacgaacgttataacaaataccgcacgagcctaaccgacctgacgcacagtttaaaaacgccgctcgcggttttgcagagtacgttacgctctttacgcaacgaaaagatgagcgtcagcaaagctgaaccggtgatgctggaacagatcagtcggatttcccagcagatcggctattatctgcatcgcgccagtatgcgcggtagcggcgtgttgttaagccgcgaactgcatcccgtcgcgccgttgttagataacctgatctccgcgctcaataaagtttatctgcgtaaaggggtgaatatcagtatggatatttcaccagagatcagttttgtcggcgagcaaaacgactttgtcgaagtaatgggcaacgtactggacaacgcttgtaaatattgtctggagtttgtcgagatttcggctcgccagaccgacgatcatttgcatattttcgtcgaagatgacggcccaggcatagcccacagcaaacgttccctggtgtttgatcgcggtcagcgcgccgataccctacgaccaggacaaggcgtggggctggctgtcgcgcgcgagattacggaacaatacgccgggcagatcattgccagcgacagtctgctcggtggcgcccgtatggaggtcgtttctggccgacagcatcccacacagaaagaggaataa",
+                "dna_ambig_count": 0,
+                "dna_hash": "16e55766c603fe33c9e75d8e81743ae2",
+                "dna_len": 1464,
+                "aa_seq": "MNKFARHFLPLSLRVRFLLATAGVVLVLSLAYGIVALVGYSVSFDKTTFRLLRGESNLFYTLAKWENNKICVELPENLDMQSPTMTVIYDETGKLLWTQRNIPWLIKSTQPEGLKTNGFHEIETNVDATSTLLSEDHSAQEKLKEVREDDDDAEMTHSVAVNIYPATTRMPQLTIVVVDTIPIELKGSYMVWSWFVYVLAANLLLVIPLLWIAAWWSLRPIDALSREVRELEDHHREMLNPETTRKLISLVRNLNQLLKSEHERYNKYRTSLTDLTHSLKTPLAVLQSTLRSLRNEKMSVSKAEPVMLEQISRISQQIGYYLHRASMRGSGVLLSRELHPVAPLLDNLISALNKVYLRKGVNISMDISPEISFVGEQNDFVEVMGNVLDNACKYCLEFVEISARQTDDHLHIFVEDDGPGIAHSKRSLVFDRGQRADTLRPGQGVGLAVAREITEQYAGQIIASDSLLGGARMEVVSGRQHPTQKEE*",
+                "aa_hash": "f85b3701f5642454bf4d2263feb13354",
+                "aa_len": 488,
+                "start_codon": "atg",
+                "end_codon": "taa",
+                "count_internal_stop": 0
+            },
+            "7": {
+                "parent_id": "locus_17:16:0:7",
+                "locus_name": "locus_17:16:0:7",
+                "seq_id": "locus_17:16:0:7",
+                "dna_seq": "atgacaatccagaagcggttgctggaggccgttgaacaaaaactcttacggcccattgatgcccagtttgctttaaccgtcgccggtaacgacgatcccgccgtgacgctggcggcagcgctgcttagtcatgacgcaggtgaaggtcacgtgtgtctgccgttgtcgcgtttaacgttaacggaggaggcgcatcccttactggtcgcctggataagcgaaacggctacgccaatcgactggaaaaagcggttactggcgtctgcggcggttagctgcggcgatagccccgcgccgttaattctgtgcggcgatcgcctctacctgaatcgcatgtggtgcaacgagcgtacggttgcgcgcttttttaacgaggttaaccaggccatcgccgtagatgaagatcagttatcccgtattctggacgcgctattccctccgacagacgaggtgaactggcaaaaggtggccgccgccgtagcgctaactcgccgtatctccgtgatttcaggcggtcccggcaccggtaaaaccaccaccgtcgcgaagctgctggcggcattaattcaaatggcggatggcgaacgttgccgtatccggctggcggcgccaaccgggaaagcggccgcacgcctgacggagtcgctcggcgcggcgttgcgtcagcttcctcttaccgatgcgcagaaaaagcgtataccggaggacgccagtacgctgcaccgactgctgggcgcacagcccggcagccagcgattacgccatcatgcgggcaacccgctgcatctggacgtgctggtggtcgatgaggcatcaatgattgatttgccgatgatgtcacgtttgattgacgctctgccgccgcacgggcgggtcatttttcttggcgatcgcgatcagttggcatccgttgaggcgggcgctgtgttgggcgatatttgcgcctatgtcaacgcagggtttacggcggaacgcgcccgacagctaagtcgactcactggtagcgccattccggcgggggccggaacgcaagccgcgtctttacgcgatagcctctgtttgttgcaaaagagctaccgtttcggcagcgattctggcatcggcaagctggcggcggcaattaactgtggcgacaggtcggcaatccaggctgtttttcagcaggggtttagcgatatagagaagcgtacattgcaaagcagcgacgattatgccgggatgctggatgaagcgctggcgggctatgggcgctacctgcggttgctgcatgaaaaagcggcgccggaggcaatccttcaggctttcaatgagtatcaactgctttgtgcgctgcgcgaaggcccatttggcgtgaggggactgaatgaccgcattgagcaggcgatggtgcagcaacgaaaaattcagcggcatccgcactctcgctggtatgaagggcgtccggtaatgattgcgcgcaacgatagcgcgttggggctatttaacggcgatattggtattgcgctcgatcgcgggcaggggttacgcgtctggtttgtgatgccggacggcacgatcaagtccgttcagcccagccgtctgccggaacatgatacaacctgggcgatgacggtacataaatcacaggggtctgaatttgatcacgccgcgctgattttacccagccaacgttcgccggtcgtgacgcgggagctggtgtataccgctgttacgcgggcgcggcggcggttatcgctgtatgccgatgaacggatcctggcaggcgcgattgtgacgcgaacggaacggcgcagcgggttagccaccttatttgatgaagtcagtcgtatcggataa",
+                "dna_ambig_count": 0,
+                "dna_hash": "a0d97d985483413f3c18bfe5833ae9ce",
+                "dna_len": 1836,
+                "aa_seq": "MTIQKRLLEAVEQKLLRPIDAQFALTVAGNDDPAVTLAAALLSHDAGEGHVCLPLSRLTLTEEAHPLLVAWISETATPIDWKKRLLASAAVSCGDSPAPLILCGDRLYLNRMWCNERTVARFFNEVNQAIAVDEDQLSRILDALFPPTDEVNWQKVAAAVALTRRISVISGGPGTGKTTTVAKLLAALIQMADGERCRIRLAAPTGKAAARLTESLGAALRQLPLTDAQKKRIPEDASTLHRLLGAQPGSQRLRHHAGNPLHLDVLVVDEASMIDLPMMSRLIDALPPHGRVIFLGDRDQLASVEAGAVLGDICAYVNAGFTAERARQLSRLTGSAIPAGAGTQAASLRDSLCLLQKSYRFGSDSGIGKLAAAINCGDRSAIQAVFQQGFSDIEKRTLQSSDDYAGMLDEALAGYGRYLRLLHEKAAPEAILQAFNEYQLLCALREGPFGVRGLNDRIEQAMVQQRKIQRHPHSRWYEGRPVMIARNDSALGLFNGDIGIALDRGQGLRVWFVMPDGTIKSVQPSRLPEHDTTWAMTVHKSQGSEFDHAALILPSQRSPVVTRELVYTAVTRARRRLSLYADERILAGAIVTRTERRSGLATLFDEVSRIG*",
+                "aa_hash": "bdd2b967a7a6337b5973dd723a62fa43",
+                "aa_len": 612,
+                "start_codon": "atg",
+                "end_codon": "taa",
+                "count_internal_stop": 0
+            },
+            "8": {
+                "parent_id": "locus_18:17:0:8",
+                "locus_name": "locus_18:17:0:8",
+                "seq_id": "locus_18:17:0:8",
+                "dna_seq": "atgcaggaggttgcaatgagctcccaggaagccagcaagatgctgcgcacttacaatattgcctggtggggcaataactactacgacgtcaacgagctgggccatattagcgtatgccccgatcccgacgtaccggaagcgcgtgtcgatcttgccaaactggtgaaagcgcgcgaagcgcaaggtcagcgtctgccggcgctgttctgcttcccgcagatcctgcaacaccgtttgcgttcaattaacgcggcgtttaagcgtgcgcgtgaatcttacggttataacggcgactacttcctcgtttatccgattaaggtcaatcagcatcgccgcgtgatcgagtcccttatccattccggtgaaccgttggggctggaagcggggtcgaaagcggaattgatggcggtgctggcgcatgccggcatgacccgtagcgtgatcgtctgtaatggttataaagaccgtgaatatattcggctggcgctgattggcgagaagatgggccataaggtttatctggtcatcgaaaagatgtctgaaatcgcgattgtgctggaagaggccgagcgcctgaacgtggttcctcgcctgggcgtgcgtgcgcgtctggcctctcaggggtccggtaagtggcaatcctccggcggcgaaaaatcaaaattcggcctggcggcgacgcaggtgctgcaactggtggagaccctgcgtgacgctgggcgtctggacagtctgcaactgttgcacttccacctgggatcgcagatggcgaacattcgcgatatcgcgaccggcgtgcgcgagtccgcgcgtttctatgttgagctgcataagctgggcgttaatatccagtgcttcgacgtgggcggcggtctgggcgtggattatgaaggtacccgctcgcagtccgactgttcggtgaactatggcctgaacgaatatgccaataacatcatctgggcgattggcgatgcctgcgaagagcatggtttaccgcatccgacggtgattaccgagtctgggcgcgccgtcactgcgcaccatacggtactggtctctaacattatcggcgtggagcgtaacgaatacacggatccgaccgcccctgctgaagatgcgccgcgcgcgctgcaaaatctgtgggaaacctggcaggagatgcataagcctggcacccgccgctcgctgcgtgaatggctgcatgatagccaaatggatctgcacgatattcatatcggctactcttccggcgcgtttagtttgcaggagcgcgcctgggcggagcaactttatctcagcatgtgccatgaagtgcagaagcaactggacccgcaaaaccgtgcgcatcgcccgattatcgacgaactgcaagagcggatggcggacaaaatgtacgtcaacttctcgctgttccagtcgatgccggacgcgtggggaatcgatcagctctttccggtgctgccgctggaagggttagatcaggtaccggaacgtcgtgccgtgctgctggatattacctgtgattccgatggcgctatcgaccactatatcgatggcgacggtatcgccacgacgatgccgatgccggaatacgatccagagaatccgccgatgctcggcttctttatggtcggcgcctatcaggagatcctcggtaacatgcacaacctgtttggcgatactgaagcggttgacgtgtttgtcttcccggatggtagtgtcgaggttgagttgtcggacgaaggcgataccgttgcggatatgctgcaatatgtgcaactggatccgaaaacgctattaacgcatttccgcgaccaggtaaaacagacggatctggacgatgcgttgcagcagcagttccttgaggaatttgaagcgggactgtacggttatacttatcttgaagatgagtag",
+                "dna_ambig_count": 0,
+                "dna_hash": "b3021e979faa7600756c06dfadfcf14c",
+                "dna_len": 1914,
+                "aa_seq": "MQEVAMSSQEASKMLRTYNIAWWGNNYYDVNELGHISVCPDPDVPEARVDLAKLVKAREAQGQRLPALFCFPQILQHRLRSINAAFKRARESYGYNGDYFLVYPIKVNQHRRVIESLIHSGEPLGLEAGSKAELMAVLAHAGMTRSVIVCNGYKDREYIRLALIGEKMGHKVYLVIEKMSEIAIVLEEAERLNVVPRLGVRARLASQGSGKWQSSGGEKSKFGLAATQVLQLVETLRDAGRLDSLQLLHFHLGSQMANIRDIATGVRESARFYVELHKLGVNIQCFDVGGGLGVDYEGTRSQSDCSVNYGLNEYANNIIWAIGDACEEHGLPHPTVITESGRAVTAHHTVLVSNIIGVERNEYTDPTAPAEDAPRALQNLWETWQEMHKPGTRRSLREWLHDSQMDLHDIHIGYSSGAFSLQERAWAEQLYLSMCHEVQKQLDPQNRAHRPIIDELQERMADKMYVNFSLFQSMPDAWGIDQLFPVLPLEGLDQVPERRAVLLDITCDSDGAIDHYIDGDGIATTMPMPEYDPENPPMLGFFMVGAYQEILGNMHNLFGDTEAVDVFVFPDGSVEVELSDEGDTVADMLQYVQLDPKTLLTHFRDQVKQTDLDDALQQQFLEEFEAGLYGYTYLEDE*",
+                "aa_hash": "42c4a831ee79a27c47138fe96829814b",
+                "aa_len": 638,
+                "start_codon": "atg",
+                "end_codon": "tag",
+                "count_internal_stop": 0
+            },
+            "9": {
+                "parent_id": "locus_19:18:0:9",
+                "locus_name": "locus_19:18:0:9",
+                "seq_id": "locus_19:18:0:9",
+                "dna_seq": "atgaattctctaccacaacggtcaaccgattttgaactgacaacatcacaggatggttttgcgcttagctggcaacagcgcctgattttacgccacagcgccgaaaacccctgtctgtggattggcgcgggcgttgccgacatcgacatgtttcgcggcaacttcagcatcaaagacaaacttaacgagaagattgcattaacggaggccacagtcagcgagctacccgacggctggctggtacaattcagccgtggcgcaacaattagcgccacccttcgcatctccgccgatgaggcgggacgcctgacgttggatctgcaaaacgacgacctgcaccataaccgtatctggttacgcctcgcagctaatccagacgaccatatctacggctgcggcgaacagttctcttatttcgatttgcgcggcaagccgttcccgctgtggaccagcgaacagggcgttggtcgtaataaaaccagctatgtcacctggcaggcagactgtaaagagaacgccggcggcgactattacttgaccttcttcccgcaaccgacctttgtcagcacgcagaagtattactgccacgtcgataatagctgctatatgaatttcgacttcagcgcgccggagtatcacgaactggcgctgtgggaagataaaactacgctgcgttttgagtgtgccgacacctacatcgccctgctggaaaaactgactgcgctgttaggtcgccagccggagctgccggactgggtttacgacggcgtcacgctcggcatacagggcggtacggaagtttgtcagcaaaaactggataacatgcgcaacgcaggcgtaaaagtgtacggtatttgggcgcaggactggtccggtatccgcatgacctcctttggcaagcgcgtgatgtggaactggaagtggaatagcgacaactatccacagctggatagccggatcaaacagtggaaagaagaaggcgtccagttcctctcttatatcaacccatacgtcgccagtgataaagacctctgcgctgaggcggcgagacacggctatctggcgaaagacgccacgggcggcgactatctggtcgagtttggcgaattctatggcggcgtggtcgatctgactaatcctgaagcttacgactggttcaaagatgtcatcaaaaagaacatgatcgcgctcggctgcagcggctggatggcggatttcggcgaatatctgccgaccgacacgtatctgcacaacggggtcagcgcagagctcatgcataacgcctggcccgcactgtgggcgaagtgtaactacgaagcgctacagaagaccggcaagctcggcgagatcctgttctttatgcgggcgggttacaccggcagtcagaaatattccaccatgatgtgggcaggcgaccagaacgttgactggagtcttgatgatggtctggcctctgtcgtgcctgctgcattgtcgctggcgatgaccggccatggtctgcatcacagcgatatcggcggctacaccaccctgtttgacatgaagcgcagcaaagagttgctgctgcgctggtgcgatttcagcgcctttacgccgatgatgcgcacccatgaaggcaaccgccccagcaatgactggcagttcgacggcgacgcggaaactattgcacactttgcccgcatgaccaccgtctttaccacgctgaaaccgtatctcaagcaggcggtggcgcaaaacgcggctaccggtctgccggtcatgcgtccgctattcctgcactacgagaacgatgccgctacctacaccctgaaatatcaatatctgctcggtcaggatctgctggtcgcgccggttcacgagcaggggcgttgcgattggacgctgtacctgccggaagatcactgggtgaatatctggaccggcgaagctcaccacggcggtgagatttccgtggatgcgccgattggcaagccgccggtcttctatcgcgcgaagagcgagtgggctttactttttgcttctttacggaatatctaa",
+                "dna_ambig_count": 0,
+                "dna_hash": "a012eee23637b48e39b00808a057e35d",
+                "dna_len": 2037,
+                "aa_seq": "MNSLPQRSTDFELTTSQDGFALSWQQRLILRHSAENPCLWIGAGVADIDMFRGNFSIKDKLNEKIALTEATVSELPDGWLVQFSRGATISATLRISADEAGRLTLDLQNDDLHHNRIWLRLAANPDDHIYGCGEQFSYFDLRGKPFPLWTSEQGVGRNKTSYVTWQADCKENAGGDYYLTFFPQPTFVSTQKYYCHVDNSCYMNFDFSAPEYHELALWEDKTTLRFECADTYIALLEKLTALLGRQPELPDWVYDGVTLGIQGGTEVCQQKLDNMRNAGVKVYGIWAQDWSGIRMTSFGKRVMWNWKWNSDNYPQLDSRIKQWKEEGVQFLSYINPYVASDKDLCAEAARHGYLAKDATGGDYLVEFGEFYGGVVDLTNPEAYDWFKDVIKKNMIALGCSGWMADFGEYLPTDTYLHNGVSAELMHNAWPALWAKCNYEALQKTGKLGEILFFMRAGYTGSQKYSTMMWAGDQNVDWSLDDGLASVVPAALSLAMTGHGLHHSDIGGYTTLFDMKRSKELLLRWCDFSAFTPMMRTHEGNRPSNDWQFDGDAETIAHFARMTTVFTTLKPYLKQAVAQNAATGLPVMRPLFLHYENDAATYTLKYQYLLGQDLLVAPVHEQGRCDWTLYLPEDHWVNIWTGEAHHGGEISVDAPIGKPPVFYRAKSEWALLFASLRNI*",
+                "aa_hash": "cb1202450e68e2b4f0d557a645f1a98d",
+                "aa_len": 679,
+                "start_codon": "atg",
+                "end_codon": "taa",
+                "count_internal_stop": 0
+            },
+            "10": {
+                "parent_id": "locus_2:1:0:10",
+                "locus_name": "locus_2:1:0:10",
+                "seq_id": "locus_2:1:0:10",
+                "dna_seq": "atgaaactttttctgacaacggcagcgctaactgcgaccttgacttccggcatgggatttgccagcgataccgtgatcccctgggcgactaacagtggcggtacggaaagcacgcatatcgcggcaatgggcgaggatgtgaatgcgcagcatcagcacatcatccacacgcatgaaggcgtatgtgccgcaaattccggcaccattcaggctgatgaagccgcgctgaccagcaacaagccaccggtacaagtccaaccggaattgttgccgcatcagggctaa",
+                "dna_ambig_count": 0,
+                "dna_hash": "e35184c8ff18e9116fc8faef20532f56",
+                "dna_len": 285,
+                "aa_seq": "MKLFLTTAALTATLTSGMGFASDTVIPWATNSGGTESTHIAAMGEDVNAQHQHIIHTHEGVCAANSGTIQADEAALTSNKPPVQVQPELLPHQG*",
+                "aa_hash": "2a1a77c25ad681437705d9145aef608c",
+                "aa_len": 95,
+                "start_codon": "atg",
+                "end_codon": "taa",
+                "count_internal_stop": 0
+            },
+            "11": {
+                "parent_id": "locus_20:19:0:11",
+                "locus_name": "locus_20:19:0:11",
+                "seq_id": "locus_20:19:0:11",
+                "dna_seq": "atgaaacatttacgcgtggtggcctgcatgatcatgctggcgctggcgggatgcgataacaacgataaaaccgccccgacgactaaaagcgaagcgccagccgtagcgcagccctcgcccgcgcaagacccgtcacagctacaaaagctggcgcagcaaagccagggcaaagcgctcacgctattagacgcctccgaagcgcagctcgacggcgcggcgacgctggtgctgacgttttcaattcctttagatcctgaacaggatttctcccgtgtggttcacgtggttgataagaaaagcggcagcgttgacggcgcatgggagctggcgccaaatttaaaagagctaaggttacgtcatctggaacctgagcgcgtgctggtggtcacggttgatcccgccgttaaagcgctgaataacgccaccttcggcaagtcttatgaaaaaacgattaccacgcgtgatgtccagcccagcgtcggctttgccagccggggatcgctgctaccggggaaaatagcggaaggactgccggtcatggcgcttaacgtcaaccacgttgatgtgaactttttccgcgttaagcccggatcgctggcgtcgtttgtcagccagtgggagtaccgtagttccctctctaactgggaatccgacaatctgctgaaaatggcggatctggtttataccggtcgttttgatcttaatccggcgcgtaatacgcgtgagaaactgctgctgccattaagcgatattaagccgctgcaacaggcgggcgtatatgtggcggtaatgaatcaggctggacactacaactatagtaatgccgctacgttgtttacccttagcgatatcggcgtgtccgcgcaccgttaccatagtcggctggatatctttacgcaaagcctggaaaacggcgcggcgcagtcgggaattgagatcgttcttctgaatgataaagggcagacgctggcgcaggcgacgagcgacgcgcagggacatgtgcaactggaggctgataaagcggcggcgctattactggcgcgtaaagaggggcagaccacgctgctcgatctcacgcttccggctctggatctgtcggagtttaatgtcgctggcgcgcccggctacagcaagcagttctttatgttcggcccacgcgatctctaccgaccgggcgaaacggttatcctcaacggattactgcgcgatagcgacggtaaaacgctgcccgatcaacccgttaagctggaagtggtaaaaccagacggacaagtgatgcgtaccgtcgtcagccagccggaaaacggactataccgtttgaattatccgctggatatcaacgcgccgaccggcttgtggcatgtccgcgccaacaccggcgataatttgctgcggagttgggatttccacgtggaagactttatgccggagcggatggcgctcaacctgacggcgcaaaaaacaccgctggcgcctgcggatgaggtgaaattctccgttgtcggctattacttgtatggcgcccctgctaacggcaataccctgcaagggcaacttttcctgcgtccgctgcgcgacgctgtcgcggcgttgcctggcttccagttcggcaatattgccgaagagaatctttcgcgcagcctggacgaagttcaactgacgttggataaaggcggacgtggtgaagtgagtgctgccagccagtggcaagaagcgcattcgccgttgcaggtaattctacaggccagcctgctggagtctggcggtcgtccggtcactcgtcgcgtagagcaggcgatttggcctgccgatacgttaccgggaattcgtccacagttcgccgccaaagcggtatacgactaccgtacggataccaccgttaatcaaccgattgtcgacgaagacagcaacgccgcattcgatattgtttacgccaacgcgcagggcgagaaaaaagcggtgtccggtttacaggtgcggctcatccgcgagcgtcgcgactattactggaactggtcggaaagcgaaggctggcagtcgcagtttgatcaaaaagatctggtggagggcgagcagacgctggatctgaacgcggatgaaaccggaaaagtcagcttcccggtggaatggggcgcgtaccgtctggaggtcaaagcgccgaatgagacggtcagcagcgttcgtttctgggccggctatagctggcaggataacagcgacggtagcggcgcggcgcgtccggatcgcgtcaccctcaaactggataaagcgaattatcgtccaggcgacaccatgaaattgcatatcgccgcgccggtcgccggtaaaggttatgccatggtggagtccagcgatggtccgctgtggtggcaggcgatcgacgtgccggcgcaggggctggagctcacgattccggtggataaaacctggaatcgccacgatctctatctcagtacgctggtggtgcgtcccggcgataaatctcgttccgcgacgccaaaacgcgccgtggggttactacatctaccgctgggggatgacaaccgccgcctcgatctggcgctggaaagcccggctaaaatgcgcccgaatcagccgctcaccgtcagggtgaaagccagcgttaaacacggcgaaatgccaaaacagatcaacgtgctggtctccgcggtcgatagcggtgtattgaatatcaccgattacgcgacgccggacccgtggcaggcgttcttcggtcaaaaacgctacggtgcggatatctacgatatttacggccaggtcattgaagggcaggggcggctggcggcgttgcgttttggcggcgatggcgacgaccttacgcgcggcggaaaaccgccggtaaaccatgccaatatcatcgcgcagcaggcgcagccgatcacgctcaatgagcagggcgaaggggtcgtaacgctgccgattggcgactttaacggcgaactgcgggttatggcgcaggcatggacagcggacgattttggtcgcggcgaaagcaaagtcgttgtcgccgcgccagtgattgccgagctgaatatgccgcgttttctggcgggaggggatgtttcgcgactggtgctggacgtcaccaatctgaccgaccgcccgcagacgctgaatattgcgctcgccgccagtgggttactggaactgcttagtcaacagccgcaaccggtcaacctggcgccgggcgtgcgcaccaccttattcgttccggtacgcgcgctggaaggttttggcgaaggcgaaatccaggcgaccattagcggtctgaatctgccgggagaaaccctcggcgcgcagcataagcagtggcaaatcggcgtgcgtccggcctggcctgcccaaacggtaaatagcggcattgcgctggcgccgggagagagctggcatgtaccagagcagcatctggcaaacgtctcgccagccacgttacagggacaactgctgttaagcggaaaaccgccgctcaatctggcgcgctacattcgcgagctgaaagcatatccgtacgggtgcctggaacaaaccaccagcgggttattcccggcgctgtataccaatgccgctcaattgcagtcgctcggtattaccggcgatagcgatgaaaaacggcgcgccgcggtggatatcggcatctcccgcatactacagatgcagcgtgataacggcggttttgcgctatgggatgaaaatggggcggaagagccctggctaacggcctacgcgatggatttcctcattcgcgcgggcgagcagggatatagcgtcccgccggaggccattaaccggggcaatgagcgactgctgcgctatctgcaggatcccggtacgatgctgattcgttatagcgataatacccaggccagtacttttgccgctcaggcttacgccgcgctggtactggcgcgtcagcagaaagcgccgctcggcgcgctgcgcgaaatctgggagcgccgtagtcaggcggcttcaggactgccgctgatgcaattgggcatcgcgttaaacacgatgggtgatgccagacgcggcgaagaggccattacgctggctctgaatacgccgcgtcaggacgaacggcaatggatagcggattacggcagttctctgcgcgataacgctctgatgttgtcgttactggaagagaacaacctcagaccggacgcgcaaaacgcgctattaagctcgctttctgagcaggccttcggtcagcgctggctctctacccaggagaacaatgccttgttcctcgccgcgcattcgcgacaggccagcgcgggcgcctggcaggcgcagacctcgttagaggcgcagccgctgtcgggcgacaaggcgctgacccgtaatctggatgctgatcagctggccgcccttgaggtgacgaacaccggtagccagccgctatggctgcgtctggatagcagcggctatccctcatctgcgcctgagcctgccagcaacgttttgcagattgaacgacaaatactggggaccgatggtcagcgcaaatcgctgtcctcgttgcgtagcggcgaactggtgctggtctggttaacggtagtggccgatcgcaatgtgccggatgcgctggtggtggacctgctcccggccgggctggagctggaaaaccagaatctggctgacagcagcgccagcctgccggagagcggtagcgaagtgcaaaatctgcttaatcagatgcagcaggcggatattcagtatatggaattccgcgacgatcggtttgtggctgccgtcgttgtcaatgagggccagcccgtgacgctggtctacctggcgcgcgcggtaacgccggggacgtaccagcttgcgcaaccgcaggtggaatcgatgtacgcgcctcagtggcgggcaaccggcgcgagcgagggactgctgattgtgacgccttaa",
+                "dna_ambig_count": 0,
+                "dna_hash": "4461918e985715e4a2b07494e1f91326",
+                "dna_len": 4935,
+                "aa_seq": "MKHLRVVACMIMLALAGCDNNDKTAPTTKSEAPAVAQPSPAQDPSQLQKLAQQSQGKALTLLDASEAQLDGAATLVLTFSIPLDPEQDFSRVVHVVDKKSGSVDGAWELAPNLKELRLRHLEPERVLVVTVDPAVKALNNATFGKSYEKTITTRDVQPSVGFASRGSLLPGKIAEGLPVMALNVNHVDVNFFRVKPGSLASFVSQWEYRSSLSNWESDNLLKMADLVYTGRFDLNPARNTREKLLLPLSDIKPLQQAGVYVAVMNQAGHYNYSNAATLFTLSDIGVSAHRYHSRLDIFTQSLENGAAQSGIEIVLLNDKGQTLAQATSDAQGHVQLEADKAAALLLARKEGQTTLLDLTLPALDLSEFNVAGAPGYSKQFFMFGPRDLYRPGETVILNGLLRDSDGKTLPDQPVKLEVVKPDGQVMRTVVSQPENGLYRLNYPLDINAPTGLWHVRANTGDNLLRSWDFHVEDFMPERMALNLTAQKTPLAPADEVKFSVVGYYLYGAPANGNTLQGQLFLRPLRDAVAALPGFQFGNIAEENLSRSLDEVQLTLDKGGRGEVSAASQWQEAHSPLQVILQASLLESGGRPVTRRVEQAIWPADTLPGIRPQFAAKAVYDYRTDTTVNQPIVDEDSNAAFDIVYANAQGEKKAVSGLQVRLIRERRDYYWNWSESEGWQSQFDQKDLVEGEQTLDLNADETGKVSFPVEWGAYRLEVKAPNETVSSVRFWAGYSWQDNSDGSGAARPDRVTLKLDKANYRPGDTMKLHIAAPVAGKGYAMVESSDGPLWWQAIDVPAQGLELTIPVDKTWNRHDLYLSTLVVRPGDKSRSATPKRAVGLLHLPLGDDNRRLDLALESPAKMRPNQPLTVRVKASVKHGEMPKQINVLVSAVDSGVLNITDYATPDPWQAFFGQKRYGADIYDIYGQVIEGQGRLAALRFGGDGDDLTRGGKPPVNHANIIAQQAQPITLNEQGEGVVTLPIGDFNGELRVMAQAWTADDFGRGESKVVVAAPVIAELNMPRFLAGGDVSRLVLDVTNLTDRPQTLNIALAASGLLELLSQQPQPVNLAPGVRTTLFVPVRALEGFGEGEIQATISGLNLPGETLGAQHKQWQIGVRPAWPAQTVNSGIALAPGESWHVPEQHLANVSPATLQGQLLLSGKPPLNLARYIRELKAYPYGCLEQTTSGLFPALYTNAAQLQSLGITGDSDEKRRAAVDIGISRILQMQRDNGGFALWDENGAEEPWLTAYAMDFLIRAGEQGYSVPPEAINRGNERLLRYLQDPGTMLIRYSDNTQASTFAAQAYAALVLARQQKAPLGALREIWERRSQAASGLPLMQLGIALNTMGDARRGEEAITLALNTPRQDERQWIADYGSSLRDNALMLSLLEENNLRPDAQNALLSSLSEQAFGQRWLSTQENNALFLAAHSRQASAGAWQAQTSLEAQPLSGDKALTRNLDADQLAALEVTNTGSQPLWLRLDSSGYPSSAPEPASNVLQIERQILGTDGQRKSLSSLRSGELVLVWLTVVADRNVPDALVVDLLPAGLELENQNLADSSASLPESGSEVQNLLNQMQQADIQYMEFRDDRFVAAVVVNEGQPVTLVYLARAVTPGTYQLAQPQVESMYAPQWRATGASEGLLIVTP*",
+                "aa_hash": "ffe361d9273afbab0ed9009dd5aa4041",
+                "aa_len": 1645,
+                "start_codon": "atg",
+                "end_codon": "taa",
+                "count_internal_stop": 0
+            },
+            "12": {
+                "parent_id": "locus_3:2:0:12",
+                "locus_name": "locus_3:2:0:12",
+                "seq_id": "locus_3:2:0:12",
+                "dna_seq": "atggcaaagaaccgtagtcgtcgtctgcgtaaaaaaatgcacattgacgaattccaggaattaggattttcggtggcatggcgttttccggaaggtacatctgaagagcagatcgataagactgtcgatgactttattaatgacgttattgagcctaataaactggcgtttgacggcagcggctacctggcctgggaagggctgatttgtatgcaggaaatcggtaaatgtaccgaagaacatcaggcgattgtgcgtaagtggctggaagcgcgcaaccttgaagaagtccgaaccagcgaacttttcgacgtttggtgggactaa",
+                "dna_ambig_count": 0,
+                "dna_hash": "670705cd2a59c4a23a897ac656a888fe",
+                "dna_len": 327,
+                "aa_seq": "MAKNRSRRLRKKMHIDEFQELGFSVAWRFPEGTSEEQIDKTVDDFINDVIEPNKLAFDGSGYLAWEGLICMQEIGKCTEEHQAIVRKWLEARNLEEVRTSELFDVWWD*",
+                "aa_hash": "f46f4f7b2362abaf1440c9752e10670e",
+                "aa_len": 109,
+                "start_codon": "atg",
+                "end_codon": "taa",
+                "count_internal_stop": 0
+            },
+            "13": {
+                "parent_id": "locus_4:3:0:13",
+                "locus_name": "locus_4:3:0:13",
+                "seq_id": "locus_4:3:0:13",
+                "dna_seq": "ctgaaactaatacctttttatttgctcgcgctattttctgcctcctccggggctacggagataaacgcctgcaaagacctgatcggaacatggaaaacccctgcagataacccgccttataccgtgacaatattgccgccagtagaagcctgcggggaaaaatgtgtgaaactgaacgtagagtatgaacttgacgtgactcaccgcaacgcgctttattgccatgaacgacaagagggggtaaaagggcagggacccatggtgatagcatttgaaggggcgtatggtggacacgctattggaacctacaaccgacagctgcaattacttagggctggcgtaataccgaaaaataaaaagtggaaatggataacgaagatggaaaattactggttcaggcgggtaaaagcgcactaa",
+                "dna_ambig_count": 0,
+                "dna_hash": "ac1b21798c0f672ad26f5a91ea278590",
+                "dna_len": 417,
+                "aa_seq": "LKLIPFYLLALFSASSGATEINACKDLIGTWKTPADNPPYTVTILPPVEACGEKCVKLNVEYELDVTHRNALYCHERQEGVKGQGPMVIAFEGAYGGHAIGTYNRQLQLLRAGVIPKNKKWKWITKMENYWFRRVKAH*",
+                "aa_hash": "dbcec3a0e9ecdc165c4e9162b079f2ee",
+                "aa_len": 139,
+                "start_codon": "ctg",
+                "end_codon": "taa",
+                "count_internal_stop": 0
+            },
+            "14": {
+                "parent_id": "locus_5:4:0:14",
+                "locus_name": "locus_5:4:0:14",
+                "seq_id": "locus_5:4:0:14",
+                "dna_seq": "atgaaaaaatttgatagctgtcatcctgtctttttactgatcggctgtgcccaggtgcctctccgttcctccgtgagcaaaccggtacagcaacctagcgctcagaaagagcaactggccaacgcaaatggtattgatgagtgtcagtcacttccgtatgtgccttcagaccttgcgaagaataaatcattatcaaaccagatcgctgataataccgcatcaaaaaatagcgcaatcagctcacgcattttttgcgaaaaatataagcaaaccaaagaacaggcgcttaccttcttccaggaacttccacaatacatgcgttcgaaagaagttgaagagcaacacatgaccgaatttaaaaaagttctacttgaacccggaagtaagaatttaagcatatatcagacgttacttgctgcccatgaaagactgcaagccttataa",
+                "dna_ambig_count": 0,
+                "dna_hash": "d00defcca8588f21ce16fa1d0ac13389",
+                "dna_len": 444,
+                "aa_seq": "MKKFDSCHPVFLLIGCAQVPLRSSVSKPVQQPSAQKEQLANANGIDECQSLPYVPSDLAKNKSLSNQIADNTASKNSAISSRIFCEKYKQTKEQALTFFQELPQYMRSKEVEEQHMTEFKKVLLEPGSKNLSIYQTLLAAHERLQAL*",
+                "aa_hash": "82d8baa0a3dad18a0efd8104ee15baae",
+                "aa_len": 148,
+                "start_codon": "atg",
+                "end_codon": "taa",
+                "count_internal_stop": 0
+            },
+            "15": {
+                "parent_id": "locus_6:5:0:15",
+                "locus_name": "locus_6:5:0:15",
+                "seq_id": "locus_6:5:0:15",
+                "dna_seq": "atgcgaattaaacctgacgataactggcgctggtattatgatgaagagcacgatcgtatgatgctcgatctcgccaatggtatgctttttcgctcgcgcttctctcgtaaaatgcttacgccggacgcgttttgcccgaccggtttttgtgtggatgatgccgcgctctatttttcctttgaagaaaaatgccgggatttcgaattaaccaaagagcaacgcgcggagctggtattgaatgcgctggtggcgattcgctatctcaaaccgcagatgccgaaaagctggcattttgtggcgcatggcgaaatgtggaccccgggcacgggtgatgccgcaagcgtctggttaagcgatacggcggaacaggttaatttgctggtcgttgagccgggagaaaatgccgcgttgtgtctgctggcacagccaggcgtggtgatagcaggccgaaccatgcagcttggcgatgcgattaaaattatgaacgacaggctgaaaccgcaggttcactgtcacagtttcagccttgaacaagcggtttaa",
+                "dna_ambig_count": 0,
+                "dna_hash": "a11561f2804e2c32c78049f8b9aeb517",
+                "dna_len": 543,
+                "aa_seq": "MRIKPDDNWRWYYDEEHDRMMLDLANGMLFRSRFSRKMLTPDAFCPTGFCVDDAALYFSFEEKCRDFELTKEQRAELVLNALVAIRYLKPQMPKSWHFVAHGEMWTPGTGDAASVWLSDTAEQVNLLVVEPGENAALCLLAQPGVVIAGRTMQLGDAIKIMNDRLKPQVHCHSFSLEQAV*",
+                "aa_hash": "f7a904be6607ca5a6d9388ad9ca3693a",
+                "aa_len": 181,
+                "start_codon": "atg",
+                "end_codon": "taa",
+                "count_internal_stop": 0
+            },
+            "16": {
+                "parent_id": "locus_7:6:0:16",
+                "locus_name": "locus_7:6:0:16",
+                "seq_id": "locus_7:6:0:16",
+                "dna_seq": "gtgctggcatttaccctacgctttattaaaaacaaacgctatttcgcgattctggcgggggcgttggttattatcgctgggttggactcacaacatgcctgtagcggtaacggtctaccgcagattaacggtaaggcgctggcggcgctggcgaagcagcatccggtagtcgtgttattccgccatgccgagcggtgcgatcgttccgataatacctgcctgccagacagcacggggattacggtcaacggtgcgcaagatgccagagcgctgggtaaagccttcagtgccgatatacaaaattacaatctctattccagtaatacggtgcgcgccatccagtcggcaacctggttttcggcaggcaggtcgcgtagggcggttaaaaaaatgatggattgcggcagcggtatttattcttcaatcaatacgttactgaaaaattcgcagattaaaaatatagtcattttaacccataatcattgtttgacgtatattgtaaaaaataagcgcggcgtgaagtttgatccggagtatcttaatgcgctcgttatgtatgcggaaaacggaaaactccttttagacggtgaatttgttcccggctag",
+                "dna_ambig_count": 0,
+                "dna_hash": "dc94bf1ec4ff9bed2a1f460cbd958656",
+                "dna_len": 606,
+                "aa_seq": "VLAFTLRFIKNKRYFAILAGALVIIAGLDSQHACSGNGLPQINGKALAALAKQHPVVVLFRHAERCDRSDNTCLPDSTGITVNGAQDARALGKAFSADIQNYNLYSSNTVRAIQSATWFSAGRSRRAVKKMMDCGSGIYSSINTLLKNSQIKNIVILTHNHCLTYIVKNKRGVKFDPEYLNALVMYAENGKLLLDGEFVPG*",
+                "aa_hash": "da78b534d889d8f35bec304ef54f1b93",
+                "aa_len": 202,
+                "start_codon": "gtg",
+                "end_codon": "tag",
+                "count_internal_stop": 0
+            },
+            "17": {
+                "parent_id": "locus_8:7:0:17",
+                "locus_name": "locus_8:7:0:17",
+                "seq_id": "locus_8:7:0:17",
+                "dna_seq": "atgggcagtaattatatcgtcatcgagggcctggaaggcgccggaaaaaccactgcgcgcgacgtggtggtggagacccttgagcaactgggtattcgtaacatgatttttacccgtgagccgggcggtacgcagcttgccgaaaaactaagaagtctggtgctggatatccgatcggtaggcgacgaagtgattaccgataaagcggaagtgctgatgttttatgccgctcgcgtacagctcgtcgaaacggtaatcaaacccgcgctggcgcaaggcgtatgggtgatcggcgatcgccacgatctctcgacccaggcgtatcaggggggagggcgcggcattgatcaaaccatgctggcgacactacgcgatgccgtgctgggcgattttcgtcctgacctgacgctgtatctggatgtcacgccggaagtcgggctaaaacgcgccagagcgcgcggcgatttggatcgcattgagcaggaatcttttgatttctttaaccggactcgcgcgcgctatctggaactggcggcgcaagactcgcgtatccgcaccattgacgcgacccagccgctggatgccgtcatgcgcgacattcgcgccacggtgacgaagtgggtgcaggagcaagcggcatga",
+                "dna_ambig_count": 0,
+                "dna_hash": "7ebe74afecf146ec4db816c8deced64f",
+                "dna_len": 642,
+                "aa_seq": "MGSNYIVIEGLEGAGKTTARDVVVETLEQLGIRNMIFTREPGGTQLAEKLRSLVLDIRSVGDEVITDKAEVLMFYAARVQLVETVIKPALAQGVWVIGDRHDLSTQAYQGGGRGIDQTMLATLRDAVLGDFRPDLTLYLDVTPEVGLKRARARGDLDRIEQESFDFFNRTRARYLELAAQDSRIRTIDATQPLDAVMRDIRATVTKWVQEQAA*",
+                "aa_hash": "ad5a47cb3a55985083b963b0cf67f382",
+                "aa_len": 214,
+                "start_codon": "atg",
+                "end_codon": "tga",
+                "count_internal_stop": 0
+            },
+            "18": {
+                "parent_id": "locus_9:8:0:18",
+                "locus_name": "locus_9:8:0:18",
+                "seq_id": "locus_9:8:0:18",
+                "dna_seq": "atgaaacacataaagaaatccgtgttggtcgtattactgacaagccatgttgcccatgccagcattgttgttggcggaacccgactggttttcgacggcaataatgatgagtcgtcaatcaatgtagagaataaagacagcaaagcgaatcttgttcagtcatggttatcggttgccgatccccaggtcacaaataagcaggtgtttattatcaccccgcctctttttcgccttgatgccgggcaaaagaacagtattcgggttattcgctctggcgcccctctacctgcagatcgggagtctatgtactggctcaatattaagggtattccttctattgatgataatgcctccgcgaaccgcgtggaaatctccattaatacccaaataaagcttatttatcgaccgccagcattaaccaaatcaacgcctgatagccagagccaacaattaaaatggcagacggcaggggatgttattaccgtaaataaccctaccccctattatatgaactttgccagtgtgacgcttaacagccatgaagtgaaatcagcgaccttcgttccgccaaaatcatcagcgtcatttaaattgagttcgactgccgcccctcatggtacggtaacgtggcgattaatcagcgattatgggatgagtttagagccgcattccggttcattctag",
+                "dna_ambig_count": 0,
+                "dna_hash": "41ebb36872854b2b33c8c028e23d8ad1",
+                "dna_len": 684,
+                "aa_seq": "MKHIKKSVLVVLLTSHVAHASIVVGGTRLVFDGNNDESSINVENKDSKANLVQSWLSVADPQVTNKQVFIITPPLFRLDAGQKNSIRVIRSGAPLPADRESMYWLNIKGIPSIDDNASANRVEISINTQIKLIYRPPALTKSTPDSQSQQLKWQTAGDVITVNNPTPYYMNFASVTLNSHEVKSATFVPPKSSASFKLSSTAAPHGTVTWRLISDYGMSLEPHSGSF*",
+                "aa_hash": "02989d1dbb505d15f06e76ddc9174b7e",
+                "aa_len": 228,
+                "start_codon": "atg",
+                "end_codon": "tag",
+                "count_internal_stop": 0
+            }
+        },
+        "query_hit_columns": [],
+        "query_hits": {
+            "0": {
+                "nucleotide": [
+                    {
+                        "qseqid": 0,
+                        "sseqid": 0,
+                        "qlen": 102,
+                        "slen": 102,
+                        "qstart": 1,
+                        "qend": 102,
+                        "sstart": 1,
+                        "send": 102,
+                        "length": 102,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": "plus",
+                        "evalue": 1.8e-51,
+                        "bitscore": 189
+                    }
+                ],
+                "protein": [
+                    {
+                        "qseqid": 0,
+                        "sseqid": 0,
+                        "qlen": 34,
+                        "slen": 34,
+                        "qstart": 1,
+                        "qend": 34,
+                        "sstart": 1,
+                        "send": 34,
+                        "length": 34,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": NaN,
+                        "evalue": 4.94e-20,
+                        "bitscore": 64.3
+                    }
+                ]
+            },
+            "1": {
+                "nucleotide": [
+                    {
+                        "qseqid": 1,
+                        "sseqid": 9,
+                        "qlen": 762,
+                        "slen": 762,
+                        "qstart": 1,
+                        "qend": 762,
+                        "sstart": 1,
+                        "send": 762,
+                        "length": 762,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": "plus",
+                        "evalue": 0.0,
+                        "bitscore": 1408
+                    }
+                ],
+                "protein": [
+                    {
+                        "qseqid": 1,
+                        "sseqid": 9,
+                        "qlen": 254,
+                        "slen": 254,
+                        "qstart": 1,
+                        "qend": 254,
+                        "sstart": 1,
+                        "send": 254,
+                        "length": 254,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": NaN,
+                        "evalue": 0.0,
+                        "bitscore": 514.0
+                    }
+                ]
+            },
+            "2": {
+                "nucleotide": [
+                    {
+                        "qseqid": 2,
+                        "sseqid": 11,
+                        "qlen": 972,
+                        "slen": 972,
+                        "qstart": 1,
+                        "qend": 972,
+                        "sstart": 1,
+                        "send": 972,
+                        "length": 972,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": "plus",
+                        "evalue": 0.0,
+                        "bitscore": 1796
+                    }
+                ],
+                "protein": [
+                    {
+                        "qseqid": 2,
+                        "sseqid": 11,
+                        "qlen": 324,
+                        "slen": 324,
+                        "qstart": 1,
+                        "qend": 324,
+                        "sstart": 1,
+                        "send": 324,
+                        "length": 324,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": NaN,
+                        "evalue": 0.0,
+                        "bitscore": 640.0
+                    }
+                ]
+            },
+            "3": {
+                "nucleotide": [
+                    {
+                        "qseqid": 3,
+                        "sseqid": 12,
+                        "qlen": 1098,
+                        "slen": 1098,
+                        "qstart": 1,
+                        "qend": 1098,
+                        "sstart": 1,
+                        "send": 1098,
+                        "length": 1098,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": "plus",
+                        "evalue": 0.0,
+                        "bitscore": 2028
+                    }
+                ],
+                "protein": [
+                    {
+                        "qseqid": 3,
+                        "sseqid": 12,
+                        "qlen": 366,
+                        "slen": 366,
+                        "qstart": 1,
+                        "qend": 366,
+                        "sstart": 1,
+                        "send": 366,
+                        "length": 366,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": NaN,
+                        "evalue": 0.0,
+                        "bitscore": 754.0
+                    }
+                ]
+            },
+            "4": {
+                "nucleotide": [
+                    {
+                        "qseqid": 4,
+                        "sseqid": 13,
+                        "qlen": 1281,
+                        "slen": 1281,
+                        "qstart": 1,
+                        "qend": 1281,
+                        "sstart": 1,
+                        "send": 1281,
+                        "length": 1281,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": "plus",
+                        "evalue": 0.0,
+                        "bitscore": 2366
+                    }
+                ],
+                "protein": [
+                    {
+                        "qseqid": 4,
+                        "sseqid": 13,
+                        "qlen": 427,
+                        "slen": 427,
+                        "qstart": 1,
+                        "qend": 427,
+                        "sstart": 1,
+                        "send": 427,
+                        "length": 427,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": NaN,
+                        "evalue": 0.0,
+                        "bitscore": 869.0
+                    }
+                ]
+            },
+            "5": {
+                "nucleotide": [
+                    {
+                        "qseqid": 5,
+                        "sseqid": 14,
+                        "qlen": 1434,
+                        "slen": 1434,
+                        "qstart": 1,
+                        "qend": 1434,
+                        "sstart": 1,
+                        "send": 1434,
+                        "length": 1434,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": "plus",
+                        "evalue": 0.0,
+                        "bitscore": 2649
+                    }
+                ],
+                "protein": [
+                    {
+                        "qseqid": 5,
+                        "sseqid": 14,
+                        "qlen": 478,
+                        "slen": 478,
+                        "qstart": 1,
+                        "qend": 478,
+                        "sstart": 1,
+                        "send": 478,
+                        "length": 478,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": NaN,
+                        "evalue": 0.0,
+                        "bitscore": 972.0
+                    }
+                ]
+            },
+            "6": {
+                "nucleotide": [
+                    {
+                        "qseqid": 6,
+                        "sseqid": 15,
+                        "qlen": 1464,
+                        "slen": 1464,
+                        "qstart": 1,
+                        "qend": 1464,
+                        "sstart": 1,
+                        "send": 1464,
+                        "length": 1464,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": "plus",
+                        "evalue": 0.0,
+                        "bitscore": 2704
+                    }
+                ],
+                "protein": [
+                    {
+                        "qseqid": 6,
+                        "sseqid": 15,
+                        "qlen": 488,
+                        "slen": 488,
+                        "qstart": 1,
+                        "qend": 488,
+                        "sstart": 1,
+                        "send": 488,
+                        "length": 488,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": NaN,
+                        "evalue": 0.0,
+                        "bitscore": 1004.0
+                    }
+                ]
+            },
+            "7": {
+                "nucleotide": [
+                    {
+                        "qseqid": 7,
+                        "sseqid": 16,
+                        "qlen": 1836,
+                        "slen": 1836,
+                        "qstart": 1,
+                        "qend": 1836,
+                        "sstart": 1,
+                        "send": 1836,
+                        "length": 1836,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": "plus",
+                        "evalue": 0.0,
+                        "bitscore": 3391
+                    }
+                ],
+                "protein": [
+                    {
+                        "qseqid": 7,
+                        "sseqid": 16,
+                        "qlen": 612,
+                        "slen": 612,
+                        "qstart": 1,
+                        "qend": 612,
+                        "sstart": 1,
+                        "send": 612,
+                        "length": 612,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": NaN,
+                        "evalue": 0.0,
+                        "bitscore": 1241.0
+                    }
+                ]
+            },
+            "8": {
+                "nucleotide": [
+                    {
+                        "qseqid": 8,
+                        "sseqid": 17,
+                        "qlen": 1914,
+                        "slen": 1914,
+                        "qstart": 1,
+                        "qend": 1914,
+                        "sstart": 1,
+                        "send": 1914,
+                        "length": 1914,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": "plus",
+                        "evalue": 0.0,
+                        "bitscore": 3535
+                    }
+                ],
+                "protein": [
+                    {
+                        "qseqid": 8,
+                        "sseqid": 17,
+                        "qlen": 638,
+                        "slen": 638,
+                        "qstart": 1,
+                        "qend": 638,
+                        "sstart": 1,
+                        "send": 638,
+                        "length": 638,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": NaN,
+                        "evalue": 0.0,
+                        "bitscore": 1326.0
+                    }
+                ]
+            },
+            "9": {
+                "nucleotide": [
+                    {
+                        "qseqid": 9,
+                        "sseqid": 18,
+                        "qlen": 2037,
+                        "slen": 2037,
+                        "qstart": 1,
+                        "qend": 2037,
+                        "sstart": 1,
+                        "send": 2037,
+                        "length": 2037,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": "plus",
+                        "evalue": 0.0,
+                        "bitscore": 3762
+                    }
+                ],
+                "protein": [
+                    {
+                        "qseqid": 9,
+                        "sseqid": 18,
+                        "qlen": 679,
+                        "slen": 679,
+                        "qstart": 1,
+                        "qend": 679,
+                        "sstart": 1,
+                        "send": 679,
+                        "length": 679,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": NaN,
+                        "evalue": 0.0,
+                        "bitscore": 1419.0
+                    }
+                ]
+            },
+            "10": {
+                "nucleotide": [
+                    {
+                        "qseqid": 10,
+                        "sseqid": 1,
+                        "qlen": 285,
+                        "slen": 285,
+                        "qstart": 1,
+                        "qend": 285,
+                        "sstart": 1,
+                        "send": 285,
+                        "length": 285,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": "plus",
+                        "evalue": 1.03e-152,
+                        "bitscore": 527
+                    }
+                ],
+                "protein": [
+                    {
+                        "qseqid": 10,
+                        "sseqid": 1,
+                        "qlen": 95,
+                        "slen": 95,
+                        "qstart": 1,
+                        "qend": 95,
+                        "sstart": 1,
+                        "send": 95,
+                        "length": 95,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": NaN,
+                        "evalue": 1.2299999999999998e-68,
+                        "bitscore": 191.0
+                    }
+                ]
+            },
+            "11": {
+                "nucleotide": [
+                    {
+                        "qseqid": 11,
+                        "sseqid": 19,
+                        "qlen": 4935,
+                        "slen": 4935,
+                        "qstart": 1,
+                        "qend": 4935,
+                        "sstart": 1,
+                        "send": 4935,
+                        "length": 4935,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": "plus",
+                        "evalue": 0.0,
+                        "bitscore": 9114
+                    }
+                ],
+                "protein": [
+                    {
+                        "qseqid": 11,
+                        "sseqid": 19,
+                        "qlen": 1645,
+                        "slen": 1645,
+                        "qstart": 1,
+                        "qend": 1645,
+                        "sstart": 1,
+                        "send": 1645,
+                        "length": 1645,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": NaN,
+                        "evalue": 0.0,
+                        "bitscore": 3332.0
+                    }
+                ]
+            },
+            "12": {
+                "nucleotide": [
+                    {
+                        "qseqid": 12,
+                        "sseqid": 2,
+                        "qlen": 327,
+                        "slen": 327,
+                        "qstart": 1,
+                        "qend": 327,
+                        "sstart": 1,
+                        "send": 327,
+                        "length": 327,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": "plus",
+                        "evalue": 5.34e-176,
+                        "bitscore": 604
+                    }
+                ],
+                "protein": [
+                    {
+                        "qseqid": 12,
+                        "sseqid": 2,
+                        "qlen": 109,
+                        "slen": 109,
+                        "qstart": 1,
+                        "qend": 109,
+                        "sstart": 1,
+                        "send": 109,
+                        "length": 109,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": NaN,
+                        "evalue": 3.09e-81,
+                        "bitscore": 224.0
+                    }
+                ]
+            },
+            "13": {
+                "nucleotide": [
+                    {
+                        "qseqid": 13,
+                        "sseqid": 3,
+                        "qlen": 417,
+                        "slen": 417,
+                        "qstart": 1,
+                        "qend": 417,
+                        "sstart": 1,
+                        "send": 417,
+                        "length": 417,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": "plus",
+                        "evalue": 0.0,
+                        "bitscore": 771
+                    }
+                ],
+                "protein": [
+                    {
+                        "qseqid": 13,
+                        "sseqid": 3,
+                        "qlen": 139,
+                        "slen": 139,
+                        "qstart": 1,
+                        "qend": 139,
+                        "sstart": 1,
+                        "send": 139,
+                        "length": 139,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": NaN,
+                        "evalue": 2.34e-106,
+                        "bitscore": 290.0
+                    }
+                ]
+            },
+            "14": {
+                "nucleotide": [
+                    {
+                        "qseqid": 14,
+                        "sseqid": 4,
+                        "qlen": 444,
+                        "slen": 444,
+                        "qstart": 1,
+                        "qend": 444,
+                        "sstart": 1,
+                        "send": 444,
+                        "length": 444,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": "plus",
+                        "evalue": 0.0,
+                        "bitscore": 821
+                    }
+                ],
+                "protein": [
+                    {
+                        "qseqid": 14,
+                        "sseqid": 4,
+                        "qlen": 148,
+                        "slen": 148,
+                        "qstart": 1,
+                        "qend": 148,
+                        "sstart": 1,
+                        "send": 148,
+                        "length": 148,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": NaN,
+                        "evalue": 1.0400000000000001e-110,
+                        "bitscore": 302.0
+                    }
+                ]
+            },
+            "15": {
+                "nucleotide": [
+                    {
+                        "qseqid": 15,
+                        "sseqid": 5,
+                        "qlen": 543,
+                        "slen": 543,
+                        "qstart": 1,
+                        "qend": 543,
+                        "sstart": 1,
+                        "send": 543,
+                        "length": 543,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": "plus",
+                        "evalue": 0.0,
+                        "bitscore": 1003
+                    }
+                ],
+                "protein": [
+                    {
+                        "qseqid": 15,
+                        "sseqid": 5,
+                        "qlen": 181,
+                        "slen": 181,
+                        "qstart": 1,
+                        "qend": 181,
+                        "sstart": 1,
+                        "send": 181,
+                        "length": 181,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": NaN,
+                        "evalue": 1.7899999999999999e-140,
+                        "bitscore": 380.0
+                    }
+                ]
+            },
+            "16": {
+                "nucleotide": [
+                    {
+                        "qseqid": 16,
+                        "sseqid": 6,
+                        "qlen": 606,
+                        "slen": 606,
+                        "qstart": 1,
+                        "qend": 606,
+                        "sstart": 1,
+                        "send": 606,
+                        "length": 606,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": "plus",
+                        "evalue": 0.0,
+                        "bitscore": 1120
+                    }
+                ],
+                "protein": [
+                    {
+                        "qseqid": 16,
+                        "sseqid": 6,
+                        "qlen": 202,
+                        "slen": 202,
+                        "qstart": 1,
+                        "qend": 202,
+                        "sstart": 1,
+                        "send": 202,
+                        "length": 202,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": NaN,
+                        "evalue": 3.71e-154,
+                        "bitscore": 416.0
+                    }
+                ]
+            },
+            "17": {
+                "nucleotide": [
+                    {
+                        "qseqid": 17,
+                        "sseqid": 7,
+                        "qlen": 642,
+                        "slen": 642,
+                        "qstart": 1,
+                        "qend": 642,
+                        "sstart": 1,
+                        "send": 642,
+                        "length": 642,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": "plus",
+                        "evalue": 0.0,
+                        "bitscore": 1186
+                    }
+                ],
+                "protein": [
+                    {
+                        "qseqid": 17,
+                        "sseqid": 7,
+                        "qlen": 214,
+                        "slen": 214,
+                        "qstart": 1,
+                        "qend": 214,
+                        "sstart": 1,
+                        "send": 214,
+                        "length": 214,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": NaN,
+                        "evalue": 1.75e-157,
+                        "bitscore": 426.0
+                    }
+                ]
+            },
+            "18": {
+                "nucleotide": [
+                    {
+                        "qseqid": 18,
+                        "sseqid": 8,
+                        "qlen": 684,
+                        "slen": 684,
+                        "qstart": 1,
+                        "qend": 684,
+                        "sstart": 1,
+                        "send": 684,
+                        "length": 684,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": "plus",
+                        "evalue": 0.0,
+                        "bitscore": 1264
+                    }
+                ],
+                "protein": [
+                    {
+                        "qseqid": 18,
+                        "sseqid": 8,
+                        "qlen": 228,
+                        "slen": 228,
+                        "qstart": 1,
+                        "qend": 228,
+                        "sstart": 1,
+                        "send": 228,
+                        "length": 228,
+                        "mismatch": 0,
+                        "pident": 100.0,
+                        "qcovhsp": 100,
+                        "qcovs": 100,
+                        "sstrand": NaN,
+                        "evalue": 6.32e-172,
+                        "bitscore": 463.0
+                    }
+                ]
+            }
+        },
+        "locus_profile": {
+            "locus_1": {
+                "nucleotide": [
+                    "0"
+                ],
+                "protein": [
+                    "0"
+                ]
+            },
+            "locus_2": {
+                "nucleotide": [
+                    "10"
+                ],
+                "protein": [
+                    "10"
+                ]
+            },
+            "locus_3": {
+                "nucleotide": [
+                    "12"
+                ],
+                "protein": [
+                    "12"
+                ]
+            },
+            "locus_4": {
+                "nucleotide": [
+                    "13"
+                ],
+                "protein": [
+                    "13"
+                ]
+            },
+            "locus_5": {
+                "nucleotide": [
+                    "14"
+                ],
+                "protein": [
+                    "14"
+                ]
+            },
+            "locus_6": {
+                "nucleotide": [
+                    "15"
+                ],
+                "protein": [
+                    "15"
+                ]
+            },
+            "locus_7": {
+                "nucleotide": [
+                    "16"
+                ],
+                "protein": [
+                    "16"
+                ]
+            },
+            "locus_8": {
+                "nucleotide": [
+                    "17"
+                ],
+                "protein": [
+                    "17"
+                ]
+            },
+            "locus_9": {
+                "nucleotide": [
+                    "18"
+                ],
+                "protein": [
+                    "18"
+                ]
+            },
+            "locus_10": {
+                "nucleotide": [
+                    "1"
+                ],
+                "protein": [
+                    "1"
+                ]
+            },
+            "locus_11": {
+                "nucleotide": [],
+                "protein": []
+            },
+            "locus_12": {
+                "nucleotide": [
+                    "2"
+                ],
+                "protein": [
+                    "2"
+                ]
+            },
+            "locus_13": {
+                "nucleotide": [
+                    "3"
+                ],
+                "protein": [
+                    "3"
+                ]
+            },
+            "locus_14": {
+                "nucleotide": [
+                    "4"
+                ],
+                "protein": [
+                    "4"
+                ]
+            },
+            "locus_15": {
+                "nucleotide": [
+                    "5"
+                ],
+                "protein": [
+                    "5"
+                ]
+            },
+            "locus_16": {
+                "nucleotide": [
+                    "6"
+                ],
+                "protein": [
+                    "6"
+                ]
+            },
+            "locus_17": {
+                "nucleotide": [
+                    "7"
+                ],
+                "protein": [
+                    "7"
+                ]
+            },
+            "locus_18": {
+                "nucleotide": [
+                    "8"
+                ],
+                "protein": [
+                    "8"
+                ]
+            },
+            "locus_19": {
+                "nucleotide": [
+                    "9"
+                ],
+                "protein": [
+                    "9"
+                ]
+            },
+            "locus_20": {
+                "nucleotide": [
+                    "11"
+                ],
+                "protein": [
+                    "11"
+                ]
+            }
+        }
+    },
+    "query_hit_columns": [
+        "qseqid",
+        "sseqid",
+        "qlen",
+        "slen",
+        "qstart",
+        "qend",
+        "sstart",
+        "send",
+        "length",
+        "mismatch",
+        "pident",
+        "qcovhsp",
+        "qcovs",
+        "sstrand",
+        "evalue",
+        "bitscore"
+    ]
+}
