@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Fixed`
 
-- Changed default data format for database configs to year-month-day format
+- Changed default data format for database configs to year-month-day format [PR 32](https://github.com/phac-nml/locidex/pull/32/commits/3afbd16880c9e70738fa73f7adfcedda59825983)
 
 ## v0.2.0
 
