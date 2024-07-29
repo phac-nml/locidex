@@ -157,7 +157,7 @@ def run(cmd_args=None):
         db_version =cmd_args.db_ver,
         db_desc=cmd_args.db_desc,
         db_author=cmd_args.author,
-        db_date=datetime.now().strftime("%Y/%d/%m"),
+        db_date=datetime.now().strftime("%Y-%m-%d"),
     )
 
     run_params = vars(cmd_args)
