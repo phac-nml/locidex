@@ -55,11 +55,12 @@ class locidex_build:
                     blast_method = DBData.protein_db_type()
                 self.init_dir(outfile)
                 out_fasta = outfile.joinpath("{}.fasta".format(t))
+                output_db_path = outfile.joinpath(t)
                 self.write_seq_file(out_fasta, col_name)
                 creating_db = BlastMakeDB(input_file=out_fasta, 
                                         db_type=blast_method,
                                         parse_seqids=self.parse_seqids,
-                                        output_db_path=out_fasta)
+                                        output_db_path=output_db_path)
                 creating_db.makeblastdb()
         self.config.is_nucl = self.is_dna
         self.config.is_prot = self.is_protein
