@@ -5,6 +5,7 @@ import shutil
 import argparse
 import logging
 import errno
+import getpass
 from collections import Counter
 from pathlib import Path
 from locidex.manifest import ManifestItem
@@ -13,6 +14,17 @@ from typing import Dict, FrozenSet, Optional, List
 from locidex.constants import NT_SUB, PROTEIN_ALPHA, DNA_ALPHA, OPTION_GROUPS, FILE_TYPES, raise_file_not_found_e
 import locidex.manifest as manifest 
 
+
+def get_user() -> str:
+    """
+    Return the user login or a default value if it cannot be determined
+    """
+    output: str = "No Author"
+    try:
+        output = getpass.getuser()
+    except KeyError:
+        pass
+    return output 
 
 def slots(annotations: Dict[str, object]) -> FrozenSet[str]:
     """

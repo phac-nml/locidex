@@ -254,8 +254,6 @@ class seq_reporter:
 
         hit_loci_names = self.get_hit_locinames()
         loci_lookup = self.get_loci_to_query_map(hit_loci_names,dbtype)
-        print("loci names", hit_loci_names)
-
         for locus in loci_lookup:
             loci_lookup[locus] = list(set(loci_lookup[locus]) - self.failed_seqids)
 
