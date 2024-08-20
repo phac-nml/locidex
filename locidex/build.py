@@ -10,7 +10,7 @@ from locidex.classes import run_command
 from locidex.constants import DBConfig, MetadataFields, raise_file_not_found_e
 from locidex.classes.blast import BlastMakeDB
 from locidex.manifest import DBData
-import getpass
+from locidex.utils import get_user
 import errno
 import logging
 import sys
@@ -129,7 +129,7 @@ def add_args(parser=None):
     parser.add_argument('-i','--input_file', type=str, required=True,help='Input tsv formated for locidex')
     parser.add_argument('-o', '--outdir', type=str, required=True, help='Output directory to put results')
     parser.add_argument('-n', '--name', type=str, required=True, help='Database name',default='Locidex Database')
-    parser.add_argument('-a', '--author', type=str, required=False, help='Author Name for Locidex Database. Default: {}'.format(getpass.getuser()),default=getpass.getuser())
+    parser.add_argument('-a', '--author', type=str, required=False, help='Author Name for Locidex Database. Default: {}'.format(get_user()),default=get_user())
     parser.add_argument('-c', '--db_ver', type=str, required=False, help='Version code for locidex db: {}'.format(default_version),
                         default=default_version)
     parser.add_argument('-e', '--db_desc',type=str, required=False, help='Version code for locidex db',
