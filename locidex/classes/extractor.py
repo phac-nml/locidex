@@ -7,7 +7,6 @@ class extractor:
     def __init__(self,df,seq_data,sseqid_col,queryid_col,qstart_col,qend_col,qlen_col,sstart_col,send_col,slen_col,sstrand_col,bitscore_col,overlap_thresh=100,extend_threshold_ratio = 0.2,filter_contig_breaks=True):
         self.filter_contig_breaks = filter_contig_breaks
         self.df = self.set_extraction_pos(df, sstart_col, send_col)
-
         self.is_complete(self.df,qstart_col,qend_col,qlen_col)
         self.is_contig_boundary(self.df,'ext_start','ext_end',slen_col)
         if filter_contig_breaks:
@@ -24,9 +23,8 @@ class extractor:
         self.df = self.df.sort_values(sort_cols,ascending=ascending_cols).reset_index(drop=True)
         self.df = self.recursive_filter_redundant_queries(self.df, 'locus_name', sseqid_col, bitscore_col, 
                                                           sort_cols, ascending_cols, overlap_threshold=1)
-
-        self.df = self.extend(self.df,sseqid_col, queryid_col, qstart_col, qend_col, sstart_col,send_col,slen_col, qlen_col, bitscore_col, overlap_threshold=overlap_thresh)
-        self.df = self.set_extraction_pos(self.df, sstart_col, send_col)
+        self.df = self.extend(self.df,sseqid_col, queryid_col, qstart_col, qend_col, sstart_col,send_col,slen_col, qlen_col, bitscore_col, overlap_threshold=overlap_thresh)      
+        self.df = self.set_extraction_pos(self.df, sstart_col, send_col) 
         loci_ranges = self.group_by_locus(self.df,sseqid_col, queryid_col,qlen_col,extend_threshold_ratio)
         self.seqs = self.extract_seq(loci_ranges, seq_data)
         pass
@@ -461,9 +459,10 @@ class extractor:
                 else:
                     sstart -= five_p_delta
 
-            if sstart < 1:
+            if sstart < 0:
                 sstart = 0
-
+            if send < 0:
+                send = 0
             if not three_p_complete:
                 e = True
                 threep_e = True
@@ -478,7 +477,11 @@ class extractor:
             is_extended.append(e)
             five_p_ext.append(fivep_e)
             three_p_ext.append(threep_e)
-
+            
+            if sstart < 0:
+                sstart = 0
+            if send < 0:
+                send = 0
 
             row[qstart_col] = qstart
             row[qend_col] = qend
@@ -492,7 +495,8 @@ class extractor:
         df['is_extended'] = is_extended
         df['is_5p_extended'] = five_p_ext
         df['is_3p_extended'] = three_p_ext
-
+        print(df[df['qseqid'].isin(['2230','16788'])][['qseqid','qstart','qend','sstart','send','ext_start','ext_end']])
+        print('------')
         return df
 
     def group_by_locus(self,df,seqid_col,query_col,qlen_col,extend_threshold_ratio = 0.2):
