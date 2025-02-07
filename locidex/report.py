@@ -102,6 +102,7 @@ class seq_reporter:
     failed_seqids = set()
 
     def __init__(self,data_dict,method='nucleotide',mode='normal',label='locus_name',filters={},max_ambig=0,max_int_stop=0,match_ident=0):
+        self.failed_seqids = set()
         self.max_ambig_count = max_ambig
         self.max_int_stop_count = max_int_stop
         self.label = label
@@ -254,10 +255,9 @@ class seq_reporter:
 
         hit_loci_names = self.get_hit_locinames()
         loci_lookup = self.get_loci_to_query_map(hit_loci_names,dbtype)
+        
         for locus in loci_lookup:
             loci_lookup[locus] = list(set(loci_lookup[locus]) - self.failed_seqids)
-
-        
         self.populate_profile()
 
 
@@ -320,11 +320,14 @@ class seq_reporter:
             if locus_name in self.locus_profile:
                 values = set(self.locus_profile[locus_name][self.method])
             allele_hashes = []
+            values = values - self.failed_seqids
             for seq_id in values:
                 if self.method == 'nucleotide':
                     key = "dna_hash"
                 elif self.method == 'protein':
                     key = "aa_hash"
+                else:
+                    continue
                 hash_value = self.query_seq_data[seq_id][key]
                 if self.mode == 'fuzzy':
                     ref_seq_hitinfo = self.get_matching_ref_seq_info(seq_id, self.method)
