@@ -58,7 +58,7 @@ def add_args(parser=None):
     parser.add_argument('--keep_truncated', required=False, help='Keep sequences where match is broken at the end of a sequence',
                         action='store_true')
     parser.add_argument('--mode', type=str, required=False, help='Select from the options provided',
-                        default='trim', choices=EXTRACT_MODES)
+                        default='raw', choices=EXTRACT_MODES)
     parser.add_argument('--n_threads','-t', type=int, required=False,
                         help='CPU Threads to use', default=1)
     parser.add_argument('--format', type=str, required=False,
@@ -101,7 +101,7 @@ def run_extract(config):
 
     if not mode in EXTRACT_MODES:
         logger.critical('Provided mode for allele extraction is not valid: {}, needs to be one of ({})'.format(mode, ", ".join(EXTRACT_MODES)))
-        raise ValueError('Extraction  mode is not valid: {}, needs to be one of ({})'.format(mode))
+        raise ValueError('Extraction  mode is not valid: {}, needs to be one of ({})'.format(mode,EXTRACT_MODES))
 
     if sample_name == None:
         sample_name = os.path.basename(input_fasta)
@@ -232,16 +232,38 @@ def run_extract(config):
 
     ext_seq_data = {}
     with open(os.path.join(outdir,'raw.extracted.seqs.fasta'), 'w') as oh:
+        align_dir = os.path.join(outdir, 'fastas')
+        if not os.path.isdir(align_dir):
+            os.makedirs(align_dir, 0o755)
+        aln_obj = aligner(trim_fwd=True,trim_rev=True,ext_fwd=False, ext_rev=False,fill=False, snps_only=False)
         for idx,record in enumerate(exobj.seqs):
             if min_dna_len > len(record['seq']):
                 continue
             seq_id = "{}:{}:{}:{}".format(record['locus_name'],record['query_id'],record['seqid'],record['id'])
-            oh.write(">{}\n{}\n".format(seq_id,record['seq']))
+            seq = record['seq']
+            #fix extension issues with gaps
+            if record['is_5p_extended'] or record['is_3p_extended']:
+                tmp_seq_data = {seq_id: {'locus_name':record['locus_name'],
+                                'ref_id':record['query_id'],
+                                'ref_seq':nt_db_seq_data[record['query_id']],
+                                'ext_seq':seq}}
+                perform_alignment(tmp_seq_data, align_dir, n_threads)
+                aln_record = tmp_seq_data[seq_id]
+                if not 'alignment' in aln_record:
+                    continue
+                ref_id = aln_record['ref_id']
+                alignment = aln_record['alignment']
+                if seq_id in alignment and ref_id in alignment:
+                    seq = aln_obj.call_seq(seq_id,alignment[ref_id],alignment[seq_id])['seq'].replace('-','')
+                
             ext_seq_data[seq_id] = {'locus_name':record['locus_name'],
                                 'ref_id':record['query_id'],
                                 'ref_seq':nt_db_seq_data[record['query_id']],
-                                'ext_seq':record['seq']}
-                    
+                                'ext_seq':seq}
+            oh.write(">{}\n{}\n".format(seq_id,seq))
+        shutil.rmtree(align_dir)
+
+
     if mode == 'trim':
         aln_obj = aligner(trim_fwd=True,trim_rev=True,ext_fwd=False, ext_rev=False,fill=False, snps_only=False)
     elif mode == 'snps':
