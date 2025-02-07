@@ -95,13 +95,14 @@ def add_args(parser=None):
 
 
 class seq_reporter:
-    data_dict = {}
-    profile = {}
-    loci = {}
-    db_seq_info = {}
-    failed_seqids = set()
+
 
     def __init__(self,data_dict,method='nucleotide',mode='normal',label='locus_name',filters={},max_ambig=0,max_int_stop=0,match_ident=0):
+        self.filters = filters
+        self.data_dict = {}
+        self.profile = {}
+        self.loci = {}
+        self.db_seq_info = {}
         self.failed_seqids = set()
         self.max_ambig_count = max_ambig
         self.max_int_stop_count = max_int_stop
@@ -130,6 +131,8 @@ class seq_reporter:
                 stop_count = 0
             if ambig_count > self.max_ambig_count or stop_count > self.max_int_stop_count:
                 failed_seqids.add(seq_id)
+                print(f'{seq_id} {ambig_count} {stop_count}')
+                print(self.query_seq_data[seq_id])
             if self.mode == 'conservative':
                 count_internal_stop = self.query_seq_data[seq_id]['count_internal_stop']
                 start_codon = self.query_seq_data[seq_id]["start_codon"]
@@ -199,7 +202,7 @@ class seq_reporter:
 
                     if qlen < min_len or qlen > max_len or pident < min_ident or qcovs < min_cov:
                         continue
-                    self.record['query_data']["locus_profile"][hit_name][dbtype].append(qid)
+                    #self.record['query_data']["locus_profile"][hit_name][dbtype].append(qid)
                     filt.append(hit)
 
                 self.query_hits[qid][dbtype] = filt
