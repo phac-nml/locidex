@@ -100,6 +100,7 @@ class seq_reporter:
     def __init__(self,data_dict,method='nucleotide',mode='normal',label='locus_name',filters={},max_ambig=0,max_int_stop=0,match_ident=0):
         self.filters = filters
         self.data_dict = {}
+        print(self.data_dict)
         self.profile = {}
         self.loci = {}
         self.db_seq_info = {}
@@ -233,6 +234,7 @@ class seq_reporter:
         hit_names = {}
         for qid in self.query_hits:
             hit_names[qid] = {}
+            
             for dbtype in self.query_hits[qid]:
                 hit_names[qid][dbtype] = set()
                 for hit in self.query_hits[qid][dbtype]:
@@ -263,13 +265,14 @@ class seq_reporter:
             loci_lookup[locus] = list(set(loci_lookup[locus]) - self.failed_seqids)
         self.populate_profile()
 
-
         loci_names_to_assign = set(self.profile.keys())
         assigned_loci = set()
 
         #Fix the values of any loci where there is a single matching query or no matching queries
         for locus_name in self.profile:
             query_hashes = self.profile[locus_name].split(',')
+            if not locus_name in loci_lookup:
+                continue
             num_queries = len(loci_lookup[locus_name])
             if num_queries == 1 and query_hashes[0] != '-':
                 assigned_loci.add(locus_name )
