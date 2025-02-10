@@ -284,6 +284,8 @@ class seq_reporter:
 
         profile = deepcopy(self.locus_profile)
         for locus_name in loci_names_to_assign:
+            if locus_name not in loci_lookup:
+                continue
             matches = loci_lookup[locus_name ]
             num_matches = len(matches)
             if num_matches <= 1:
