@@ -270,7 +270,7 @@ class seq_reporter:
         #Fix the values of any loci where there is a single matching query or no matching queries
         for locus_name in self.profile:
             query_hashes = self.profile[locus_name].split(',')
-            num_queries = len(loci_lookup[locus])
+            num_queries = len(loci_lookup[locus_name])
             if num_queries == 1 and query_hashes[0] != '-':
                 assigned_loci.add(locus_name )
             elif locus_name not in loci_lookup or len(loci_lookup[locus_name]) == 0:
