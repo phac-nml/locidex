@@ -15,10 +15,10 @@ from locidex.classes.blast import BlastSearch, FilterOptions, BlastMakeDB
 from locidex.manifest import DBData
 from locidex.classes.db import search_db_conf, db_config
 from locidex.classes.seq_intake import seq_intake, seq_store
-from locidex.constants import FILE_TYPES, BlastColumns, BlastCommands, DBConfig, DB_EXPECTED_FILES, EXTRACT_MODES, raise_file_not_found_e
+from locidex.constants import FILE_TYPES, BlastColumns, BlastCommands, DBConfig, DB_EXPECTED_FILES, EXTRACT_MODES, raise_file_not_found_e, START_CODONS, STOP_CODONS
 from locidex.version import __version__
 from locidex.classes.aligner import perform_alignment, aligner
-from locidex.utils import check_db_groups, get_format
+from locidex.utils import check_db_groups, get_format,translate_dna
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filemode=sys.stderr, level=logging.INFO)
@@ -65,8 +65,8 @@ def add_args(parser=None):
                         help='Format of query file [genbank,fasta]')
     parser.add_argument('--translation_table', type=int, required=False,
                         help='output directory', default=11)
-    parser.add_argument('-a', '--annotate', required=False, help='Perform annotation on unannotated input fasta (Do not use if you are taking in the output of extract)',
-                        action='store_true')
+    parser.add_argument('--protein_coding', type=bool, required=False,
+                        help='output directory', default=True)
     parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
     parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
                         action='store_true')
@@ -97,7 +97,7 @@ def run_extract(config):
     max_target_seqs = config['max_target_seqs']
     mode = config['mode'].lower()
     db_data = DBData(db_dir=db_dir)
-
+    protein_coding = config['protein_coding']
 
     if not mode in EXTRACT_MODES:
         logger.critical('Provided mode for allele extraction is not valid: {}, needs to be one of ({})'.format(mode, ", ".join(EXTRACT_MODES)))
@@ -242,6 +242,8 @@ def run_extract(config):
             seq_id = "{}:{}:{}:{}".format(record['locus_name'],record['query_id'],record['seqid'],record['id'])
             seq = record['seq']
             #fix extension issues with gaps
+            
+            
             if record['is_5p_extended'] or record['is_3p_extended']:
                 tmp_seq_data = {seq_id: {'locus_name':record['locus_name'],
                                 'ref_id':record['query_id'],
@@ -254,7 +256,20 @@ def run_extract(config):
                 ref_id = aln_record['ref_id']
                 alignment = aln_record['alignment']
                 if seq_id in alignment and ref_id in alignment:
-                    seq = aln_obj.call_seq(seq_id,alignment[ref_id],alignment[seq_id])['seq'].replace('-','')
+                    seq = aln_obj.call_seq(seq_id,alignment[ref_id],alignment[seq_id])['seq']            
+
+            if protein_coding:
+                first_stop_pos = len(seq)
+                ref_seq = nt_db_seq_data[record['query_id']]
+                start_codon = ref_seq[0:3]
+                stop_codon = ref_seq[-3:]
+
+                if start_codon in START_CODONS and stop_codon in STOP_CODONS:
+                    aa_seq = translate_dna(seq.replace('-',''),translation_table)
+                    count_int_stop = aa_seq[:-1].count("*")
+                    if count_int_stop > 0:
+                        first_stop_pos = (aa_seq.find('*') + 1) * 3
+                        seq = seq.replace('-','')[0:first_stop_pos]
                 
             ext_seq_data[seq_id] = {'locus_name':record['locus_name'],
                                 'ref_id':record['query_id'],
@@ -282,6 +297,7 @@ def run_extract(config):
                 record = ext_seq_data[seq_id]
                 if not 'alignment' in record:
                     continue
+                
                 ref_id = record['ref_id']
                 alignment = record['alignment']
                 if not seq_id in alignment or not ref_id in alignment:

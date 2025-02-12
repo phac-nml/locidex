@@ -132,8 +132,7 @@ class seq_reporter:
                 stop_count = 0
             if ambig_count > self.max_ambig_count or stop_count > self.max_int_stop_count:
                 failed_seqids.add(seq_id)
-                print(f'{seq_id} {ambig_count} {stop_count}')
-                print(self.query_seq_data[seq_id])
+
             if self.mode == 'conservative':
                 count_internal_stop = self.query_seq_data[seq_id]['count_internal_stop']
                 start_codon = self.query_seq_data[seq_id]["start_codon"]
