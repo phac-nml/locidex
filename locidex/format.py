@@ -79,7 +79,7 @@ class locidex_format:
                     break
             else:
                 logger.critical("File: {} does not have a valid extension. Valid extensions are: {}".format(e, str(self.valid_ext)))
-                raise ValueError("Extension for file: {} is not allowed.".format())
+                raise ValueError("Extension for file: {} is not allowed.".format(e))
 
     def set_input_type(self):
         if os.path.isfile(self.input):
@@ -110,8 +110,8 @@ class locidex_format:
         fwd_idx, rev_idx = 0, 3
         reverse_p = False
 
-        rev = six_frame_translation[fwd_idx] # frame 1
-        fwd = six_frame_translation[rev_idx] # frame 2
+        fwd = six_frame_translation[fwd_idx] # frame 1
+        rev = six_frame_translation[rev_idx] # frame 2
 
         fwd_stop_counts = fwd[:-1].count(self.__stop_codon)
 
@@ -142,6 +142,7 @@ class locidex_format:
                 else:
                     gene_name = self.gene_name
                 dna_seq = str(record.seq).lower().replace('-','')
+                aa_seq = ''
                 if self.is_protein_coding:
                     t = self.pick_frame(six_frame_translation(dna_seq, trans_table=self.translation_table))
                     aa_seq = t.seq
