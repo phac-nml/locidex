@@ -100,7 +100,6 @@ class seq_reporter:
     def __init__(self,data_dict,method='nucleotide',mode='normal',label='locus_name',filters={},max_ambig=0,max_int_stop=0,match_ident=0):
         self.filters = filters
         self.data_dict = {}
-        print(self.data_dict)
         self.profile = {}
         self.loci = {}
         self.db_seq_info = {}
@@ -309,7 +308,6 @@ class seq_reporter:
         self.locus_profile = profile
 
 
-
     def get_matching_ref_seq_info(self,qid, dbtype):
         for hit in self.query_hits[qid][dbtype]:
             hit_id = str(hit['sseqid'])
@@ -347,7 +345,8 @@ class seq_reporter:
                 allele_hashes.append(hash_value)
 
             num_alleles = len(allele_hashes)
-            if num_alleles > 1 and self.mode == 'conservative':
+            unique_allele_count = len(set(allele_hashes))
+            if unique_allele_count > 1 and self.mode == 'conservative':
                 allele_hashes = ['-']
             elif num_alleles > 1 and self.mode == 'normal':
                 allele_hashes = calc_md5(["".join([str(x) for x in sorted(allele_hashes)])])
