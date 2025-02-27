@@ -4,6 +4,7 @@ import os
 import re
 import sys
 import errno
+import csv
 from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
 from datetime import datetime
 from functools import partial
@@ -39,6 +40,7 @@ def add_args(parser=None):
     #                    action='store_true')
     parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
                         action='store_true')
+    parser.add_argument('-k', '--samplekey', type=str, required=False, help='Two column TSV file for overriding MLST profile key of JSON file. Columns [sample,mlst_alleles]')
     return parser
 
 
@@ -75,17 +77,17 @@ def validate_input_file(data_in: dict, db_version: str, db_name: str, perform_va
     except KeyError:
         logger.critical("Missing fields in configuration required fields in in reported allele file. Fields required: {}".format(ReportData.fields()))
         raise ValueError("Missing fields in configuration required fields in in reported allele file. Fields required: {}".format(ReportData.fields()))
-        
+
     else:
 
         if db_version is not None and sq_data.db_info.db_version != db_version and perform_validation:
             logger.critical("You are attempting to merge files that were created using different database versions.")
             raise ValueError("You are attempting to merge files that were created using different database versions.")
-        
+
         if db_name is not None and sq_data.db_info.db_name != db_name and perform_validation:
             logger.critical("You are attempting to merge files that have different names.")
             raise ValueError("You are attempting to merge files that have different names. {} {}".format(sq_data.db_info.db_name, db_name))
-    
+
     return sq_data, sq_data.db_info.db_version, sq_data.db_info.db_name
 
 def check_files_exist(file_list: list[os.PathLike]) -> None:
@@ -98,29 +100,32 @@ def check_files_exist(file_list: list[os.PathLike]) -> None:
             raise_file_not_found_e(file, logger)
 
 
-def read_file_list(file_list,perform_validation=False):
+def read_file_list(file_list,perform_validation=False, key_sample_name=None):
     records = {}
     db_version = None
     db_name = None
-
     check_files_exist(file_list)
 
     for f in file_list:
+        if key_sample_name:
+            alt_profile = key_sample_name[os.path.basename(f)][0]
         encoding = guess_type(f)[1]
         _open = partial(gzip.open, mode='rt') if encoding == 'gzip' else open
         with _open(f) as fh:
             data = json.load(fh)
-            sq_data, db_version, db_name = validate_input_file(data, 
-                                                            db_version=db_version, 
-                                                            db_name=db_name, 
-                                                            perform_validation=perform_validation)     
+            if key_sample_name:
+                data = compare_profiles(data,alt_profile, os.path.basename(f))
+            sq_data, db_version, db_name = validate_input_file(data,
+                                                            db_version=db_version,
+                                                            db_name=db_name,
+                                                            perform_validation=perform_validation)
 
             sample_name = sq_data.data.sample_name
             if records.get(sq_data.data.sample_name) is None:
                 records[sample_name] = sq_data
             else:
                 logger.critical("Duplicate sample name detected: {}".format(sq_data.data.sample_name))
-                raise ValueError("Attempting to merge allele profiles with the same sample name: {}".format(sq_data.data.sample_name))
+                raise ValueError("Attempting to merge allele samplekeys with the same sample name: {}".format(sq_data.data.sample_name))
     return records
 
 def extract_profiles(records):
@@ -167,7 +172,66 @@ def write_gene_fastas(seq_data,work_dir):
             oh.write(f'>{seq_name}\n{seq}\n')
             oh.close()
             d+=1
-    return files   
+    return files
+
+def read_samplesheet(sample_key_file):
+        f =open(sample_key_file,'r')
+        sampledict = {}
+        for line in f:
+            line = line.rstrip().split(",")
+            if len(line) != 2:
+                logger.critical("File should be tsv with two columns [sample,mlst_alleles]")
+                raise_file_not_found_e(logger)
+            sample = line[0]
+            mlst_file = os.path.basename(line[1])
+            sampledict[mlst_file] = [sample]
+        return sampledict
+
+def compare_profiles(mlst, sample_id, file_name):
+    # Extract the profile from the json_data
+    profile = mlst.get("data", {}).get("profile", {})
+    # Check for multiple keys in the JSON file and define error message
+    keys = sorted(profile.keys())
+    original_key = keys[0] if keys else None
+    # Define a variable to store the match_status (True or False)
+    match_status = sample_id in profile
+    # Initialize the error message
+    error_message = None
+
+    if not keys:
+        error_message = (
+            f"{file_name} is missing the 'profile' section or is completely empty!"
+        )
+        print(error_message)
+        sys.exit(1)
+    elif len(keys) > 1:
+        # Check if sample_id matches any key
+        if not match_status:
+            error_message = f"No key in the MLST JSON file ({file_name}) matches the specified sample ID '{sample_id}'. The first key '{original_key}' has been forcefully changed to '{sample_id}' and all other keys have been removed."
+            # Retain only the specified sample ID
+            mlst["data"]["profile"] = {sample_id: profile.pop(original_key)}
+        else:
+            error_message = f"MLST JSON file ({file_name}) contains multiple keys: {keys}. The MLST JSON file has been modified to retain only the '{sample_id}' entry"
+            # Retain only the specified sample_id in the profile
+            mlst["data"]["profile"] = {sample_id: profile[sample_id]}
+    elif not match_status:
+        error_message = f"{sample_id} ID and JSON key in {file_name} DO NOT MATCH. The '{original_key}' key in {file_name} has been forcefully changed to '{sample_id}': User should manually check input files to ensure correctness."
+        # Update the JSON file with the new sample ID
+        mlst["data"]["profile"] = {sample_id: profile.pop(original_key)}
+        mlst["data"]["sample_name"] = sample_id
+
+    # Write file containing relevant error messages <------------------ Fix error message output
+    if error_message:
+        output_error_file = "dev/results" + "/" + sample_id + "_error_report.csv"
+        with open(output_error_file, "w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["sample", "JSON_key", "error_message"])
+            writer.writerow([sample_id, keys, error_message])
+
+    # Write the updated JSON data back to the original file
+    return mlst
+
+
 
 def run_merge(config):
     analysis_parameters = config
@@ -175,6 +239,7 @@ def run_merge(config):
     #Input Parameters
     input_files = config['input'][0]
     outdir = config['outdir']
+
     ###
     # Commented out as these changes will require test data
     # perform_align = config['align']
@@ -183,9 +248,9 @@ def run_merge(config):
     ###
     force = config['force']
     validate_db = config['strict']
+    samplekeys = config['samplekey']
     if validate_db is None or validate_db == '':
         validate_db = False
-
 
     run_data = {}
     run_data['analysis_start_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
@@ -198,18 +263,24 @@ def run_merge(config):
     if not os.path.isdir(outdir):
         os.makedirs(outdir, 0o755)
 
+    if samplekeys:
+        check_files_exist([samplekeys])
+        sample_dict = read_samplesheet(samplekeys)
+    else:
+        sample_dict = None
+
     #perform merge
     file_list = get_file_list(input_files)
-    records = read_file_list(file_list,perform_validation=validate_db)
+    records = read_file_list(file_list,perform_validation=validate_db, key_sample_name=sample_dict)
 
     #create profile
     df = pd.DataFrame.from_dict(extract_profiles(records), orient='index')
     df.insert(loc=0, column='sample_id', value=df.index.tolist())
     df.to_csv(os.path.join(outdir,'profile.tsv'),index=False,header=True,sep="\t")
-    
+
     del(df)
     run_data['result_file'] = os.path.join(outdir,"profile.tsv")
-    
+
     ######### create alignment ###############
     # Bring this back in when test data is provided
     ############################################
@@ -221,7 +292,7 @@ def run_merge(config):
     #    work_dir = os.path.join(outdir,"raw_gene_fastas")
     #    if not os.path.isdir(work_dir):
     #        os.makedirs(work_dir, 0o755)
-    #    
+    #
     #    seq_data = extract_seqs(records)
     #    gene_files = write_gene_fastas(seq_data,work_dir)
     #    del(records)
@@ -244,14 +315,14 @@ def run_merge(config):
     #    results = r
     #    loci_names = list(gene_files.keys())
     #    alignment = {}
-    #    
+    #
 
     #    for i in range(0,len(results)):
     #        alignment[loci_names[i]] = parse_align(results[i][0])
     #        results[i] = None
     #    del(results)
 
-    #    
+    #
     #    for sample_id in sample_names:
     #        for locus_name in loci_names:
     #            if sample_id not in alignment[locus_name]:
@@ -261,7 +332,7 @@ def run_merge(config):
 
     #    out_align = os.path.join(outdir,'loci_alignment.fas')
     #    oh = open(out_align,'w')
-    #    
+    #
     #    for sample_id in sample_names:
     #        seq = []
     #        for locus_name in loci_names:
