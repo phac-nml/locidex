@@ -112,6 +112,7 @@ def read_file_list(file_list,perform_validation=False, key_sample_name=None):
         encoding = guess_type(f)[1]
         _open = partial(gzip.open, mode='rt') if encoding == 'gzip' else open
         with _open(f) as fh:
+            print(fh)
             data = json.load(fh)
             if key_sample_name:
                 data = compare_profiles(data,alt_profile, os.path.basename(f))
