@@ -125,7 +125,7 @@ def read_file_list(file_list,perform_validation=False, key_sample_name=None):
                 records[sample_name] = sq_data
             else:
                 logger.critical("Duplicate sample name detected: {}".format(sq_data.data.sample_name))
-                raise ValueError("Attempting to merge allele samplekeys with the same sample name: {}".format(sq_data.data.sample_name))
+                raise ValueError("Attempting to merge allele profiles with the same sample name: {}".format(sq_data.data.sample_name))
     return records
 
 def extract_profiles(records):
