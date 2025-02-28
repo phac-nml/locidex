@@ -100,11 +100,12 @@ def check_files_exist(file_list: list[os.PathLike]) -> None:
             raise_file_not_found_e(file, logger)
 
 
-def read_file_list(file_list,perform_validation=False, key_sample_name=None):
+def read_file_list(file_list, perform_validation=False, key_sample_name=None):
     records = {}
     db_version = None
     db_name = None
     check_files_exist(file_list)
+    error_reports = []
 
     for f in file_list:
         if key_sample_name:
@@ -112,10 +113,11 @@ def read_file_list(file_list,perform_validation=False, key_sample_name=None):
         encoding = guess_type(f)[1]
         _open = partial(gzip.open, mode='rt') if encoding == 'gzip' else open
         with _open(f) as fh:
-            print(fh)
             data = json.load(fh)
             if key_sample_name:
-                data = compare_profiles(data,alt_profile, os.path.basename(f))
+                data, compare_errmsg = compare_profiles(data,alt_profile, os.path.basename(f))
+                if compare_errmsg:
+                    error_reports.append(compare_errmsg)
             sq_data, db_version, db_name = validate_input_file(data,
                                                             db_version=db_version,
                                                             db_name=db_name,
@@ -127,7 +129,8 @@ def read_file_list(file_list,perform_validation=False, key_sample_name=None):
             else:
                 logger.critical("Duplicate sample name detected: {}".format(sq_data.data.sample_name))
                 raise ValueError("Attempting to merge allele profiles with the same sample name: {}".format(sq_data.data.sample_name))
-    return records
+
+    return records, error_reports
 
 def extract_profiles(records):
     profile = {}
@@ -221,18 +224,9 @@ def compare_profiles(mlst, sample_id, file_name):
         mlst["data"]["profile"] = {sample_id: profile.pop(original_key)}
         mlst["data"]["sample_name"] = sample_id
 
-    # Write file containing relevant error messages <------------------ Fix error message output
-    if error_message:
-        output_error_file = "dev/results" + "/" + sample_id + "_error_report.csv"
-        with open(output_error_file, "w", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(["sample", "JSON_key", "error_message"])
-            writer.writerow([sample_id, keys, error_message])
-
+    error_report = [sample_id, keys, error_message]
     # Write the updated JSON data back to the original file
-    return mlst
-
-
+    return mlst, error_report
 
 def run_merge(config):
     analysis_parameters = config
@@ -272,7 +266,7 @@ def run_merge(config):
 
     #perform merge
     file_list = get_file_list(input_files)
-    records = read_file_list(file_list,perform_validation=validate_db, key_sample_name=sample_dict)
+    records, compare_error = read_file_list(file_list,perform_validation=validate_db, key_sample_name=sample_dict)
 
     #create profile
     df = pd.DataFrame.from_dict(extract_profiles(records), orient='index')
@@ -281,6 +275,15 @@ def run_merge(config):
 
     del(df)
     run_data['result_file'] = os.path.join(outdir,"profile.tsv")
+
+    #Write error messages for profile mismatch (compare_profiles())
+    for error_message in compare_error:
+            if error_message[2]:
+                output_error_file = outdir + "/" + error_message[0] + "_error_report.csv"
+                with open(output_error_file, "w", newline="") as f:
+                    writer = csv.writer(f)
+                    writer.writerow(["sample", "JSON_key", "error_message"])
+                    writer.writerow([error_message[0], error_message[1], error_message[2]])
 
     ######### create alignment ###############
     # Bring this back in when test data is provided
