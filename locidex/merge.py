@@ -105,7 +105,10 @@ def read_file_list(file_list, perform_validation=False, key_sample_name=None):
     db_version = None
     db_name = None
     check_files_exist(file_list)
-    error_reports = []
+    if key_sample_name:
+        modified_MLST_files = [["sample", "JSON_key", "error_message"]]
+    else:
+        modified_MLST_files = None
 
     for f in file_list:
         if key_sample_name:
@@ -115,9 +118,9 @@ def read_file_list(file_list, perform_validation=False, key_sample_name=None):
         with _open(f) as fh:
             data = json.load(fh)
             if key_sample_name:
-                data, compare_errmsg = compare_profiles(data,alt_profile, os.path.basename(f))
-                if compare_errmsg:
-                    error_reports.append(compare_errmsg)
+                data, mlst_report = compare_profiles(data,alt_profile, os.path.basename(f))
+                if mlst_report:
+                    modified_MLST_files.append(mlst_report)
             sq_data, db_version, db_name = validate_input_file(data,
                                                             db_version=db_version,
                                                             db_name=db_name,
@@ -130,7 +133,7 @@ def read_file_list(file_list, perform_validation=False, key_sample_name=None):
                 logger.critical("Duplicate sample name detected: {}".format(sq_data.data.sample_name))
                 raise ValueError("Attempting to merge allele profiles with the same sample name: {}".format(sq_data.data.sample_name))
 
-    return records, error_reports
+    return records, modified_MLST_files
 
 def extract_profiles(records):
     profile = {}
@@ -200,31 +203,36 @@ def compare_profiles(mlst, sample_id, file_name):
     # Define a variable to store the match_status (True or False)
     match_status = sample_id in profile
     # Initialize the error message
-    error_message = None
+    MLST_message = None
 
     if not keys:
         logger.critical(f"{file_name} is missing the 'profile' section or is completely empty!")
         raise ValueError(f"{file_name} is missing the 'profile' section or is completely empty!")
-        sys.exit(1)
+
     elif len(keys) > 1:
         # Check if sample_id matches any key
         if not match_status:
-            error_message = f"No key in the MLST JSON file ({file_name}) matches the specified sample ID '{sample_id}'. The first key '{original_key}' has been forcefully changed to '{sample_id}' and all other keys have been removed."
+            MLST_message = f"No key in the MLST JSON file ({file_name}) matches the specified sample ID '{sample_id}'. The first key '{original_key}' has been forcefully changed to '{sample_id}' and all other keys have been removed."
             # Retain only the specified sample ID
             mlst["data"]["profile"] = {sample_id: profile.pop(original_key)}
         else:
-            error_message = f"MLST JSON file ({file_name}) contains multiple keys: {keys}. The MLST JSON file has been modified to retain only the '{sample_id}' entry"
+            MLST_message = f"MLST JSON file ({file_name}) contains multiple keys: {keys}. The MLST JSON file has been modified to retain only the '{sample_id}' entry"
             # Retain only the specified sample_id in the profile
             mlst["data"]["profile"] = {sample_id: profile[sample_id]}
     elif not match_status:
-        error_message = f"{sample_id} ID and JSON key in {file_name} DO NOT MATCH. The '{original_key}' key in {file_name} has been forcefully changed to '{sample_id}': User should manually check input files to ensure correctness."
+        MLST_message = f"{sample_id} ID and JSON key in {file_name} DO NOT MATCH. The '{original_key}' key in {file_name} has been forcefully changed to '{sample_id}': User should manually check input files to ensure correctness."
         # Update the JSON file with the new sample ID
         mlst["data"]["profile"] = {sample_id: profile.pop(original_key)}
         mlst["data"]["sample_name"] = sample_id
 
-    error_report = [sample_id, keys, error_message]
+    # Create a report for all the samples that have their profiles modified in the output profile.tsv
+    if MLST_message:
+        mlst_report = [sample_id, keys, MLST_message]
+    else:
+        mlst_report = None
+
     # Write the updated JSON data back to the original file
-    return mlst, error_report
+    return mlst, mlst_report
 
 def run_merge(config):
     analysis_parameters = config
@@ -264,7 +272,7 @@ def run_merge(config):
 
     #perform merge
     file_list = get_file_list(input_files)
-    records, compare_error = read_file_list(file_list,perform_validation=validate_db, key_sample_name=sample_dict)
+    records, modified_MLST_file_list = read_file_list(file_list,perform_validation=validate_db, key_sample_name=sample_dict)
 
     #create profile
     df = pd.DataFrame.from_dict(extract_profiles(records), orient='index')
@@ -274,14 +282,10 @@ def run_merge(config):
     del(df)
     run_data['result_file'] = os.path.join(outdir,"profile.tsv")
 
-    #Write error messages for profile mismatch (compare_profiles())
-    for error_message in compare_error:
-            if error_message[2]:
-                output_error_file = outdir + "/" + error_message[0] + "_error_report.csv"
-                with open(output_error_file, "w", newline="") as f:
-                    writer = csv.writer(f)
-                    writer.writerow(["sample", "JSON_key", "error_message"])
-                    writer.writerow([error_message[0], error_message[1], error_message[2]])
+    #Write report of all the MLST files with profile mismatch and how MLST profiles with mismatch were modified
+    df = pd.DataFrame(modified_MLST_file_list)
+    df.to_csv(f'{outdir}/MLST_error_report.csv', index=False, header=False)
+
 
     run_data['analysis_end_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     with open(os.path.join(outdir,"run.json"),'w' ) as fh:
