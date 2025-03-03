@@ -203,10 +203,8 @@ def compare_profiles(mlst, sample_id, file_name):
     error_message = None
 
     if not keys:
-        error_message = (
-            f"{file_name} is missing the 'profile' section or is completely empty!"
-        )
-        print(error_message)
+        logger.critical(f"{file_name} is missing the 'profile' section or is completely empty!")
+        raise ValueError(f"{file_name} is missing the 'profile' section or is completely empty!")
         sys.exit(1)
     elif len(keys) > 1:
         # Check if sample_id matches any key
