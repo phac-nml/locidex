@@ -105,7 +105,7 @@ def read_file_list(file_list, outputdirectory, perform_validation=False, key_sam
     db_version = None
     db_name = None
     check_files_exist(file_list)
-    error_reports = []
+    modified_MLST_filess = []
 
     for f in file_list:
         if key_sample_name:
@@ -117,7 +117,7 @@ def read_file_list(file_list, outputdirectory, perform_validation=False, key_sam
             if key_sample_name:
                 data, compare_errmsg = compare_profiles(data,alt_profile, os.path.basename(f))
                 if compare_errmsg:
-                    error_reports.append(compare_errmsg)
+                    modified_MLST_filess.append(compare_errmsg)
                         # Write the a new updated JSON data back to a new file
                     with gzip.open("{}/{}.gz".format(outputdirectory, os.path.basename(f)), "wt") as f:
                         json.dump(data, f, indent=4)
@@ -133,7 +133,7 @@ def read_file_list(file_list, outputdirectory, perform_validation=False, key_sam
                 logger.critical("Duplicate sample name detected: {}".format(sq_data.data.sample_name))
                 raise ValueError("Attempting to merge allele profiles with the same sample name: {}".format(sq_data.data.sample_name))
 
-    return records, error_reports
+    return records, modified_MLST_filess
 
 def extract_profiles(records):
     profile = {}
@@ -225,9 +225,9 @@ def compare_profiles(mlst, sample_id, file_name):
         mlst["data"]["profile"] = {sample_id: profile.pop(original_key)}
         mlst["data"]["sample_name"] = sample_id
 
-    error_report = [sample_id, keys, error_message]
+    modified_MLST_file = [sample_id, keys, error_message]
     # Write the updated JSON data back to the original file
-    return mlst, error_report
+    return mlst, modified_MLST_file
 
 def run_merge(config):
     analysis_parameters = config
@@ -267,7 +267,7 @@ def run_merge(config):
 
     #perform merge
     file_list = get_file_list(input_files)
-    records, compare_error = read_file_list(file_list, outdir, perform_validation=validate_db, key_sample_name=sample_dict)
+    records, modified_MLST_file_list = read_file_list(file_list, outdir, perform_validation=validate_db, key_sample_name=sample_dict)
 
     #create profile
     df = pd.DataFrame.from_dict(extract_profiles(records), orient='index')
@@ -277,9 +277,9 @@ def run_merge(config):
     del(df)
     run_data['result_file'] = os.path.join(outdir,"profile.tsv")
 
-    #Write error messages for profile mismatch (compare_profiles())
-    for error_message in compare_error:
-            if error_message[2]:
+    #Write report of all the MLST files with profile mismatch and how MLST profiles with mismatch were modified
+    for report_message in modified_MLST_file_list:
+            if report_message[2]:
                 output_error_file = outdir + "/" + error_message[0] + "_error_report.csv"
                 with open(output_error_file, "w", newline="") as f:
                     writer = csv.writer(f)
