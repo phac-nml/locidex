@@ -100,7 +100,7 @@ def check_files_exist(file_list: list[os.PathLike]) -> None:
             raise_file_not_found_e(file, logger)
 
 
-def read_file_list(file_list, outputdirectory, perform_validation=False, key_sample_name=None):
+def read_file_list(file_list, perform_validation=False, key_sample_name=None):
     records = {}
     db_version = None
     db_name = None
@@ -118,9 +118,6 @@ def read_file_list(file_list, outputdirectory, perform_validation=False, key_sam
                 data, compare_errmsg = compare_profiles(data,alt_profile, os.path.basename(f))
                 if compare_errmsg:
                     error_reports.append(compare_errmsg)
-                        # Write the a new updated JSON data back to a new file
-                    with gzip.open("{}/{}.gz".format(outputdirectory, os.path.basename(f)), "wt") as f:
-                        json.dump(data, f, indent=4)
             sq_data, db_version, db_name = validate_input_file(data,
                                                             db_version=db_version,
                                                             db_name=db_name,
@@ -208,7 +205,7 @@ def compare_profiles(mlst, sample_id, file_name):
     if not keys:
         logger.critical(f"{file_name} is missing the 'profile' section or is completely empty!")
         raise ValueError(f"{file_name} is missing the 'profile' section or is completely empty!")
-
+        sys.exit(1)
     elif len(keys) > 1:
         # Check if sample_id matches any key
         if not match_status:
@@ -267,7 +264,7 @@ def run_merge(config):
 
     #perform merge
     file_list = get_file_list(input_files)
-    records, compare_error = read_file_list(file_list, outdir, perform_validation=validate_db, key_sample_name=sample_dict)
+    records, compare_error = read_file_list(file_list,perform_validation=validate_db, key_sample_name=sample_dict)
 
     #create profile
     df = pd.DataFrame.from_dict(extract_profiles(records), orient='index')
