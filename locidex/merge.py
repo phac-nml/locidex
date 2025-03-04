@@ -67,14 +67,11 @@ def get_file_list(input_files):
                     file_list.append(line)
     return file_list
 
-def validate_input_file(data_in: dict, filename: str, db_version: str, db_name: str, perform_db_validation: bool, perform_profile_validation: bool) -> tuple[ReportData, str, str, list]:
+def validate_input_file(data_in: dict, filename: str, db_version: str, db_name: str, perform_db_validation: bool, perform_profile_validation: bool, profile_refs_dict=dict) -> tuple[ReportData, str, str, list]:
     """
     Validate input data for usage verifying db_versions, db_names and MLST profiles are the same
     """
     if perform_profile_validation:
-        profile_refs = perform_profile_validation
-        check_files_exist([profile_refs])
-        profile_refs_dict = read_samplesheet(profile_refs)
         user_provided_profile = profile_refs_dict[filename][0]
         data_in, mlst_report = validate_profiles(data_in, user_provided_profile, filename)
     else:
@@ -113,10 +110,14 @@ def read_file_list(file_list, perform_db_validation=False, perform_profile_valid
     db_version = None
     db_name = None
     check_files_exist(file_list)
+    # Before we can perform profile validation of the MLST files we need to check that a proper profile key file was provided
     if perform_profile_validation:
         modified_MLST_files = [["sample", "JSON_key", "error_message"]]
+        check_files_exist([perform_profile_validation])
+        profile_refs_dict = read_samplesheet(perform_profile_validation)
     else:
         modified_MLST_files = None
+        profile_refs_dict = None
 
     for f in file_list:
         encoding = guess_type(f)[1]
@@ -129,7 +130,8 @@ def read_file_list(file_list, perform_db_validation=False, perform_profile_valid
                                                             db_version=db_version,
                                                             db_name=db_name,
                                                             perform_db_validation=perform_db_validation,
-                                                            perform_profile_validation=perform_profile_validation)
+                                                            perform_profile_validation=perform_profile_validation,
+                                                            profile_refs_dict = profile_refs_dict)
             if perform_profile_validation and mlst_report is not None:
                 modified_MLST_files.append(mlst_report)
             sample_name = sq_data.data.sample_name
@@ -188,17 +190,20 @@ def write_gene_fastas(seq_data,work_dir):
     return files
 
 def read_samplesheet(sample_key_file):
-        f =open(sample_key_file,'r')
-        sampledict = {}
-        for line in f:
-            line = line.rstrip().split(",")
-            if len(line) != 2:
-                logger.critical("File should be tsv with two columns [sample,mlst_alleles]")
-                raise_file_not_found_e(logger)
-            sample = line[0]
-            mlst_file = os.path.basename(line[1])
-            sampledict[mlst_file] = [sample]
-        return sampledict
+    """
+    We will be accepting a file with two columns either ['sample', 'mlst_alleles'] or ['sample_name', 'mlst_alleles']
+    """
+    try:
+        df = pd.read_csv(sample_key_file, sep=",", usecols= lambda column: column in {"sample", "sample_name", "mlst_alleles"}, header=0)
+        df["mlst_alleles"] = df["mlst_alleles"].apply(lambda x: os.path.basename(x))
+        sampledict = df.set_index("mlst_alleles").T.to_dict('list')
+
+
+    except:
+            logging.critical("File should be CSV that will contain either ['sample', 'mlst_alleles'] or ['sample_name', 'mlst_alleles']")
+            raise FileNotFoundError("Incorrect file format")
+
+    return sampledict
 
 def validate_profiles(mlst, sample_id, file_name):
     # Extract the profile from the json_data
