@@ -20,10 +20,10 @@ def test_throws_duplicate_error():
     """
     """
     with pytest.raises(ValueError, match="Attempting to merge allele profiles with the same sample name: 1"):
-        merge.read_file_list(DUPLICATE_NAMES, perform_validation=True)
+        merge.read_file_list(DUPLICATE_NAMES, perform_db_validation=True)
 
 def test_merge_profiles_no_error():
-    merge.read_file_list(MERGE_SUCCESSFULLY, perform_validation=True)
+    merge.read_file_list(MERGE_SUCCESSFULLY, perform_db_validation=True)
 
 
 def test_check_files_exist():
@@ -34,7 +34,7 @@ def test_check_files_exist():
     merge.check_files_exist(MERGE_SUCCESSFULLY)
 
 def test_extract_profiles():
-    records, compare_error = merge.read_file_list(MERGE_SUCCESSFULLY, perform_validation=True)
+    records, compare_error = merge.read_file_list(MERGE_SUCCESSFULLY, perform_db_validation=True)
     extracted_profiles = merge.extract_profiles(records)
     assert len(extracted_profiles) == 2
     value1, value2 = extracted_profiles.values()
@@ -44,12 +44,13 @@ def test_extract_profiles():
 def test_input_assure():
     mlst_file = json.load(open(MERGE_MISMATCH_PROFILES))
     ## Test that if the sample name matches the profile in the MLST json file nothing is changed
-    new_mlst, compare_errmsg = merge.compare_profiles(mlst_file, "sampleA", "sample1.mlst.json")
+    new_mlst, mlst_report = merge.validate_profiles(mlst_file, "sampleA", "sample1.mlst.json")
     assert new_mlst["data"]["profile"] == {'sampleA': {'l1': '1', 'l2': '1', 'l3': '1'}}
+    assert mlst_report == None
     ## Test that a different sample than the profile in the MLST json will be changed
-    same_mlst, compare_errmsg = merge.compare_profiles(mlst_file, "sample1", "sample1.mlst.json")
+    same_mlst, mlst_report = merge.validate_profiles(mlst_file, "sample1", "sample1.mlst.json")
     assert same_mlst["data"]["profile"] == {'sample1': {'l1': '1', 'l2': '1', 'l3': '1'}}
-    assert compare_errmsg[2] == "sample1 ID and JSON key in sample1.mlst.json DO NOT MATCH. The 'sampleA' key in sample1.mlst.json has been forcefully changed to 'sample1': User should manually check input files to ensure correctness."
+    assert mlst_report[2] == "sample1 ID and JSON key in sample1.mlst.json DO NOT MATCH. The 'sampleA' key in sample1.mlst.json has been forcefully changed to 'sample1': User should manually check input files to ensure correctness."
 
 
 

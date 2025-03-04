@@ -40,7 +40,7 @@ def add_args(parser=None):
     #                    action='store_true')
     parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
                         action='store_true')
-    parser.add_argument('-k', '--samplekey', type=str, required=False, help='Two column TSV file for overriding MLST profile key of JSON file. Columns [sample,mlst_alleles]')
+    parser.add_argument('-p', '--profile_ref', type=str, required=False, help='Two column TSV file with profile references for overriding MLST profiles. Columns [sample,mlst_alleles]')
     return parser
 
 
@@ -67,10 +67,18 @@ def get_file_list(input_files):
                     file_list.append(line)
     return file_list
 
-def validate_input_file(data_in: dict, db_version: str, db_name: str, perform_validation: bool) -> tuple[ReportData, str, str]:
+def validate_input_file(data_in: dict, filename: str, db_version: str, db_name: str, perform_db_validation: bool, perform_profile_validation: bool) -> tuple[ReportData, str, str, list]:
     """
-    Validate input data for usage verifying db_versions and db_names are the same
+    Validate input data for usage verifying db_versions, db_names and MLST profiles are the same
     """
+    if perform_profile_validation:
+        profile_refs = perform_profile_validation
+        check_files_exist([profile_refs])
+        profile_refs_dict = read_samplesheet(profile_refs)
+        user_provided_profile = profile_refs_dict[filename][0]
+        data_in, mlst_report = validate_profiles(data_in, user_provided_profile, filename)
+    else:
+        mlst_report = None
 
     try:
         sq_data = ReportData.deseriealize(data_in)
@@ -80,15 +88,15 @@ def validate_input_file(data_in: dict, db_version: str, db_name: str, perform_va
 
     else:
 
-        if db_version is not None and sq_data.db_info.db_version != db_version and perform_validation:
+        if db_version is not None and sq_data.db_info.db_version != db_version and perform_db_validation:
             logger.critical("You are attempting to merge files that were created using different database versions.")
             raise ValueError("You are attempting to merge files that were created using different database versions.")
 
-        if db_name is not None and sq_data.db_info.db_name != db_name and perform_validation:
+        if db_name is not None and sq_data.db_info.db_name != db_name and perform_db_validation:
             logger.critical("You are attempting to merge files that have different names.")
             raise ValueError("You are attempting to merge files that have different names. {} {}".format(sq_data.db_info.db_name, db_name))
 
-    return sq_data, sq_data.db_info.db_version, sq_data.db_info.db_name
+    return sq_data, sq_data.db_info.db_version, sq_data.db_info.db_name, mlst_report
 
 def check_files_exist(file_list: list[os.PathLike]) -> None:
     """
@@ -100,32 +108,30 @@ def check_files_exist(file_list: list[os.PathLike]) -> None:
             raise_file_not_found_e(file, logger)
 
 
-def read_file_list(file_list, perform_validation=False, key_sample_name=None):
+def read_file_list(file_list, perform_db_validation=False, perform_profile_validation=False):
     records = {}
     db_version = None
     db_name = None
     check_files_exist(file_list)
-    if key_sample_name:
+    if perform_profile_validation:
         modified_MLST_files = [["sample", "JSON_key", "error_message"]]
     else:
         modified_MLST_files = None
 
     for f in file_list:
-        if key_sample_name:
-            alt_profile = key_sample_name[os.path.basename(f)][0]
         encoding = guess_type(f)[1]
+        filename = os.path.basename(f)
         _open = partial(gzip.open, mode='rt') if encoding == 'gzip' else open
         with _open(f) as fh:
             data = json.load(fh)
-            if key_sample_name:
-                data, mlst_report = compare_profiles(data,alt_profile, os.path.basename(f))
-                if mlst_report:
-                    modified_MLST_files.append(mlst_report)
-            sq_data, db_version, db_name = validate_input_file(data,
+            sq_data, db_version, db_name, mlst_report = validate_input_file(data,
+                                                            filename,
                                                             db_version=db_version,
                                                             db_name=db_name,
-                                                            perform_validation=perform_validation)
-
+                                                            perform_db_validation=perform_db_validation,
+                                                            perform_profile_validation=perform_profile_validation)
+            if perform_profile_validation and mlst_report is not None:
+                modified_MLST_files.append(mlst_report)
             sample_name = sq_data.data.sample_name
             if records.get(sq_data.data.sample_name) is None:
                 records[sample_name] = sq_data
@@ -194,7 +200,7 @@ def read_samplesheet(sample_key_file):
             sampledict[mlst_file] = [sample]
         return sampledict
 
-def compare_profiles(mlst, sample_id, file_name):
+def validate_profiles(mlst, sample_id, file_name):
     # Extract the profile from the json_data
     profile = mlst.get("data", {}).get("profile", {})
     # Check for multiple keys in the JSON file and define error message
@@ -249,9 +255,11 @@ def run_merge(config):
     ###
     force = config['force']
     validate_db = config['strict']
-    samplekeys = config['samplekey']
+    profile_refs = config['profile_ref']
     if validate_db is None or validate_db == '':
         validate_db = False
+    if profile_refs is None or profile_refs == '':
+        profile_refs = False
 
     run_data = {}
     run_data['analysis_start_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
@@ -264,15 +272,9 @@ def run_merge(config):
     if not os.path.isdir(outdir):
         os.makedirs(outdir, 0o755)
 
-    if samplekeys:
-        check_files_exist([samplekeys])
-        sample_dict = read_samplesheet(samplekeys)
-    else:
-        sample_dict = None
-
     #perform merge
     file_list = get_file_list(input_files)
-    records, modified_MLST_file_list = read_file_list(file_list,perform_validation=validate_db, key_sample_name=sample_dict)
+    records, modified_MLST_file_list = read_file_list(file_list,perform_db_validation=validate_db, perform_profile_validation=profile_refs)
 
     #create profile
     df = pd.DataFrame.from_dict(extract_profiles(records), orient='index')
