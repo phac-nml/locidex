@@ -206,8 +206,10 @@ def read_samplesheet(sample_key_file):
     return sampledict
 
 def validate_profiles(mlst, sample_id, file_name):
+    data_key = "data"
+    profile_key = "profile"
     # Extract the profile from the json_data
-    profile = mlst.get("data", {}).get("profile", {})
+    profile = mlst.get(data_key, {}).get(profile_key, {})
     # Check for multiple keys in the JSON file and define error message
     keys = sorted(profile.keys())
     original_key = keys[0] if keys else None
@@ -225,16 +227,16 @@ def validate_profiles(mlst, sample_id, file_name):
         if not match_status:
             MLST_message = f"No key in the MLST JSON file ({file_name}) matches the specified sample ID '{sample_id}'. The first key '{original_key}' has been forcefully changed to '{sample_id}' and all other keys have been removed."
             # Retain only the specified sample ID
-            mlst["data"]["profile"] = {sample_id: profile.pop(original_key)}
+            mlst[data_key][profile_key] = {sample_id: profile.pop(original_key)}
         else:
             MLST_message = f"MLST JSON file ({file_name}) contains multiple keys: {keys}. The MLST JSON file has been modified to retain only the '{sample_id}' entry"
             # Retain only the specified sample_id in the profile
-            mlst["data"]["profile"] = {sample_id: profile[sample_id]}
+            mlst[data_key][profile_key] = {sample_id: profile[sample_id]}
     elif not match_status:
         MLST_message = f"{sample_id} ID and JSON key in {file_name} DO NOT MATCH. The '{original_key}' key in {file_name} has been forcefully changed to '{sample_id}': User should manually check input files to ensure correctness."
         # Update the JSON file with the new sample ID
-        mlst["data"]["profile"] = {sample_id: profile.pop(original_key)}
-        mlst["data"]["sample_name"] = sample_id
+        mlst[data_key][profile_key] = {sample_id: profile.pop(original_key)}
+        mlst[data_key]["sample_name"] = sample_id
 
     # Create a report for all the samples that have their profiles modified in the output profile.tsv
     if MLST_message:
