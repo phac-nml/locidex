@@ -48,11 +48,11 @@ def test_extract_profiles():
 def test_profile_validation():
     mlst_file = json.load(open(MERGE_MISMATCH_PROFILES))
     ## Test that if the sample name matches the profile in the MLST json file nothing is changed
-    new_mlst, mlst_report = merge.validate_profiles(mlst_file, "sampleA", "sample1.mlst.json")
+    new_mlst, mlst_report = merge.validate_and_fix_profiles(mlst_file, "sampleA", "sample1.mlst.json")
     assert new_mlst["data"]["profile"] == {'sampleA': {'l1': '1', 'l2': '1', 'l3': '1'}}
     assert mlst_report == None
     ## Test that a different sample than the profile in the MLST json will be changed
-    same_mlst, mlst_report = merge.validate_profiles(mlst_file, "sample1", "sample1.mlst.json")
+    same_mlst, mlst_report = merge.validate_and_fix_profiles(mlst_file, "sample1", "sample1.mlst.json")
     assert same_mlst["data"]["profile"] == {'sample1': {'l1': '1', 'l2': '1', 'l3': '1'}}
     assert mlst_report[2] == "sample1 ID and JSON key in sample1.mlst.json DO NOT MATCH. The 'sampleA' key in sample1.mlst.json has been forcefully changed to 'sample1': User should manually check input files to ensure correctness."
 
@@ -78,3 +78,36 @@ def test_profile_validation_report(tmpdir):
         next(reader_obj)  # Skip the first line (header)
         second_line = next(reader_obj)
         assert second_line == ['sample1',"['sampleA']", "sample1 ID and JSON key in sample1.mlst.json DO NOT MATCH. The 'sampleA' key in sample1.mlst.json has been forcefully changed to 'sample1': User should manually check input files to ensure correctness."]
+    with open(f"{tmpdir}/profile.tsv", "r", newline='') as file:
+        reader_obj = csv.reader(file, delimiter="\t",)
+        next(reader_obj)  # Skip the first line (header)
+        sampleQ = next(reader_obj)
+        assert sampleQ == ['sampleQ','1','2','1']
+        sample1 = next(reader_obj)
+        assert sample1 == ['sample1','1','1','1']
+
+def test_profile_validation_noreport(tmpdir):
+    """ Note: Similar to test_profile_validation_report, except checking that functionality stays the same without a report
+    """
+    CONFIG = {'command': 'merge',
+                                'input': [[
+                                    'locidex/example/merge/merge_inputassure/sampleQ.mlst.json',
+                                    'locidex/example/merge/merge_inputassure/sample1.mlst.json',
+                                    'locidex/example/merge/merge_inputassure/sample2.mlst.json',
+                                    'locidex/example/merge/merge_inputassure/sample3.mlst.json']],
+                                'outdir': f"{tmpdir}",
+                                'strict': False,
+                                'force': True,
+                                'profile_ref': None}
+    merge.run_merge(CONFIG)
+    merge_output = sorted(listdir(tmpdir))
+    assert merge_output == ["profile.tsv", "run.json"]
+
+    with open(f"{tmpdir}/profile.tsv", "r", newline='') as file:
+        reader_obj = csv.reader(file, delimiter="\t",)
+        next(reader_obj)  # Skip the first line (header)
+        sampleQ = next(reader_obj)
+        assert sampleQ == ['sampleQ','1','2','1']
+        sample1 = next(reader_obj)
+        assert sample1 == ['sampleA','1','1','1']
+

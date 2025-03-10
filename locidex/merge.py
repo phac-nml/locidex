@@ -297,8 +297,9 @@ def run_merge(config):
     run_data['result_file'] = os.path.join(outdir,"profile.tsv")
 
     #Write report of all the MLST files with profile mismatch and how MLST profiles with mismatch were modified
-    df = pd.DataFrame(modified_MLST_file_list)
-    df.to_csv(f'{outdir}/MLST_error_report.csv', index=False, header=False)
+    if modified_MLST_file_list:
+        df = pd.DataFrame(modified_MLST_file_list)
+        df.to_csv(f'{outdir}/MLST_error_report.csv', index=False, header=False)
 
 
     run_data['analysis_end_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
