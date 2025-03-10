@@ -232,7 +232,7 @@ def validate_profiles(mlst, sample_id, file_name):
         if not match_status:
             MLST_message = f"No key in the MLST JSON file ({file_name}) matches the specified sample ID '{sample_id}'. The first key '{original_key}' has been forcefully changed to '{sample_id}' and all other keys have been removed."
             # Retain only the specified sample ID
-            mlst[data_key][profile_key] = {sample_id: profile.pop(original_key)}
+            mlst[data_key][profile_key] = {sample_id: profile[original_key]}
         else:
             MLST_message = f"MLST JSON file ({file_name}) contains multiple keys: {keys}. The MLST JSON file has been modified to retain only the '{sample_id}' entry"
             # Retain only the specified sample_id in the profile
@@ -240,7 +240,7 @@ def validate_profiles(mlst, sample_id, file_name):
     elif not match_status:
         MLST_message = f"{sample_id} ID and JSON key in {file_name} DO NOT MATCH. The '{original_key}' key in {file_name} has been forcefully changed to '{sample_id}': User should manually check input files to ensure correctness."
         # Update the JSON file with the new sample ID
-        mlst[data_key][profile_key] = {sample_id: profile.pop(original_key)}
+        mlst[data_key][profile_key] = {sample_id: profile[original_key]}
         mlst[data_key]["sample_name"] = sample_id
 
     # Create a report for all the samples that have their profiles modified in the output profile.tsv
