@@ -4,7 +4,7 @@ import os
 import re
 import sys
 import errno
-import csv
+import typing
 from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
 from datetime import datetime
 from functools import partial
@@ -19,6 +19,11 @@ from locidex.version import __version__
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filemode=sys.stderr, level=logging.INFO)
+
+class OutputRow(typing.NamedTuple):
+    sample_id: str
+    keys: list[str]
+    message: str
 
 def add_args(parser=None):
     """
@@ -67,7 +72,7 @@ def get_file_list(input_files):
                     file_list.append(line)
     return file_list
 
-def validate_input_file(data_in: dict, filename: str, db_version: str, db_name: str, perform_db_validation: bool, perform_profile_validation: bool, profile_refs_dict=dict) -> tuple[ReportData, str, str, list]:
+def validate_input_file(data_in: dict, filename: str, db_version: str, db_name: str, perform_db_validation: bool, perform_profile_validation: bool, profile_refs_dict:dict) -> tuple[ReportData, str, str, typing.Optional[OutputRow]]:
     """
     Validate input data for usage verifying db_versions, db_names and MLST profiles are the same
     """
@@ -240,7 +245,7 @@ def validate_profiles(mlst, sample_id, file_name):
 
     # Create a report for all the samples that have their profiles modified in the output profile.tsv
     if MLST_message:
-        mlst_report = [sample_id, keys, MLST_message]
+        mlst_report = OutputRow(sample_id, keys, MLST_message)
     else:
         mlst_report = None
 
