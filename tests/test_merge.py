@@ -4,7 +4,6 @@ import json
 import csv
 from locidex import merge
 from os import listdir
-from tempfile import TemporaryDirectory
 
 
 
