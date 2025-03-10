@@ -78,7 +78,7 @@ def validate_input_file(data_in: dict, filename: str, db_version: str, db_name: 
     """
     if perform_profile_validation:
         user_provided_profile = profile_refs_dict[filename][0]
-        data_in, mlst_report = validate_profiles(data_in, user_provided_profile, filename)
+        data_in, mlst_report = validate_and_fix_profiles(data_in, user_provided_profile, filename)
     else:
         mlst_report = None
 
@@ -210,7 +210,7 @@ def read_samplesheet(sample_key_file):
 
     return sampledict
 
-def validate_profiles(mlst, sample_id, file_name):
+def validate_and_fix_profiles(mlst, sample_id, file_name):
     data_key = "data"
     profile_key = "profile"
     # Extract the profile from the json_data
