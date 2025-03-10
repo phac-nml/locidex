@@ -45,7 +45,7 @@ def add_args(parser=None):
     #                    action='store_true')
     parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
                         action='store_true')
-    parser.add_argument('-p', '--profile_ref', type=str, required=False, help='Two column TSV file with profile references for overriding MLST profiles. Columns [sample,mlst_alleles]')
+    parser.add_argument('-p', '--profile_ref', type=str, required=False, help='Provide a TSV file with profile references for overriding MLST profiles. Columns [sample/sample_name,mlst_alleles]')
     return parser
 
 
