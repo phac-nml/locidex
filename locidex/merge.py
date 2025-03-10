@@ -205,7 +205,7 @@ def read_samplesheet(sample_key_file):
 
 
     except:
-            logging.critical("File should be CSV that will contain either ['sample', 'mlst_alleles'] or ['sample_name', 'mlst_alleles']")
+            logging.critical("File {fname} should be CSV that will contain either ['sample', 'mlst_alleles'] or ['sample_name', 'mlst_alleles']".format(fname = sample_key_file))
             raise FileNotFoundError("Incorrect file format")
 
     return sampledict
