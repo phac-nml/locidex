@@ -258,8 +258,9 @@ class seq_store:
     }
 
     #def __init__(self,sample_name,db_config_dict,metadata_dict,query_seq_records,blast_columns,filters={},stored_fields=[]):
-    def __init__(self,sample_name,db_config_dict,metadata_dict,query_seq_records,blast_columns,filters: HitFilters):
+    def __init__(self,sample_name,db_config_dict,metadata_dict,query_seq_records,blast_columns,filters: HitFilters,override=False):
         self.sample_name = sample_name
+        self.override = override
         self.record['query_data']['sample_name'] = sample_name
         self.add_db_config(db_config_dict)
         self.add_seq_data(query_seq_records)
@@ -267,6 +268,7 @@ class seq_store:
         self.add_hit_cols(blast_columns)
         self.filters = filters
         self.record['query_data']['sample_name'] = self.sample_name
+       
 
 
     def add_db_config(self,conf: DBConfig):
@@ -327,6 +329,8 @@ class seq_store:
                     hit_name = self.record['db_seq_info'][hit_id]['locus_name']
 
                     hinfo = self.record["db_seq_info"][hit_id]
+                    if self.override:
+                        hinfo = {}
                     if dbtype == 'nucleotide':
                         if "dna_min_len" not in hinfo:
                             min_len = self.filters["dna_min_len"]
