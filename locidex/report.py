@@ -1,10 +1,10 @@
 import json
 import os
 import sys
-from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
+from argparse import ArgumentParser
 from copy import deepcopy
 from datetime import datetime
-from dataclasses import dataclass, asdict, fields
+from dataclasses import dataclass, fields
 import pandas as pd
 import logging
 import errno
@@ -82,9 +82,15 @@ def add_args(parser=None):
     parser.add_argument('-a', '--max_ambig', type=int, required=False, help='Maximum number of ambiguous characters allowed in a sequence',default=0)
     parser.add_argument('-s', '--max_stop', type=int, required=False, help='Maximum number of internal stop codons allowed in a sequence',default=0)
     parser.add_argument('-r', '--match_ident', type=float, required=False, 
-                        help='Report match allele if percent difference is >= this value',default=100)
+                        help='Report match if percent identity is >= this value',default=0)
     parser.add_argument('-l','--match_cov', type=float, required=False, 
-                        help='Report match allele if percent coverage is >+ this value',default=100)
+                        help='Report match if percent coverage is >= this value',default=0)
+    parser.add_argument('-b','--min_len', type=float, required=False, 
+                        help='Report match if query length is >= this value',default=0)
+    parser.add_argument('-x','--max_len', type=float, required=False, 
+                        help='Report match allele length is <= this value',default=100000)
+    parser.add_argument('--override', required=False, help='Overwrite individual loci thresholds for filtering and use the global parameters',
+                        action='store_true')
     parser.add_argument('--translation_table', type=int, required=False,
                         help='output directory', default=11)
     parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
@@ -97,8 +103,9 @@ def add_args(parser=None):
 class seq_reporter:
 
 
-    def __init__(self,data_dict,method='nucleotide',mode='normal',label='locus_name',filters={},max_ambig=0,max_int_stop=0,match_ident=0):
+    def __init__(self,data_dict,method='nucleotide',mode='normal',label='locus_name',filters=dict(),max_ambig=0,max_int_stop=0,match_ident=0,override=True):
         self.filters = filters
+        self.override = override
         self.data_dict = {}
         self.profile = {}
         self.loci = {}
@@ -116,7 +123,9 @@ class seq_reporter:
         self.query_hits = self.data_dict["query_data"]["query_hits"]
         self.locus_profile = self.data_dict['query_data']["locus_profile"]
         self.blast_columns = self.data_dict["query_hit_columns"]
+        self.filter_hits()
         self.build_profile()
+        
 
 
 
@@ -149,6 +158,7 @@ class seq_reporter:
 
 
     def filter_hits(self):
+        failed = set()
         for qid in self.query_hits:
             for dbtype in self.query_hits[qid]:
                 filt = []
@@ -157,54 +167,57 @@ class seq_reporter:
                     qlen = hit['qlen']
                     pident = hit['pident']
                     qcovs = hit['qcovs']
-                    bitscore = hit['bitscore']
                     hinfo = self.db_seq_info[hit_id]
-                    hit_name = hinfo['locus_name']
 
-
-                    if dbtype == 'nucleotide':
-                        if "dna_min_len" not in hinfo:
-                            min_len = self.filters["dna_min_len"]
-                        else:
-                            min_len = hinfo["dna_min_len"]
-                        if "dna_max_len" not in hinfo:
-                            max_len = self.filters["dna_min_len"]
-                        else:
-                            max_len = hinfo["dna_max_len"]
-                        if "min_dna_match_cov" not in hinfo:
-                            min_cov = self.filters["min_dna_match_cov"]
-                        else:
-                            min_cov = hinfo["dna_min_cov"]
-                        if "dna_min_ident" not in hinfo:
-                            min_ident = self.filters["dna_min_ident"]
-                        else:
-                            min_ident = hinfo["dna_min_ident"]
+                    if self.override:
+                        min_len = self.filters["dna_min_len"]
+                        min_cov = self.filters["min_dna_match_cov"]
+                        min_ident = self.filters["dna_min_ident"]
+                        max_len = self.filters["dna_max_len"]
                     else:
-                        if qlen < hinfo["aa_min_len"] or qlen > hinfo["aa_max_len"] or pident < hinfo["aa_min_ident"]:
-                            continue
-                        if "aa_min_len" not in hinfo:
-                            min_len = self.filters["aa_min_len"]
+                        if dbtype == 'nucleotide':
+                            if "dna_min_len" not in hinfo:
+                                min_len = self.filters["dna_min_len"]
+                            else:
+                                min_len = hinfo["dna_min_len"]
+                            if "dna_max_len" not in hinfo:
+                                max_len = self.filters["dna_min_len"]
+                            else:
+                                max_len = hinfo["dna_max_len"]
+                            if "min_dna_match_cov" not in hinfo:
+                                min_cov = self.filters["min_dna_match_cov"]
+                            else:
+                                min_cov = hinfo["min_dna_match_cov"]
+                            if "dna_min_ident" not in hinfo:
+                                min_ident = self.filters["dna_min_ident"]
+                            else:
+                                min_ident = hinfo["dna_min_ident"]
                         else:
-                            min_len = hinfo["aa_min_len"]
-                        if "aa_max_len" not in hinfo:
-                            max_len = self.filters["aa_min_len"]
-                        else:
-                            max_len = hinfo["aa_max_len"]
-                        if "min_aa_match_cov" not in hinfo:
-                            min_cov = self.filters["min_aa_match_cov"]
-                        else:
-                            min_cov = hinfo["aa_min_cov"]
-                        if "aa_min_ident" not in hinfo:
-                            min_ident = self.filters["aa_min_ident"]
-                        else:
-                            min_ident = hinfo["aa_min_ident"]
-
+                            if qlen < hinfo["aa_min_len"] or qlen > hinfo["aa_max_len"] or pident < hinfo["aa_min_ident"]:
+                                continue
+                            if "aa_min_len" not in hinfo:
+                                min_len = self.filters["aa_min_len"]
+                            else:
+                                min_len = hinfo["aa_min_len"]
+                            if "aa_max_len" not in hinfo:
+                                max_len = self.filters["aa_min_len"]
+                            else:
+                                max_len = hinfo["aa_max_len"]
+                            if "min_aa_match_cov" not in hinfo:
+                                min_cov = self.filters["min_aa_match_cov"]
+                            else:
+                                min_cov = hinfo["min_aa_match_cov"]
+                            if "aa_min_ident" not in hinfo:
+                                min_ident = self.filters["aa_min_ident"]
+                            else:
+                                min_ident = hinfo["aa_min_ident"]
                     if qlen < min_len or qlen > max_len or pident < min_ident or qcovs < min_cov:
+                        failed.add(qid)
                         continue
-                    #self.record['query_data']["locus_profile"][hit_name][dbtype].append(qid)
                     filt.append(hit)
-
                 self.query_hits[qid][dbtype] = filt
+        self.failed_seqids = self.failed_seqids | failed
+
 
     def calc_query_best_hit(self):
         best_hits = {}
@@ -232,7 +245,6 @@ class seq_reporter:
         hit_names = {}
         for qid in self.query_hits:
             hit_names[qid] = {}
-            
             for dbtype in self.query_hits[qid]:
                 hit_names[qid][dbtype] = set()
                 for hit in self.query_hits[qid][dbtype]:
@@ -245,10 +257,10 @@ class seq_reporter:
     def get_loci_to_query_map(self,hit_names,dbtype):
         loci_lookup = {}
         for qid in hit_names:
-            if not dbtype in hit_names[qid]:
+            if dbtype not in hit_names[qid]:
                 continue
             for l in hit_names[qid][dbtype]:
-                if not l in loci_lookup:
+                if l not in loci_lookup:
                     loci_lookup[l] = []
                 loci_lookup[l].append(qid)
         return loci_lookup
@@ -269,7 +281,7 @@ class seq_reporter:
         #Fix the values of any loci where there is a single matching query or no matching queries
         for locus_name in self.profile:
             query_hashes = self.profile[locus_name].split(',')
-            if not locus_name in loci_lookup:
+            if locus_name not in loci_lookup:
                 continue
             num_queries = len(loci_lookup[locus_name])
             if num_queries == 1 and query_hashes[0] != '-':
@@ -291,7 +303,7 @@ class seq_reporter:
                 continue
 
             for qid in matches:
-                if not dbtype in self.query_best_hits[qid]:
+                if dbtype not in self.query_best_hits[qid]:
                     continue
                 best_hits = self.query_best_hits[qid][dbtype]
                 best_hit_names = set()
@@ -313,9 +325,8 @@ class seq_reporter:
             hit_id = str(hit['sseqid'])
             pident = hit['pident']
             if pident < self.match_ident:
-                    continue
+                continue
             hinfo = self.db_seq_info[hit_id]
-            hit_name = hinfo['locus_name']
             return hinfo
         return {}
     
@@ -326,6 +337,7 @@ class seq_reporter:
                 values = set(self.locus_profile[locus_name][self.method])
             allele_hashes = []
             values = values - self.failed_seqids
+
             for seq_id in values:
                 if self.method == 'nucleotide':
                     key = "dna_hash"
@@ -334,6 +346,7 @@ class seq_reporter:
                 else:
                     continue
                 hash_value = self.query_seq_data[seq_id][key]
+                
                 if self.mode == 'fuzzy':
                     ref_seq_hitinfo = self.get_matching_ref_seq_info(seq_id, self.method)
                     if len(ref_seq_hitinfo) > 0:
@@ -341,7 +354,11 @@ class seq_reporter:
                             hash_value = ref_seq_hitinfo['dna_seq_hash']  
                         elif self.method == 'protein':
                             hash_value = ref_seq_hitinfo['aa_seq_hash'] 
-                            
+                if self.mode == 'conservative':
+                    if  'protein' in  self.locus_profile[locus_name] and len( self.locus_profile[locus_name]['protein']) > 0:
+                        if seq_id not in self.locus_profile[locus_name]['protein'] or seq_id not in self.locus_profile[locus_name]['nucleotide']:
+                            continue        
+
                 allele_hashes.append(hash_value)
 
             num_alleles = len(allele_hashes)
@@ -392,11 +409,15 @@ def run_report(config):
     match_ident = config['match_ident']
     match_cov = config['match_cov']
     translation_table = config['translation_table']
+    override = config['override']
+    min_len = config['min_len']
+    max_len = config['max_len']
 
 
     run_data = dict()
     run_data['analysis_start_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     run_data['parameters'] = analysis_parameters
+
 
     if os.path.isdir(outdir) and not force:
         logger.critical(f'Error {outdir} exists, if you would like to overwrite, then specify --force')
@@ -406,7 +427,7 @@ def run_report(config):
         os.makedirs(outdir, 0o755)
 
     seq_store_dict = {}
-    with open(input_file ,'r') as fh:
+    with open(input_file ,'r',encoding='utf-8') as fh:
         seq_store_dict = json.load(fh)
 
     if len(seq_store_dict) == 0:
@@ -415,6 +436,16 @@ def run_report(config):
 
     if sample_name is None:
         sample_name = seq_store_dict["query_data"]["sample_name"]
+    filters = {
+        "dna_min_len": min_len,
+        "dna_min_ident": match_ident,
+        "min_dna_match_cov": match_cov,
+        "dna_max_len":max_len,
+        "aa_min_len": min_len,
+        "aa_min_ident": match_ident,
+        "min_aa_match_cov": match_cov,
+        "aa_max_len":max_len
+    }
 
     #validate the ids
     seq_data = {}
@@ -438,7 +469,7 @@ def run_report(config):
                 raise KeyError(f'Error seq_store key for {id}: {pid_1} mismatched to input fasta {id}: {pid_2}. These files must be matched')
             seq_data[id] = seq_obj.seq_data[i]
 
-    allele_obj = seq_reporter(seq_store_dict, method='nucleotide', mode=mode, label=label, filters={},max_ambig=max_ambig,max_int_stop=max_int_stop,match_ident=match_ident)
+    allele_obj = seq_reporter(seq_store_dict, method='nucleotide', mode=mode, label=label, filters=filters,max_ambig=max_ambig,max_int_stop=max_int_stop,match_ident=match_ident,override=override)
 
 
 

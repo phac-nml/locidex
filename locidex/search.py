@@ -192,6 +192,7 @@ def run_search(config):
         'evalue': FilterOptions(min=None, max=min_evalue, include=None)
     }
 
+
     df = pd.DataFrame.from_dict(seq_obj.seq_data)
     filtered_df = df
     filtered_df['index'] = filtered_df.index.to_list()
@@ -208,7 +209,7 @@ def run_search(config):
     
 
     store_obj = seq_store(sample_name, db_data.config_data, db_data.metadata['meta'],
-                        seq_obj.seq_data, BlastColumns._fields, hit_filters)
+                        seq_obj.seq_data, BlastColumns._fields, hit_filters,override=override)
 
     protein_filter = DefaultSearchOpts(
         program=BlastCommands.blastp, 
