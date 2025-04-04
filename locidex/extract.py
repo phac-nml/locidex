@@ -237,10 +237,14 @@ def run_extract(config):
             os.makedirs(align_dir, 0o755)
         aln_obj = aligner(trim_fwd=True,trim_rev=True,ext_fwd=False, ext_rev=False,fill=False, snps_only=False)
         for idx,record in enumerate(exobj.seqs):
+            seq = record['seq']
+            seq = re.sub('^N+','',seq)
+            seq = re.sub('N+$','',seq)    
+            record['seq'] = seq
             if min_dna_len > len(record['seq']):
                 continue
             seq_id = "{}:{}:{}:{}".format(record['locus_name'],record['query_id'],record['seqid'],record['id'])
-            seq = record['seq']
+    
             #fix extension issues with gaps
             
             

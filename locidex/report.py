@@ -33,6 +33,7 @@ class Data:
     sample_name: str
     profile: dict
     seq_data: dict
+    metrics: dict
 
     def __getitem__(self, name: str) -> Any:
         return getattr(self, str(name))
@@ -104,6 +105,7 @@ class seq_reporter:
 
 
     def __init__(self,data_dict,method='nucleotide',mode='normal',label='locus_name',filters=dict(),max_ambig=0,max_int_stop=0,match_ident=0,override=True):
+        self.query_metrics = {}
         self.filters = filters
         self.override = override
         self.data_dict = {}
@@ -161,7 +163,22 @@ class seq_reporter:
         failed = set()
         for qid in self.query_hits:
             for dbtype in self.query_hits[qid]:
+                if not dbtype in self.query_metrics:
+                    self.query_metrics[dbtype] = {  
+                        'no_match':0,               
+                        'single_match': 0,
+                        'multi_match':0,
+                        'filtered':list()
+                    }
                 filt = []
+                if len(self.query_hits[qid][dbtype]) == 0:
+                    self.query_metrics[dbtype]['no_match']+=1
+                elif len(self.query_hits[qid][dbtype]) == 1:
+                    self.query_metrics[dbtype]['single_match']+=1
+                else:
+                    self.query_metrics[dbtype]['multi_match']+=1
+
+
                 for hit in self.query_hits[qid][dbtype]:
                     hit_id = str(hit['sseqid'])
                     qlen = hit['qlen']
@@ -213,11 +230,11 @@ class seq_reporter:
                                 min_ident = hinfo["aa_min_ident"]
                     if qlen < min_len or qlen > max_len or pident < min_ident or qcovs < min_cov:
                         failed.add(qid)
+                        self.query_metrics[dbtype]['filtered'].append(qid)
                         continue
                     filt.append(hit)
                 self.query_hits[qid][dbtype] = filt
         self.failed_seqids = self.failed_seqids | failed
-
 
     def calc_query_best_hit(self):
         best_hits = {}
@@ -331,12 +348,20 @@ class seq_reporter:
         return {}
     
     def populate_profile(self):
+        categories = {
+            'single_allele': 0,
+            'no_match_hits': 0,
+            'no_dna_match_hits':0,
+            'multiple_alleles':0
+        }
         for locus_name in self.profile:
             values = set()
             if locus_name in self.locus_profile:
                 values = set(self.locus_profile[locus_name][self.method])
             allele_hashes = []
             values = values - self.failed_seqids
+            if len(values) == 0:
+                categories['no_match_hits']+=1
 
             for seq_id in values:
                 if self.method == 'nucleotide':
@@ -345,6 +370,7 @@ class seq_reporter:
                     key = "aa_hash"
                 else:
                     continue
+                
                 hash_value = self.query_seq_data[seq_id][key]
                 
                 if self.mode == 'fuzzy':
@@ -357,12 +383,17 @@ class seq_reporter:
                 if self.mode == 'conservative':
                     if  'protein' in  self.locus_profile[locus_name] and len( self.locus_profile[locus_name]['protein']) > 0:
                         if seq_id not in self.locus_profile[locus_name]['protein'] or seq_id not in self.locus_profile[locus_name]['nucleotide']:
+                            categories['no_dna_match_hits']+=1
                             continue        
 
                 allele_hashes.append(hash_value)
 
             num_alleles = len(allele_hashes)
             unique_allele_count = len(set(allele_hashes))
+            if unique_allele_count > 1:
+                categories['multiple_alleles']+=1
+            elif unique_allele_count == 1:
+                categories['single_allele']+=1
             if unique_allele_count > 1 and self.mode == 'conservative':
                 allele_hashes = ['-']
             elif num_alleles > 1 and self.mode == 'normal':
@@ -372,7 +403,7 @@ class seq_reporter:
             elif self.mode == 'fuzzy':
                 allele_hashes = calc_md5(["".join([str(x) for x in sorted(allele_hashes)])])
             self.profile[locus_name] = ",".join(list(set([str(x) for x in allele_hashes])))
-        
+        self.locus_metrics = categories
 
 
     def extract_hit_data(self,dbtype):
@@ -491,7 +522,8 @@ def run_report(config):
         data = Data(
             sample_name = sample_name,
             profile = {sample_name: allele_obj.profile},
-            seq_data=seq_data
+            seq_data=seq_data,
+            metrics= {'loci':allele_obj.locus_metrics, 'queries':allele_obj.query_metrics}
         )
     )
 
