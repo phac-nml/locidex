@@ -99,7 +99,7 @@ The below figure shows a general workflow for each of the locidex commands:
 
 ### Search
 
-The search module is meant to use locidex formatted database directories. 
+The search module is meant to use locidex formatted database directories.
 
 - DNA and protein blast searches
 - Md5 hashing of alleles
@@ -125,13 +125,13 @@ Accepted input Data Formats: GenBank, Fasta (of individual loci sequences)
 {out folder name}
 ├── blast
   ├── nucleotide
-    ├── hsps.txt        
+    ├── hsps.txt
     └── queries.fasta
   ├── protein
-    ├── hsps.txt        
-    └── queries.fasta      
+    ├── hsps.txt
+    └── queries.fasta
 ├── seq_store.json
-└── results.json  
+└── results.json
 ```
 
 See "Sequence Store" for description of the seq_store.json output file
@@ -141,8 +141,8 @@ See "Sequence Store" for description of the seq_store.json output file
 The extract module is meant to use locidex formatted database directories to get sequences of individual loci based on a locidex formatted database. The extract module operates in four different modes:
 
 1) raw: sequences are directly extracted from the assembly with no further processing.
-2) trim: any leading or trailing bases which are not present in the db match are trimmed from the sequence. 
-3) snp: This will apply only nucleotide variants to the reference allele which can be very useful for nanopore assemblies where indels are common and unlikely to be real. 
+2) trim: any leading or trailing bases which are not present in the db match are trimmed from the sequence.
+3) snp: This will apply only nucleotide variants to the reference allele which can be very useful for nanopore assemblies where indels are common and unlikely to be real.
 4) extend : This mode will fill in any terminal sequence missing from the sequence based on the matched reference allele.
 
 > [!Note]
@@ -158,18 +158,18 @@ Gene annotation is notoriously inconsistent between different software, and so w
 
 EXAMPLE: to extract loci sequences from an input genome, reporting just extracted sequences and skipping any post processing (mode=`raw`)
 
-		locidex extract --mode raw -i ./example/search/NC_003198.1.fasta -d .example/build_db_mlst_out -o ./example/search/NC_003198_fasta -n 8 
+		locidex extract --mode raw -i ./example/search/NC_003198.1.fasta -d .example/build_db_mlst_out -o ./example/search/NC_003198_fasta -n 8
 
 #### Output
 
 ```
 {out folder name}
 ├── blast
-    ├── hsps.txt        
+    ├── hsps.txt
 ├── blast_db
-    ├── contigs.fasta.ndb  
+    ├── contigs.fasta.ndb
     ├── contigs.fasta.nhr
-    ├── contigs.fasta.nin 
+    ├── contigs.fasta.nin
     ├── contigs.fasta.njs
     ├── contigs.fasta.not
     ├── contigs.fasta.nsq
@@ -178,7 +178,7 @@ EXAMPLE: to extract loci sequences from an input genome, reporting just extracte
 ├── filtered.hsps.txt
 ├── processed.extracted.seqs.fasta #optional sequences with trimming, gapp filling an snp only based on options selected
 ├── raw.extracted.seqs.fasta #exact extracted sequences
-└── results.json  
+└── results.json
 ```
 
 ### Report
@@ -200,7 +200,7 @@ A locus is reported with an allele call only if all of the following are true. (
 6) Only a single hit meets the criteria above
 
 Normal
-A locus is reported with an allele call only if all of the following are true. 
+A locus is reported with an allele call only if all of the following are true.
 1) Match identity >= threshold
 2) Match coverage >= threshold
 3) Multiple matches to a single locus are hashed to produce an allele call which is the hash of the (n) match hashes found
@@ -211,14 +211,28 @@ A Sequence store (`seq_store.json`) object produced by the 'search' function.
 
 	    locidex report -i .example/search/seq_store.json -o ./example/report_out --name NC_003198
 
+#### Option:
+
+`-p`/`--profile_ref`: Provide a TSV file with profile references for overriding MLST profiles. Columns [sample/sample_name,mlst_alleles]'
+
+The TSV should have the new profiles with a column name `sample` or `sample_name` and the associated MLST file path under `mlst_alleles`
+```
+sample  mlst_alleles    .....
+SAMPLE1 sample1_mlst.json   .....
+SAMPLE2 sample2_mlst.json   .....
+SAMPLE3 sample3_mlst.json   .....
+```
+
 #### Output
 
 ```
 {out folder name}
 ├── nucleotide.hits.txt
 ├── profile.json
-└── protein.hits.txt  
+└── protein.hits.txt
+└── MLST_error_report.csv  (optional)
 ```
+
 
 ### Merge
 
@@ -234,14 +248,14 @@ EXAMPLE: merging multiple files provided on the command line to -i
 
 EXAMPLE: merging files provided through a list of paths to report files
 
-		  locidex merge -i ./example/merge_in/file_list.txt ./example/merge_out/ 
+		  locidex merge -i ./example/merge_in/file_list.txt ./example/merge_out/
 
 #### Output
 
 ```
 {out folder name}
-├── profile.tsv   
-└── results.json  
+├── profile.tsv
+└── results.json
 ```
 
 ### Format
@@ -252,16 +266,16 @@ Takes common formats of gene-by-gene databases and formats them for use with loc
 
 Accepts two formats common with most of the major MLST databases:
 
-1. a directory of fasta files: ["fasta","fas","fa","ffn","fna","fasta.gz","fas.gz","fa.gz","ffn.gz","fna.gz"] with "locus name" as the file name and allele id's are present in the fasta header separated by an underscore. ie. aroC would have the file name aroC.fas and the header line would be >aroC_1. 
+1. a directory of fasta files: ["fasta","fas","fa","ffn","fna","fasta.gz","fas.gz","fa.gz","ffn.gz","fna.gz"] with "locus name" as the file name and allele id's are present in the fasta header separated by an underscore. ie. aroC would have the file name aroC.fas and the header line would be >aroC_1.
 2. a concatonated file of all loci in a single fasta file which has the fasta def line as `>{locus name}_{allele id}`. These two formats are common with most of the major MLST databases.
 
-	    locidex format -i ./example/format_db_mlst_in/ -o ./example/mlst_out/ 
+	    locidex format -i ./example/format_db_mlst_in/ -o ./example/mlst_out/
 
 #### Output
 
 ```
 {out folder name}
-├── results.json                    
+├── results.json
 └── locidex.txt
 ```
 
@@ -277,7 +291,7 @@ Builds locidex db folder structure
 
 Takes the output of **locidex format** (may or may not have additional columns added). There are specific fields being looked for in the file which either or both are required depending on the type of db being built "dna_seq", "aa_seq".
 
-		locidex build -i ./example/build_db_mlst_in/senterica.mlst.txt -o ./example/mlst_out_db/ 
+		locidex build -i ./example/build_db_mlst_in/senterica.mlst.txt -o ./example/mlst_out_db/
 
 #### Output
 
@@ -286,7 +300,7 @@ See - [Database structure](/README.md#Database) for further information.
 
 ### Manifest
 
-Takes a directory containing multiple locidex databases and creates a manifest file that can be passed to locidex command (extract or search), along with a name and version of a specifec database to use. 
+Takes a directory containing multiple locidex databases and creates a manifest file that can be passed to locidex command (extract or search), along with a name and version of a specifec database to use.
 
 #### Input
 
@@ -355,12 +369,12 @@ The output is a `manifest.json` file in the base directory of the database folde
 
 ## Example workflow
 
-MLST Example: The 7-gene MLST scheme targets from [https://pubmlst.org/organisms/salmonella-spp](https://pubmlst.org/organisms/salmonella-spp) were used as targets to extract the full length CDS annotations from NC_003198.1 (Salmonella Typhi CT18). Sequences were separated into individual fasta files for each gene, though a concatonated version would also work as long as the fasta header began with the locus identifier. 
+MLST Example: The 7-gene MLST scheme targets from [https://pubmlst.org/organisms/salmonella-spp](https://pubmlst.org/organisms/salmonella-spp) were used as targets to extract the full length CDS annotations from NC_003198.1 (Salmonella Typhi CT18). Sequences were separated into individual fasta files for each gene, though a concatonated version would also work as long as the fasta header began with the locus identifier.
 
 > [!Note]
-> The extracted  CDS annotations are not just the MLST target sequences but the full orf and so this will differ from normal MLST results. If you want to use the traditional subsections of each loci, you will need to extract these using another method. 
+> The extracted  CDS annotations are not just the MLST target sequences but the full orf and so this will differ from normal MLST results. If you want to use the traditional subsections of each loci, you will need to extract these using another method.
 
-`locidex format` is used to create a TSV file containing the sequence of each of the targets and individual match thresholds for each query. These can be modified by the user before building the database. 
+`locidex format` is used to create a TSV file containing the sequence of each of the targets and individual match thresholds for each query. These can be modified by the user before building the database.
 
 		locidex format -i ~/example/format_db_mlst_in/ -o ~/example/format_db_mlst_out/ --force
 
@@ -370,7 +384,7 @@ The `locidex build` converts that TSV into a form that `locidex search` can use.
 
 `locidex search` is used to query against the database to produce a sequence store (two examples are provided here to show the use of genbank annotations or prodigal results).
 
-		locidex search -q ~/example/search/NC_003198.1.gbk -d ~/example/build_db_mlst_out/ -o ./mlst_ncbi_annotated --force 
+		locidex search -q ~/example/search/NC_003198.1.gbk -d ~/example/build_db_mlst_out/ -o ./mlst_ncbi_annotated --force
 
 		locidex search -q ~/example/search/NC_003198.1.fasta -d ~/example/build_db_mlst_out/ -o ./mlst_prodigal --force --annotate
 
@@ -401,7 +415,7 @@ Similar to [abricate](https://github.com/tseemann/abricate), Locidex uses a fixe
         ├──nucleotide.njs
         ├──nucleotide.nsq
         ├──nucleotide.ntf
-        └──nucleotide.nto 
+        └──nucleotide.nto
     └──protein                      #optional but >= 1must be present
         ├── protein.fasta
         ├── protein.pdb
@@ -492,10 +506,10 @@ No, the benefit of having dual searching with protein and dna is that you can ha
 
 Ideally a gene-by-gene scheme consists of only single copy genes but bacterial genomes are dynamic and genuine dulplications can occur, in addition to assembly artifacts and contamination. There are a variety of approaches available to manages these cases. Within the 7-gene [mlst](https://github.com/tseemann/mlst) tool multiple alleles for a given locus are reported with a comma delimiting each allele. However, this poses an issue for calculating genetic distances since it is unclear how to treat the multiple alleles. There are several common methods for how to treat multiple alleles:
 
-1) treat the combination as a novel allele 
-2) blank the column 
-3) select the earliest allele in the database 
-4) Use a similarity score to rate which is the best allele to include. 
+1) treat the combination as a novel allele
+2) blank the column
+3) select the earliest allele in the database
+4) Use a similarity score to rate which is the best allele to include.
 
 The most conservative approach is to not interpret that column by blanking it in distance calculations which results in blunting resolution which is implemented within locidex as the conservative mode. Alternatively, by using an approach to select only one of the loci to match will have mixed effects (options 3, 4) that can result in inconsistencies where some isolates appear more similar or dissimilar than they are. The preferred method that locidex has implemented as its [DEFAULT] (normal) mode is to combine the result into a new "allele" hash that is derived from calculating the md5 hash of the concatenated allele md5 hashes, sorted alphabetically. This has the benefit of the same combination of alleles  resulting in the same hash code and will match when this occurs. Conversely, it will count a difference even when individual component alleles may match between two samples.
 

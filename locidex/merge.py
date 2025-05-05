@@ -4,6 +4,7 @@ import os
 import re
 import sys
 import errno
+import typing
 from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
 from datetime import datetime
 from functools import partial
@@ -18,6 +19,11 @@ from locidex.version import __version__
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(filemode=sys.stderr, level=logging.INFO)
+
+class OutputRow(typing.NamedTuple):
+    sample_id: str
+    keys: list[str]
+    message: str
 
 def add_args(parser=None):
     """
@@ -39,6 +45,7 @@ def add_args(parser=None):
     #                    action='store_true')
     parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
                         action='store_true')
+    parser.add_argument('-p', '--profile_ref', type=str, required=False, help='Provide a TSV file with profile references for overriding MLST profiles. Columns [sample/sample_name,mlst_alleles]')
     return parser
 
 
@@ -65,28 +72,33 @@ def get_file_list(input_files):
                     file_list.append(line)
     return file_list
 
-def validate_input_file(data_in: dict, db_version: str, db_name: str, perform_validation: bool) -> tuple[ReportData, str, str]:
+def validate_input_file(data_in: dict, filename: str, db_version: str, db_name: str, perform_db_validation: bool, perform_profile_validation: bool, profile_refs_dict:dict) -> tuple[ReportData, str, str, typing.Optional[OutputRow]]:
     """
-    Validate input data for usage verifying db_versions and db_names are the same
+    Validate input data for usage verifying db_versions, db_names and MLST profiles are the same
     """
+    if perform_profile_validation:
+        user_provided_profile = profile_refs_dict[filename][0]
+        data_in, mlst_report = validate_and_fix_profiles(data_in, user_provided_profile, filename)
+    else:
+        mlst_report = None
 
     try:
         sq_data = ReportData.deseriealize(data_in)
     except KeyError:
         logger.critical("Missing fields in configuration required fields in in reported allele file. Fields required: {}".format(ReportData.fields()))
         raise ValueError("Missing fields in configuration required fields in in reported allele file. Fields required: {}".format(ReportData.fields()))
-        
+
     else:
 
-        if db_version is not None and sq_data.db_info.db_version != db_version and perform_validation:
+        if db_version is not None and sq_data.db_info.db_version != db_version and perform_db_validation:
             logger.critical("You are attempting to merge files that were created using different database versions.")
             raise ValueError("You are attempting to merge files that were created using different database versions.")
-        
-        if db_name is not None and sq_data.db_info.db_name != db_name and perform_validation:
+
+        if db_name is not None and sq_data.db_info.db_name != db_name and perform_db_validation:
             logger.critical("You are attempting to merge files that have different names.")
             raise ValueError("You are attempting to merge files that have different names. {} {}".format(sq_data.db_info.db_name, db_name))
-    
-    return sq_data, sq_data.db_info.db_version, sq_data.db_info.db_name
+
+    return sq_data, sq_data.db_info.db_version, sq_data.db_info.db_name, mlst_report
 
 def check_files_exist(file_list: list[os.PathLike]) -> None:
     """
@@ -98,30 +110,43 @@ def check_files_exist(file_list: list[os.PathLike]) -> None:
             raise_file_not_found_e(file, logger)
 
 
-def read_file_list(file_list,perform_validation=False):
+def read_file_list(file_list, perform_db_validation=False, perform_profile_validation=False):
     records = {}
     db_version = None
     db_name = None
-
     check_files_exist(file_list)
+    # Before we can perform profile validation of the MLST files we need to check that a proper profile key file was provided
+    if perform_profile_validation:
+        modified_MLST_files = [["sample", "JSON_key", "error_message"]]
+        check_files_exist([perform_profile_validation])
+        profile_refs_dict = read_samplesheet(perform_profile_validation)
+    else:
+        modified_MLST_files = None
+        profile_refs_dict = None
 
     for f in file_list:
         encoding = guess_type(f)[1]
+        filename = os.path.basename(f)
         _open = partial(gzip.open, mode='rt') if encoding == 'gzip' else open
         with _open(f) as fh:
             data = json.load(fh)
-            sq_data, db_version, db_name = validate_input_file(data, 
-                                                            db_version=db_version, 
-                                                            db_name=db_name, 
-                                                            perform_validation=perform_validation)     
-
+            sq_data, db_version, db_name, mlst_report = validate_input_file(data,
+                                                            filename,
+                                                            db_version=db_version,
+                                                            db_name=db_name,
+                                                            perform_db_validation=perform_db_validation,
+                                                            perform_profile_validation=perform_profile_validation,
+                                                            profile_refs_dict = profile_refs_dict)
+            if perform_profile_validation and mlst_report is not None:
+                modified_MLST_files.append(mlst_report)
             sample_name = sq_data.data.sample_name
             if records.get(sq_data.data.sample_name) is None:
                 records[sample_name] = sq_data
             else:
                 logger.critical("Duplicate sample name detected: {}".format(sq_data.data.sample_name))
                 raise ValueError("Attempting to merge allele profiles with the same sample name: {}".format(sq_data.data.sample_name))
-    return records
+
+    return records, modified_MLST_files
 
 def extract_profiles(records):
     profile = {}
@@ -167,7 +192,65 @@ def write_gene_fastas(seq_data,work_dir):
             oh.write(f'>{seq_name}\n{seq}\n')
             oh.close()
             d+=1
-    return files   
+    return files
+
+def read_samplesheet(sample_key_file):
+    """
+    We will be accepting a file with two columns either ['sample', 'mlst_alleles'] or ['sample_name', 'mlst_alleles']
+    """
+    try:
+        df = pd.read_csv(sample_key_file, sep=",", usecols= lambda column: column in {"sample", "sample_name", "mlst_alleles"}, header=0)
+        df["mlst_alleles"] = df["mlst_alleles"].apply(lambda x: os.path.basename(x))
+        sampledict = df.set_index("mlst_alleles").T.to_dict('list')
+
+
+    except:
+            logging.critical("File {fname} should be CSV that will contain either ['sample', 'mlst_alleles'] or ['sample_name', 'mlst_alleles']".format(fname = sample_key_file))
+            raise FileNotFoundError("Incorrect file format")
+
+    return sampledict
+
+def validate_and_fix_profiles(mlst, sample_id, file_name):
+    data_key = "data"
+    profile_key = "profile"
+    # Extract the profile from the json_data
+    profile = mlst.get(data_key, {}).get(profile_key, {})
+    # Check for multiple keys in the JSON file and define error message
+    keys = sorted(profile.keys())
+    original_key = keys[0] if keys else None
+    # Define a variable to store the match_status (True or False)
+    match_status = sample_id in profile
+    # Initialize the error message
+    MLST_message = None
+
+    if not keys:
+        logger.critical(f"{file_name} is missing the 'profile' section or is completely empty!")
+        raise ValueError(f"{file_name} is missing the 'profile' section or is completely empty!")
+
+    elif len(keys) > 1:
+        # Check if sample_id matches any key
+        if not match_status:
+            MLST_message = f"No key in the MLST JSON file ({file_name}) matches the specified sample ID '{sample_id}'. The first key '{original_key}' has been forcefully changed to '{sample_id}' and all other keys have been removed."
+            # Retain only the specified sample ID
+            mlst[data_key][profile_key] = {sample_id: profile[original_key]}
+        else:
+            MLST_message = f"MLST JSON file ({file_name}) contains multiple keys: {keys}. The MLST JSON file has been modified to retain only the '{sample_id}' entry"
+            # Retain only the specified sample_id in the profile
+            mlst[data_key][profile_key] = {sample_id: profile[sample_id]}
+    elif not match_status:
+        MLST_message = f"{sample_id} ID and JSON key in {file_name} DO NOT MATCH. The '{original_key}' key in {file_name} has been forcefully changed to '{sample_id}': User should manually check input files to ensure correctness."
+        # Update the JSON file with the new sample ID
+        mlst[data_key][profile_key] = {sample_id: profile[original_key]}
+        mlst[data_key]["sample_name"] = sample_id
+
+    # Create a report for all the samples that have their profiles modified in the output profile.tsv
+    if MLST_message:
+        mlst_report = OutputRow(sample_id, keys, MLST_message)
+    else:
+        mlst_report = None
+
+    # Write the updated JSON data back to the original file
+    return mlst, mlst_report
 
 def run_merge(config):
     analysis_parameters = config
@@ -175,6 +258,7 @@ def run_merge(config):
     #Input Parameters
     input_files = config['input'][0]
     outdir = config['outdir']
+
     ###
     # Commented out as these changes will require test data
     # perform_align = config['align']
@@ -183,9 +267,11 @@ def run_merge(config):
     ###
     force = config['force']
     validate_db = config['strict']
+    profile_refs = config['profile_ref']
     if validate_db is None or validate_db == '':
         validate_db = False
-
+    if profile_refs is None or profile_refs == '':
+        profile_refs = False
 
     run_data = {}
     run_data['analysis_start_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
@@ -200,87 +286,22 @@ def run_merge(config):
 
     #perform merge
     file_list = get_file_list(input_files)
-    records = read_file_list(file_list,perform_validation=validate_db)
+    records, modified_MLST_file_list = read_file_list(file_list,perform_db_validation=validate_db, perform_profile_validation=profile_refs)
 
     #create profile
     df = pd.DataFrame.from_dict(extract_profiles(records), orient='index')
     df.insert(loc=0, column='sample_id', value=df.index.tolist())
     df.to_csv(os.path.join(outdir,'profile.tsv'),index=False,header=True,sep="\t")
-    
+
     del(df)
     run_data['result_file'] = os.path.join(outdir,"profile.tsv")
-    
-    ######### create alignment ###############
-    # Bring this back in when test data is provided
-    ############################################
-    #sample_names = list(df['sample_id'])
-    #loci_lengths = {}
-    #invalid_loci = set()
-    #if perform_align and len(records) > 1:
-    #    pass
-    #    work_dir = os.path.join(outdir,"raw_gene_fastas")
-    #    if not os.path.isdir(work_dir):
-    #        os.makedirs(work_dir, 0o755)
-    #    
-    #    seq_data = extract_seqs(records)
-    #    gene_files = write_gene_fastas(seq_data,work_dir)
-    #    del(records)
-    #    del(seq_data)
-    #    pool = Pool(processes=n_threads)
 
-    #    results = []
-    #    for locus_name in gene_files:
-    #        results.append(pool.apply_async(align, args=((gene_files[locus_name]['file'],))))
-
-    #    pool.close()
-    #    pool.join()
-
-    #    r = []
-    #    for x in results:
-    #        if isinstance(x, dict):
-    #            r.append(x)
-    #        else:
-    #            r.append(x.get())
-    #    results = r
-    #    loci_names = list(gene_files.keys())
-    #    alignment = {}
-    #    
-
-    #    for i in range(0,len(results)):
-    #        alignment[loci_names[i]] = parse_align(results[i][0])
-    #        results[i] = None
-    #    del(results)
-
-    #    
-    #    for sample_id in sample_names:
-    #        for locus_name in loci_names:
-    #            if sample_id not in alignment[locus_name]:
-    #                continue
-    #            loci_lengths[locus_name] = len(alignment[locus_name][sample_id])
+    #Write report of all the MLST files with profile mismatch and how MLST profiles with mismatch were modified
+    if modified_MLST_file_list:
+        df = pd.DataFrame(modified_MLST_file_list)
+        df.to_csv(f'{outdir}/MLST_error_report.csv', index=False, header=False)
 
 
-    #    out_align = os.path.join(outdir,'loci_alignment.fas')
-    #    oh = open(out_align,'w')
-    #    
-    #    for sample_id in sample_names:
-    #        seq = []
-    #        for locus_name in loci_names:
-    #            if locus_name not in loci_lengths:
-    #                invalid_loci.add(locus_name)
-    #                continue
-    #            if sample_id in alignment[locus_name]:
-    #                seq.append(alignment[locus_name][sample_id])
-    #            else:
-    #                seq.append(''.join(['-']*loci_lengths[locus_name]))
-    #            seq.append(linker_seq)
-    #        oh.write('>{}\n{}\n'.format(sample_id,"".join(seq)))
-    #    oh.close()
-    #    run_data['alignment_file'] = out_align
-
-    #run_data['count_valid_loci'] = len(loci_lengths.keys())
-    #run_data['count_invalid_loci'] = len(list(invalid_loci))
-    #run_data['valid_loci'] = ",".join(list(loci_lengths.keys()))
-    #run_data['invalid_loci'] = ",".join(list(invalid_loci))
     run_data['analysis_end_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     with open(os.path.join(outdir,"run.json"),'w' ) as fh:
         fh.write(json.dumps(run_data, indent=4))

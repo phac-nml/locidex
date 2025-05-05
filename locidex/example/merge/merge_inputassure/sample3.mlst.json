@@ -1,0 +1,21 @@
+{
+    "db_info": {},
+    "parameters": {
+        "mode": "normal",
+        "min_match_ident": 100,
+        "min_match_cov": 100,
+        "max_ambiguous": 0,
+        "max_internal_stops": 0
+    },
+    "data": {
+        "sample_name": "sampleC",
+        "profile": {
+            "sampleC": {
+                "l1": "1",
+                "l2": "1",
+                "l3": "2"
+            }
+        },
+        "seq_data": {}
+    }
+}
