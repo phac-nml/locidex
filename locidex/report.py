@@ -105,7 +105,7 @@ class seq_reporter:
 
 
     def __init__(self,data_dict,method='nucleotide',mode='normal',label='locus_name',filters=dict(),max_ambig=0,max_int_stop=0,match_ident=0,override=True):
-        self.query_metrics = {}
+        self.init_metrics()
         self.filters = filters
         self.override = override
         self.data_dict = {}
@@ -129,7 +129,31 @@ class seq_reporter:
         self.build_profile()
         
 
+    def init_metrics(self):
+        self.query_metrics = {
+            'loci': {
+            'no_blast_hit': 0,
+            'single_blast_hit': 0,
+            'multiple_blast_hits':0,
+            'no_nucleotide_blast_hits':0,
+            'no_protein_blast_hits':0,
 
+        },
+            'queries':{}
+        }
+        for dbtype in ['nucleotide','protein']:
+            self.query_metrics['queries'][dbtype] = {  
+                        'no_blast_hit':0,               
+                        'single_blast_hit': 0,
+                        'multiple_blast_hits':0,
+                        'missing_start_codon':0,
+                        'internal_stop_codon':0,
+                        'missing_stop_codon':0,
+                        'count_total_queries':0, 
+                        'count_filtered_blast_queries':0,
+                        'count_total_filtered_queries':0,              
+                        'filtered':list()
+                    }
 
 
     def filter_queries(self):
@@ -147,10 +171,32 @@ class seq_reporter:
                 count_internal_stop = self.query_seq_data[seq_id]['count_internal_stop']
                 start_codon = self.query_seq_data[seq_id]["start_codon"]
                 stop_codon = self.query_seq_data[seq_id]["end_codon"]
-                if start_codon not in START_CODONS or stop_codon not in STOP_CODONS or count_internal_stop > 0:
-                    failed_seqids.add(seq_id)
+                fail = False
+                if start_codon not in START_CODONS:
+                    fail = True
+                    self.query_metrics['queries']['nucleotide']['missing_start_codon']+=1
+                    self.query_metrics['queries']['protein']['missing_start_codon']+=1
                 
+                if stop_codon not in STOP_CODONS:
+                    fail = True
+                    self.query_metrics['queries']['nucleotide']['missing_stop_codon']+=1
+                    self.query_metrics['queries']['protein']['missing_stop_codon']+=1
+
+                if count_internal_stop > 0:
+                    fail = True
+                    self.query_metrics['queries']['nucleotide']['internal_stop_codon']+=1
+                    self.query_metrics['queries']['protein']['internal_stop_codon']+=1
+
+                if fail:
+                    self.query_metrics['queries']['nucleotide']['filtered'].append(seq_id)
+                    self.query_metrics['queries']['protein']['filtered'].append(seq_id)
+                    failed_seqids.add(seq_id)
+        self.query_metrics['queries']['nucleotide']['count_total_filtered_queries'] = len(self.query_metrics['queries']['nucleotide']['filtered'])
+        self.query_metrics['queries']['protein']['count_total_filtered_queries'] = len(self.query_metrics['queries']['protein']['filtered'])
+        self.query_metrics['queries']['nucleotide']['count_total_queries'] = len(self.query_seq_data)
+        self.query_metrics['queries']['protein']['count_total_queries'] = self.query_metrics['queries']['nucleotide']['count_total_queries']
         self.failed_seqids =  failed_seqids
+
 
     def build_profile(self):
         for lid in self.data_dict["db_seq_info"]:
@@ -163,20 +209,13 @@ class seq_reporter:
         failed = set()
         for qid in self.query_hits:
             for dbtype in self.query_hits[qid]:
-                if not dbtype in self.query_metrics:
-                    self.query_metrics[dbtype] = {  
-                        'no_match':0,               
-                        'single_match': 0,
-                        'multi_match':0,
-                        'filtered':list()
-                    }
                 filt = []
                 if len(self.query_hits[qid][dbtype]) == 0:
-                    self.query_metrics[dbtype]['no_match']+=1
+                    self.query_metrics['queries'][dbtype]['no_blast_hit']+=1
                 elif len(self.query_hits[qid][dbtype]) == 1:
-                    self.query_metrics[dbtype]['single_match']+=1
+                    self.query_metrics['queries'][dbtype]['single_blast_hit']+=1
                 else:
-                    self.query_metrics[dbtype]['multi_match']+=1
+                    self.query_metrics['queries'][dbtype]['multiple_blast_hits']+=1
 
 
                 for hit in self.query_hits[qid][dbtype]:
@@ -230,10 +269,12 @@ class seq_reporter:
                                 min_ident = hinfo["aa_min_ident"]
                     if qlen < min_len or qlen > max_len or pident < min_ident or qcovs < min_cov:
                         failed.add(qid)
-                        self.query_metrics[dbtype]['filtered'].append(qid)
+                        self.query_metrics['queries'][dbtype]['filtered'].append(qid)
                         continue
                     filt.append(hit)
                 self.query_hits[qid][dbtype] = filt
+                self.query_metrics['queries'][dbtype]['filtered'] = list(set(self.query_metrics['queries'][dbtype]['filtered']))
+                self.query_metrics['queries'][dbtype]['count_filtered_blast_queries'] = len(self.query_metrics['queries'][dbtype]['filtered'] )
         self.failed_seqids = self.failed_seqids | failed
 
     def calc_query_best_hit(self):
@@ -349,10 +390,11 @@ class seq_reporter:
     
     def populate_profile(self):
         categories = {
-            'single_allele': 0,
-            'no_match_hits': 0,
-            'no_dna_match_hits':0,
-            'multiple_alleles':0
+            'no_blast_hit': 0,
+            'single_blast_hit': 0,
+            'multiple_blast_hits':0,
+            'no_nucleotide_blast_hits':0,
+            'no_protein_blast_hits':0
         }
         for locus_name in self.profile:
             values = set()
@@ -361,7 +403,13 @@ class seq_reporter:
             allele_hashes = []
             values = values - self.failed_seqids
             if len(values) == 0:
-                categories['no_match_hits']+=1
+                categories['no_blast_hit']+=1
+            nt_seqids = set(self.locus_profile[locus_name]['nucleotide']) - self.failed_seqids
+            if len( nt_seqids) == 0:
+                categories['no_nucleotide_blast_hits']+=1
+            pr_seqids = set(self.locus_profile[locus_name]['protein']) - self.failed_seqids
+            if len( pr_seqids) == 0:
+                categories['no_protein_blast_hits']+=1
 
             for seq_id in values:
                 if self.method == 'nucleotide':
@@ -373,6 +421,7 @@ class seq_reporter:
                 
                 hash_value = self.query_seq_data[seq_id][key]
                 
+
                 if self.mode == 'fuzzy':
                     ref_seq_hitinfo = self.get_matching_ref_seq_info(seq_id, self.method)
                     if len(ref_seq_hitinfo) > 0:
@@ -382,8 +431,8 @@ class seq_reporter:
                             hash_value = ref_seq_hitinfo['aa_seq_hash'] 
                 if self.mode == 'conservative':
                     if  'protein' in  self.locus_profile[locus_name] and len( self.locus_profile[locus_name]['protein']) > 0:
+
                         if seq_id not in self.locus_profile[locus_name]['protein'] or seq_id not in self.locus_profile[locus_name]['nucleotide']:
-                            categories['no_dna_match_hits']+=1
                             continue        
 
                 allele_hashes.append(hash_value)
@@ -391,9 +440,9 @@ class seq_reporter:
             num_alleles = len(allele_hashes)
             unique_allele_count = len(set(allele_hashes))
             if unique_allele_count > 1:
-                categories['multiple_alleles']+=1
+                categories['multiple_blast_hits']+=1
             elif unique_allele_count == 1:
-                categories['single_allele']+=1
+                categories['single_blast_hit']+=1
             if unique_allele_count > 1 and self.mode == 'conservative':
                 allele_hashes = ['-']
             elif num_alleles > 1 and self.mode == 'normal':
@@ -403,7 +452,7 @@ class seq_reporter:
             elif self.mode == 'fuzzy':
                 allele_hashes = calc_md5(["".join([str(x) for x in sorted(allele_hashes)])])
             self.profile[locus_name] = ",".join(list(set([str(x) for x in allele_hashes])))
-        self.locus_metrics = categories
+        self.query_metrics['loci'] = categories
 
 
     def extract_hit_data(self,dbtype):
@@ -523,7 +572,7 @@ def run_report(config):
             sample_name = sample_name,
             profile = {sample_name: allele_obj.profile},
             seq_data=seq_data,
-            metrics= {'loci':allele_obj.locus_metrics, 'queries':allele_obj.query_metrics}
+            metrics= allele_obj.query_metrics
         )
     )
 
