@@ -4,7 +4,7 @@ import sys
 from argparse import ArgumentParser
 from copy import deepcopy
 from datetime import datetime
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, field, fields
 import pandas as pd
 import logging
 import errno
@@ -33,7 +33,7 @@ class Data:
     sample_name: str
     profile: dict
     seq_data: dict
-    metrics: dict
+    metrics: dict = field(default_factory=dict)
 
     def __getitem__(self, name: str) -> Any:
         return getattr(self, str(name))
