@@ -279,7 +279,7 @@ def run_extract(config):
                                 'ref_id':record['query_id'],
                                 'ref_seq':nt_db_seq_data[record['query_id']],
                                 'ext_seq':seq}
-            oh.write(">{}\n{}\n".format(seq_id,seq))
+            oh.write(">{}\n{}\n".format(seq_id,seq.replace('-','')))
         shutil.rmtree(align_dir)
 
 

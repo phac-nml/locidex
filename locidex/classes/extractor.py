@@ -2,13 +2,14 @@ import pandas as pd
 import numpy as np
 from locidex.constants import NT_SUB, STOP_CODONS, START_CODONS
 class extractor:
-    seqs = {}
-    df = pd.DataFrame()
-    def __init__(self,df,seq_data,sseqid_col,queryid_col,qstart_col,qend_col,qlen_col,sstart_col,send_col,slen_col,sstrand_col,bitscore_col,overlap_thresh=100,extend_threshold_ratio = 0.2,filter_contig_breaks=True):
+    
+    def __init__(self,df,seq_data,sseqid_col,queryid_col,qstart_col,qend_col,qlen_col,sstart_col,send_col,slen_col,sstrand_col,bitscore_col,overlap_thresh=100,extend_threshold_ratio = 0.2,filter_contig_breaks=False):
+        self.seqs = {}
+        self.df = df
         self.filter_contig_breaks = filter_contig_breaks
         self.df = self.set_extraction_pos(df, sstart_col, send_col)
         self.is_complete(self.df,qstart_col,qend_col,qlen_col)
-        self.is_contig_boundary(self.df,'ext_start','ext_end',slen_col)
+        self.is_contig_boundary(self.df,'qstart','qend','ext_start','ext_end',slen_col,'qlen')
         if filter_contig_breaks:
             self.df = df[ (df['is_5prime_boundary'] == False) & (df['is_3prime_boundary'] == False)]
             self.df = self.df.reset_index(drop=True)
@@ -16,7 +17,6 @@ class extractor:
         pcols = [qstart_col,qend_col,sstart_col,send_col]
         for c in pcols:
             self.df[c] = self.df[c].apply(lambda x: x - 1)
-        
         self.df = self.get_best_hit_query(self.df)
         sort_cols = [sseqid_col, 'locus_name', sstart_col, bitscore_col, send_col]
         ascending_cols = [True, True, True, False, False]
@@ -40,9 +40,9 @@ class extractor:
         self.is_3prime_complete(df,qend_col,qlen_col)
         df['is_complete'] = np.where(((df['is_5prime_complete'] == True) &  (df['is_3prime_complete'] == True)), True, False)
 
-    def is_contig_boundary(self,df,sstart_col,send_col,slen_col):
-        df['is_5prime_boundary'] = np.where(df[sstart_col] == 1, True, False)
-        df['is_3prime_boundary'] = np.where(df[send_col] == df[slen_col], True, False)
+    def is_contig_boundary(self,df,qstart_col, qend_col, sstart_col,send_col,slen_col,qlen_col):
+        df['is_5prime_boundary'] = np.where((df[sstart_col] == 1) & (df[qstart_col] > 1), True, False)
+        df['is_3prime_boundary'] = np.where((df[send_col] == df[slen_col]) & (df[qend_col] < df[qlen_col]), True, False)
         df['is_on_boundary'] = np.where(((df['is_5prime_boundary'] == True) & (df['is_3prime_boundary'] == True)), True, False)
 
     def set_revcomp(self,df,sstart_col,send_col,strand_col):
