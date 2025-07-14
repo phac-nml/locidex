@@ -93,7 +93,7 @@
   files:
       - path: test_out/extract/G3/raw.extracted.seqs.fasta
         md5sum: 263d767c0503521372f8ea3c0689073a
-      - path: original/search/G3/seq_store.json
+      - path: test_out/search/G3/seq_store.json
       - path: test_out/report/conservative/G3/report.json
         md5sum: 1b1c41937b4b56fecb28d79aa3f80f04
       - path: test_out/report/normal/G3/report.json
