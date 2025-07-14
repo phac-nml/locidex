@@ -172,6 +172,13 @@ class seq_reporter:
                 start_codon = self.query_seq_data[seq_id]["start_codon"]
                 stop_codon = self.query_seq_data[seq_id]["end_codon"]
                 fail = False
+                if int(self.query_seq_data[seq_id]['dna_len']) % 3 > 0:
+                    fail = True
+                    if start_codon in START_CODONS:
+                        stop_codon = ''
+                    else:
+                        start_codon = ''
+
                 if start_codon not in START_CODONS:
                     fail = True
                     self.query_metrics['queries']['nucleotide']['missing_start_codon']+=1
@@ -186,6 +193,7 @@ class seq_reporter:
                     fail = True
                     self.query_metrics['queries']['nucleotide']['internal_stop_codon']+=1
                     self.query_metrics['queries']['protein']['internal_stop_codon']+=1
+
 
                 if fail:
                     self.query_metrics['queries']['nucleotide']['filtered'].append(seq_id)
