@@ -146,7 +146,7 @@
       "
   files:
       - path: test_out/extract/G6/raw.extracted.seqs.fasta
-        md5sum: 9c76d604cbf87f0ce649b0b3ebfc4854
+        md5sum: a20198bc5accf1f23eadb5777f9d4b2d
       - path: test_out/search/G6/seq_store.json
       - path: test_out/report/conservative/G6/report.json
         md5sum: 2c57a77688be930a69c1e6a5ae5dd912
