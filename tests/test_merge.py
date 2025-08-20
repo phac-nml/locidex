@@ -69,7 +69,8 @@ def test_profile_validation_report(tmpdir):
                                 'outdir': f"{tmpdir}",
                                 'strict': False,
                                 'force': True,
-                                'profile_ref': 'locidex/example/merge/merge_inputassure/test_ref_profile.csv'}
+                                'profile_ref': 'locidex/example/merge/merge_inputassure/test_ref_profile.csv',
+                                'loci': None}
     merge.run_merge(CONFIG)
     merge_output = sorted(listdir(tmpdir))
     assert merge_output == ["MLST_error_report.csv", "profile.tsv", "run.json"]
@@ -98,7 +99,8 @@ def test_profile_validation_noreport(tmpdir):
                                 'outdir': f"{tmpdir}",
                                 'strict': False,
                                 'force': True,
-                                'profile_ref': None}
+                                'profile_ref': None,
+                                'loci': None}
     merge.run_merge(CONFIG)
     merge_output = sorted(listdir(tmpdir))
     assert merge_output == ["profile.tsv", "run.json"]
