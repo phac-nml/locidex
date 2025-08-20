@@ -111,7 +111,7 @@ def check_files_exist(file_list: list[os.PathLike]) -> None:
             raise_file_not_found_e(file, logger)
 
 
-def read_file_list(file_list, perform_db_validation=False, perform_profile_validation=False, loci_to_remove=None):
+def read_file_list(file_list, perform_db_validation=False, perform_profile_validation=False, loci_to_keep=None):
     records = {}
     db_version = None
     db_name = None
@@ -141,9 +141,11 @@ def read_file_list(file_list, perform_db_validation=False, perform_profile_valid
             if perform_profile_validation and mlst_report is not None:
                 modified_MLST_files.append(mlst_report)
             sample_name = sq_data.data.sample_name
-            # Remove loci that are not in the coreMLST profile list
-            for k in loci_to_remove:
-                sq_data.data.profile[sample_name].pop(k, None)
+            # Remove loci that are not in loci list if provided
+            if loci_to_keep is not None:
+                profile = sq_data.data.profile[sample_name]
+                core_loci = {k: profile[k] for k in loci_to_keep if k in profile}
+                sq_data.data.profile[sample_name] = core_loci
 
             if records.get(sq_data.data.sample_name) is None:
                 records[sample_name] = sq_data
@@ -266,10 +268,10 @@ def run_merge(config):
 
     if config['loci'] is not None:
         if os.path.isfile(config['loci']):
-            loci_to_remove = pd.read_csv(config['loci'], header=None).iloc[:, 0].tolist()
+            loci_to_keep = pd.read_csv(config['loci'], header=None).iloc[:, 0].tolist()
         else:
-            loci_to_remove = config['loci'].split(',')
-        print(f"INFO:locidex merge: Keeping only the following loci: {loci_to_remove}")
+            loci_to_keep = config['loci'].split(',')
+        print(f"INFO:locidex merge: Keeping only the following loci: {loci_to_keep}")
 
     ###
     # Commented out as these changes will require test data
@@ -298,7 +300,7 @@ def run_merge(config):
 
     #perform merge
     file_list = get_file_list(input_files)
-    records, modified_MLST_file_list = read_file_list(file_list,perform_db_validation=validate_db, perform_profile_validation=profile_refs, loci_to_remove=loci_to_remove)
+    records, modified_MLST_file_list = read_file_list(file_list,perform_db_validation=validate_db, perform_profile_validation=profile_refs, loci_to_keep=loci_to_keep)
 
     #create profile
     df = pd.DataFrame.from_dict(extract_profiles(records), orient='index')
