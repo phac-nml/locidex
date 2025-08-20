@@ -46,6 +46,7 @@ def add_args(parser=None):
     parser.add_argument('-f', '--force', required=False, help='Overwrite existing directory',
                         action='store_true')
     parser.add_argument('-p', '--profile_ref', type=str, required=False, help='Provide a TSV file with profile references for overriding MLST profiles. Columns [sample/sample_name,mlst_alleles]')
+    parser.add_argument('--loci', required=False, default=None, help='Specifies a file (or command-separated list) of loci to keep from MLST files',)
     return parser
 
 
@@ -110,7 +111,7 @@ def check_files_exist(file_list: list[os.PathLike]) -> None:
             raise_file_not_found_e(file, logger)
 
 
-def read_file_list(file_list, perform_db_validation=False, perform_profile_validation=False):
+def read_file_list(file_list, perform_db_validation=False, perform_profile_validation=False, loci_to_remove=None):
     records = {}
     db_version = None
     db_name = None
@@ -140,6 +141,10 @@ def read_file_list(file_list, perform_db_validation=False, perform_profile_valid
             if perform_profile_validation and mlst_report is not None:
                 modified_MLST_files.append(mlst_report)
             sample_name = sq_data.data.sample_name
+            # Remove loci that are not in the coreMLST profile list
+            for k in loci_to_remove:
+                sq_data.data.profile[sample_name].pop(k, None)
+
             if records.get(sq_data.data.sample_name) is None:
                 records[sample_name] = sq_data
             else:
@@ -259,6 +264,13 @@ def run_merge(config):
     input_files = config['input'][0]
     outdir = config['outdir']
 
+    if config['loci'] is not None:
+        if os.path.isfile(config['loci']):
+            loci_to_remove = pd.read_csv(config['loci'], header=None).iloc[:, 0].tolist()
+        else:
+            loci_to_remove = config['loci'].split(',')
+        print(f"INFO:locidex merge: Keeping only the following loci: {loci_to_remove}")
+
     ###
     # Commented out as these changes will require test data
     # perform_align = config['align']
@@ -286,7 +298,7 @@ def run_merge(config):
 
     #perform merge
     file_list = get_file_list(input_files)
-    records, modified_MLST_file_list = read_file_list(file_list,perform_db_validation=validate_db, perform_profile_validation=profile_refs)
+    records, modified_MLST_file_list = read_file_list(file_list,perform_db_validation=validate_db, perform_profile_validation=profile_refs, loci_to_remove=loci_to_remove)
 
     #create profile
     df = pd.DataFrame.from_dict(extract_profiles(records), orient='index')
