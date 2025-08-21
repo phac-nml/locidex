@@ -273,7 +273,7 @@ def run_merge(config):
             loci_to_keep = config['loci'].split(',')
         print(f"INFO:locidex merge: Keeping only the following loci: {loci_to_keep}")
     else:
-        loci_to_keep =  config['loci']
+        loci_to_keep = config['loci']
 
     ###
     # Commented out as these changes will require test data
