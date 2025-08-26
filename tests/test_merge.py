@@ -69,7 +69,8 @@ def test_profile_validation_report(tmpdir):
                                 'outdir': f"{tmpdir}",
                                 'strict': False,
                                 'force': True,
-                                'profile_ref': 'locidex/example/merge/merge_inputassure/test_ref_profile.csv'}
+                                'profile_ref': 'locidex/example/merge/merge_inputassure/test_ref_profile.csv',
+                                'loci': None}
     merge.run_merge(CONFIG)
     merge_output = sorted(listdir(tmpdir))
     assert merge_output == ["MLST_error_report.csv", "profile.tsv", "run.json"]
@@ -98,7 +99,8 @@ def test_profile_validation_noreport(tmpdir):
                                 'outdir': f"{tmpdir}",
                                 'strict': False,
                                 'force': True,
-                                'profile_ref': None}
+                                'profile_ref': None,
+                                'loci': None}
     merge.run_merge(CONFIG)
     merge_output = sorted(listdir(tmpdir))
     assert merge_output == ["profile.tsv", "run.json"]
@@ -111,3 +113,32 @@ def test_profile_validation_noreport(tmpdir):
         sample1 = next(reader_obj)
         assert sample1 == ['sampleA','1','1','1']
 
+def test_removal_loci():
+    """
+    Test that the --loci maintains the loci specified to subset the profiles properly.
+    Both to remove 'aroC': '9048803cd72dee3c868cd2dc5dc5650d' and to ensure the order for the remaining loci follows the loci_to_keep.
+    """
+    records, compare_error = merge.read_file_list(MERGE_SUCCESSFULLY, perform_db_validation=True, loci_to_keep=[ 'sucA',  'purE', 'dnaN', 'hemD', 'hisD', 'thrA'])
+    extracted_profiles = merge.extract_profiles(records)
+    assert len(extracted_profiles) == 2
+    value1, value2 = extracted_profiles.values()
+    assert value1 == value2
+    assert value1 == {'sucA': '9289fc07cc8e93cfe0716e6f613cefdb', 'purE': '9855cbf4009439498bf84cacefce4d8f', 'dnaN': '2772ad8b8e0f7b50f1396c31fbe53f2d', 'hemD': '620f99723c4e190abe096b11ca34b944', 'hisD': '38027ac1ac34817584a176c7e575e97e', 'thrA': '9e1aa76bb42279ed7ec8fc30f984b65d'}
+
+def test_removal_loci_argument(capfd, tmpdir):
+    """ Note: test that the --loci argument works to take in a file with loci to keep
+    """
+    CONFIG = {'command': 'merge',
+                                'input': [[
+                                    'locidex/example/merge/merge_inputassure/sampleQ.mlst.json',
+                                    'locidex/example/merge/merge_inputassure/sample1.mlst.json',
+                                    'locidex/example/merge/merge_inputassure/sample2.mlst.json',
+                                    'locidex/example/merge/merge_inputassure/sample3.mlst.json']],
+                                'outdir': f"{tmpdir}",
+                                'strict': False,
+                                'force': True,
+                                'profile_ref': None,
+                                'loci': 'locidex/example/merge/merge_inputassure/loci_to_keep.txt'}
+    merge.run_merge(CONFIG)
+    out, err = capfd.readouterr()
+    assert out == "INFO:locidex merge: Keeping only the following loci: ['l1', 'aroC', 'dnaN']\n"

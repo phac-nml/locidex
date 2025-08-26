@@ -250,6 +250,10 @@ EXAMPLE: merging files provided through a list of paths to report files
 
 		  locidex merge -i ./example/merge_in/file_list.txt ./example/merge_out/
 
+#### Parameters
+
+- `--loci` : Specify the loci to include in the output (`profile.tsv`) with a single loci file (e.g., [loci_to_keep](locidex/example/merge/merge_inputassure/loci_to_keep.txt)) OR command-separated list of loci (eg., locus_1,locus_2,..,locus_n) to keep (default: None)
+
 #### Output
 
 ```

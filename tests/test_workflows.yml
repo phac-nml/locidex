@@ -23,7 +23,7 @@
   command: locidex extract -i locidex/example/search/NC_003198.1.fasta --db_group locidex/example/manifest_selection/dbs --db_name "Locidex Database" --db_version 1.0.0 -o here
 
 - name: Run all
-  command: > 
+  command: >
     bash -c "
     locidex extract -i locidex/example/search/NC_003198.1.fasta -d locidex/example/build_db_mlst_out -o here &&
     locidex search --query here/raw.extracted.seqs.fasta -d locidex/example/build_db_mlst_out -o searched &&
@@ -39,7 +39,7 @@
   files:
     - path: format_out/locidex.txt
     - path: format_out/results.json
-  
+
 - name: Run Merge
   command: locidex merge -i locidex/example/merge/merge_in/report.json locidex/example/merge/merge_in/report1.json -o merged_out/
   files:
@@ -56,12 +56,12 @@
     "
   files:
     - path: test_out/extract/G1/raw.extracted.seqs.fasta
-      md5sum: 263d767c0503521372f8ea3c0689073a 
+      md5sum: 263d767c0503521372f8ea3c0689073a
     - path: test_out/search/G1/seq_store.json
     - path: test_out/report/conservative/G1/report.json
-      md5sum: e048b379915dc91e93d048cd89c78ae2
+      md5sum: b718b21e151598792e44a3940cb8028d
     - path: test_out/report/normal/G1/report.json
-      md5sum: b5f39c7aceee1ce8062f32b66ef9d9f3 
+      md5sum: 0fd8429db9606466c9547851bb6379ad
 
 
 - name: Test G2
@@ -77,10 +77,10 @@
         md5sum: a22c3896a3b2a5d8e0c0793c3848f0b2
       - path: test_out/search/G2/seq_store.json
       - path: test_out/report/conservative/G2/report.json
-        md5sum: b5999c77be20fef1f681a620cb5b071c
+        md5sum: daccce29c15e100d6fefdc52bc2aac23
       - path: test_out/report/normal/G2/report.json
-        md5sum: b0e2c03eeb5ce19fca5ecf5980053dbf
-  
+        md5sum: aa254ad6bf6843655a40cdf956f1d721
+
 
 - name: Test G3
   command: >
@@ -95,10 +95,10 @@
         md5sum: 263d767c0503521372f8ea3c0689073a
       - path: test_out/search/G3/seq_store.json
       - path: test_out/report/conservative/G3/report.json
-        md5sum: 30bf0e9d8198b05d639b4a3ab04f7cff
+        md5sum: 1b1c41937b4b56fecb28d79aa3f80f04
       - path: test_out/report/normal/G3/report.json
-        md5sum: ac66a45d13640cbe65c8445ac42d73a4
-  
+        md5sum: af1bda0e5eb607565605ad3be227de23
+
 
 - name: Test G4
   command: >
@@ -113,10 +113,10 @@
         md5sum: a22c3896a3b2a5d8e0c0793c3848f0b2
       - path: test_out/search/G4/seq_store.json
       - path: test_out/report/conservative/G4/report.json
-        md5sum: c4e56ec3a72f97a164dcdde217795434
+        md5sum: f66232fccfe8d30192234747db7056c9
       - path: test_out/report/normal/G4/report.json
-        md5sum: 772fe43da898ad3bf4d59ae0463e72f9
-  
+        md5sum: bb68bbbba52a3eb43084b09754b706e1
+
 
 - name: Test G5
   command: >
@@ -128,13 +128,13 @@
       "
   files:
       - path: test_out/extract/G5/raw.extracted.seqs.fasta
-        md5sum: 1fa0a1e6302e05ef9b131d71577e4be8
+        md5sum: b794b7bf488e49dd2a0a00e661ddf498
       - path: test_out/search/G5/seq_store.json
       - path: test_out/report/conservative/G5/report.json
-        md5sum: 09a5009eedc1a898448078a54f8e28a8
+        md5sum: 3cbe3dc7dccf4dc10601fdeaf97a53cb
       - path: test_out/report/normal/G5/report.json
-        md5sum: 1eafef6baebe88c84ea8b7a82183d6f5
-  
+        md5sum: ae04eee89cdb946bf170caea2bc236ae
+
 
 - name: Test G6
   command: >
@@ -146,13 +146,13 @@
       "
   files:
       - path: test_out/extract/G6/raw.extracted.seqs.fasta
-        md5sum: 9c76d604cbf87f0ce649b0b3ebfc4854
+        md5sum: a20198bc5accf1f23eadb5777f9d4b2d
       - path: test_out/search/G6/seq_store.json
       - path: test_out/report/conservative/G6/report.json
-        md5sum: a9bfc3bf4a32a181fa56f037a1265347
+        md5sum: 2c57a77688be930a69c1e6a5ae5dd912
       - path: test_out/report/normal/G6/report.json
-        md5sum: 1195e0a8d01aa8bc160061631c8198ac 
-  
+        md5sum: 36aa5617f5c3b68b63be38ac9a5b2cec
+
 
 - name: Test G7
   command: >
@@ -167,10 +167,10 @@
         md5sum: 14814906e4a1dadde2e422fb84aef547
       - path: test_out/search/G7/seq_store.json
       - path: test_out/report/conservative/G7/report.json
-        md5sum: 16b7d2a1e6e8888b57bbc11cab682492
+        md5sum: 35822613514f2bdb1636d46a5600f503
       - path: test_out/report/normal/G7/report.json
-        md5sum: b6eab54e2d17a8eb0fc8fb275af54003
-  
+        md5sum: abbc56182f290600cc51dc3d3adfe518
+
 
 - name: Test G8
   command: >
@@ -185,10 +185,10 @@
         md5sum: ca09751ff5ed7b3f5fec1a6d41696a0b
       - path: test_out/search/G8/seq_store.json
       - path: test_out/report/conservative/G8/report.json
-        md5sum: 312756f9eaf90483c95252daa92bea65
+        md5sum: f54d5228a7fee9e8996a03a00abad84c
       - path: test_out/report/normal/G8/report.json
-        md5sum: 3f4bb8c104469f7a07d7f3fe9dd0ed1d
-  
+        md5sum: d3a077058db390a52730ca52bf5451c7
+
 
 - name: Test G9
   command: >
@@ -203,10 +203,10 @@
         md5sum: 3c98833aea5abc427222c9ef1ea0be61
       - path: test_out/search/G9/seq_store.json
       - path: test_out/report/conservative/G9/report.json
-        md5sum: 55ab5181170966ead133c425fded1060
+        md5sum: aa7a2e5f1dd6111899621cdacbf294ef
       - path: test_out/report/normal/G9/report.json
-        md5sum: 6db1d3e7ae26152f8d041cecc1ac847b 
-  
+        md5sum: 5c343fe278d4121c3bb898c189b79426
+
 
 - name: Test G10
   command: >
@@ -221,10 +221,10 @@
         md5sum: 3b8981e69b40ee7118d8356c89280bcb
       - path: test_out/search/G10/seq_store.json
       - path: test_out/report/conservative/G10/report.json
-        md5sum: c22f72415ec2eac72c3260edfc099dca
+        md5sum: 3c198c299506c2c76a6abd8dadad502f
       - path: test_out/report/normal/G10/report.json
-        md5sum: e30f1282431bb9923ace156acc89321c
-  
+        md5sum: 33146aea682002de52b0edc504b9a6b1
+
 
 - name: Test G11
   command: >
@@ -236,13 +236,13 @@
       "
   files:
       - path: test_out/extract/G11/raw.extracted.seqs.fasta
-        md5sum: e2bdd2194087059f1b7a7ac664d3fc3f 
+        md5sum: e2bdd2194087059f1b7a7ac664d3fc3f
       - path: test_out/search/G11/seq_store.json
       - path: test_out/report/conservative/G11/report.json
-        md5sum: 2a36a4242d2742d7c0cfac39eefd482c
+        md5sum: 3208f01481fcc5544ef01fddb7941a29
       - path: test_out/report/normal/G11/report.json
-        md5sum: 5f170a44fadf72ab35d5b2de8b2ef343
-  
+        md5sum: a717a9cfbcc62e57dbce7bb34dfaccb7
+
 
 - name: Test G12
   command: >
@@ -257,10 +257,10 @@
         md5sum: 8eb5977e87e795e3dbc50d98af4d2b45
       - path: test_out/search/G12/seq_store.json
       - path: test_out/report/conservative/G12/report.json
-        md5sum: 05cb031b16a5e40299d0f7ccefe7ac8c
+        md5sum: 49015bfae8e97296227edbb3bd3b7b3f
       - path: test_out/report/normal/G12/report.json
-        md5sum: b4a398254e55838aaeeb3a97a9b51181
-  
+        md5sum: bfdd180a84eb83a56d4d3c08ba527e96
+
 
 - name: Test G13
   command: >
@@ -275,10 +275,10 @@
         md5sum: f5abee1fa5628d3ccffbe2b5d03e677d
       - path: test_out/search/G13/seq_store.json
       - path: test_out/report/conservative/G13/report.json
-        md5sum: 6b2d0b51683274983ea117d84a1113ee
+        md5sum: 77805b9b917a3112a3a1ffff08699c3a
       - path: test_out/report/normal/G13/report.json
-        md5sum: fc00bd027755743198d97355354b53d1
-  
+        md5sum: 1cb032c92b4a77d528ad0f0508e4dacb
+
 
 - name: Test G14
   command: >
@@ -293,6 +293,6 @@
         md5sum: 0c1255c5ed4ee62d4e21eef8e3dafc06
       - path: test_out/search/G14/seq_store.json
       - path: test_out/report/conservative/G14/report.json
-        md5sum: 1de0c6f82e484fb6a14a438e256b058b
+        md5sum: a15ee5b8bbbcfd9491fb044f6ec0e17f
       - path: test_out/report/normal/G14/report.json
-        md5sum: 212127f73816ffc3450958e23d26aa50
+        md5sum: 754864e9c6614c7e4ae3f0cecd07e1d6
