@@ -2,14 +2,14 @@ import pandas as pd
 import numpy as np
 from locidex.constants import NT_SUB, STOP_CODONS, START_CODONS
 class extractor:
-    seqs = {}
-    df = pd.DataFrame()
-    def __init__(self,df,seq_data,sseqid_col,queryid_col,qstart_col,qend_col,qlen_col,sstart_col,send_col,slen_col,sstrand_col,bitscore_col,overlap_thresh=100,extend_threshold_ratio = 0.2,filter_contig_breaks=True):
+    
+    def __init__(self,df,seq_data,sseqid_col,queryid_col,qstart_col,qend_col,qlen_col,sstart_col,send_col,slen_col,sstrand_col,bitscore_col,overlap_thresh=100,extend_threshold_ratio = 0.2,filter_contig_breaks=False):
+        self.seqs = {}
+        self.df = df
         self.filter_contig_breaks = filter_contig_breaks
         self.df = self.set_extraction_pos(df, sstart_col, send_col)
-
         self.is_complete(self.df,qstart_col,qend_col,qlen_col)
-        self.is_contig_boundary(self.df,'ext_start','ext_end',slen_col)
+        self.is_contig_boundary(self.df,'qstart','qend','ext_start','ext_end',slen_col,'qlen')
         if filter_contig_breaks:
             self.df = df[ (df['is_5prime_boundary'] == False) & (df['is_3prime_boundary'] == False)]
             self.df = self.df.reset_index(drop=True)
@@ -17,16 +17,14 @@ class extractor:
         pcols = [qstart_col,qend_col,sstart_col,send_col]
         for c in pcols:
             self.df[c] = self.df[c].apply(lambda x: x - 1)
-        
         self.df = self.get_best_hit_query(self.df)
         sort_cols = [sseqid_col, 'locus_name', sstart_col, bitscore_col, send_col]
         ascending_cols = [True, True, True, False, False]
         self.df = self.df.sort_values(sort_cols,ascending=ascending_cols).reset_index(drop=True)
         self.df = self.recursive_filter_redundant_queries(self.df, 'locus_name', sseqid_col, bitscore_col, 
                                                           sort_cols, ascending_cols, overlap_threshold=1)
-
-        self.df = self.extend(self.df,sseqid_col, queryid_col, qstart_col, qend_col, sstart_col,send_col,slen_col, qlen_col, bitscore_col, overlap_threshold=overlap_thresh)
-        self.df = self.set_extraction_pos(self.df, sstart_col, send_col)
+        self.df = self.extend(self.df,sseqid_col, queryid_col, qstart_col, qend_col, sstart_col,send_col,slen_col, qlen_col, bitscore_col, overlap_threshold=overlap_thresh)  
+        self.df = self.set_extraction_pos(self.df, sstart_col, send_col) 
         loci_ranges = self.group_by_locus(self.df,sseqid_col, queryid_col,qlen_col,extend_threshold_ratio)
         self.seqs = self.extract_seq(loci_ranges, seq_data)
         pass
@@ -42,9 +40,9 @@ class extractor:
         self.is_3prime_complete(df,qend_col,qlen_col)
         df['is_complete'] = np.where(((df['is_5prime_complete'] == True) &  (df['is_3prime_complete'] == True)), True, False)
 
-    def is_contig_boundary(self,df,sstart_col,send_col,slen_col):
-        df['is_5prime_boundary'] = np.where(df[sstart_col] == 1, True, False)
-        df['is_3prime_boundary'] = np.where(df[send_col] == df[slen_col], True, False)
+    def is_contig_boundary(self,df,qstart_col, qend_col, sstart_col,send_col,slen_col,qlen_col):
+        df['is_5prime_boundary'] = np.where((df[sstart_col] == 1) & (df[qstart_col] > 1), True, False)
+        df['is_3prime_boundary'] = np.where((df[send_col] == df[slen_col]) & (df[qend_col] < df[qlen_col]), True, False)
         df['is_on_boundary'] = np.where(((df['is_5prime_boundary'] == True) & (df['is_3prime_boundary'] == True)), True, False)
 
     def set_revcomp(self,df,sstart_col,send_col,strand_col):
@@ -436,7 +434,7 @@ class extractor:
                 five_p_ext.append(fivep_e)
                 three_p_ext.append(threep_e)
                 continue
-
+            id = row['qseqid']
             qstart = int(row[qstart_col])
             qend = int(row[qend_col])
             qlen = int(row[qlen_col])
@@ -459,11 +457,12 @@ class extractor:
                 if is_rev:
                     sstart += five_p_delta
                 else:
-                    sstart -= five_p_delta
+                    sstart -= five_p_delta 
 
-            if sstart < 1:
+            if sstart < 0:
                 sstart = 0
-
+            if send < 0:
+                send = 0
             if not three_p_complete:
                 e = True
                 threep_e = True
@@ -478,7 +477,35 @@ class extractor:
             is_extended.append(e)
             five_p_ext.append(fivep_e)
             three_p_ext.append(threep_e)
+            
+            if sstart < 0:
+                sstart = 0
+            if send < 0:
+                send = 0
 
+            if fivep_e:
+                ext_len = abs(sstart - send) 
+                while ext_len > qlen:
+                    if is_rev:
+                        sstart -= 1
+                    else:
+                        sstart += 1          
+                    ext_len = abs(sstart - send) 
+
+            
+            if threep_e:
+                ext_len = abs(sstart - send) 
+                while ext_len > qlen:
+                    if is_rev:
+                        send += 1
+                    else:
+                        send -= 1   
+                    ext_len = abs(sstart - send) 
+
+            if sstart < 0:
+                sstart = 0
+            if send < 0:
+                send = 0
 
             row[qstart_col] = qstart
             row[qend_col] = qend
@@ -492,7 +519,6 @@ class extractor:
         df['is_extended'] = is_extended
         df['is_5p_extended'] = five_p_ext
         df['is_3p_extended'] = three_p_ext
-
         return df
 
     def group_by_locus(self,df,seqid_col,query_col,qlen_col,extend_threshold_ratio = 0.2):
