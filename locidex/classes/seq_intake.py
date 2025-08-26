@@ -258,15 +258,17 @@ class seq_store:
     }
 
     #def __init__(self,sample_name,db_config_dict,metadata_dict,query_seq_records,blast_columns,filters={},stored_fields=[]):
-    def __init__(self,sample_name,db_config_dict,metadata_dict,query_seq_records,blast_columns,filters: HitFilters):
+    def __init__(self,sample_name,db_config_dict,metadata_dict,query_seq_records,blast_columns,filters: HitFilters,override=False):
         self.sample_name = sample_name
+        self.override = override
         self.record['query_data']['sample_name'] = sample_name
         self.add_db_config(db_config_dict)
         self.add_seq_data(query_seq_records)
         self.add_db_metadata(metadata_dict)
         self.add_hit_cols(blast_columns)
-        self.filters = filters
+        self.filters = asdict(filters)
         self.record['query_data']['sample_name'] = self.sample_name
+       
 
 
     def add_db_config(self,conf: DBConfig):
@@ -327,42 +329,48 @@ class seq_store:
                     hit_name = self.record['db_seq_info'][hit_id]['locus_name']
 
                     hinfo = self.record["db_seq_info"][hit_id]
-                    if dbtype == 'nucleotide':
-                        if "dna_min_len" not in hinfo:
-                            min_len = self.filters["dna_min_len"]
-                        else:
-                            min_len = hinfo["dna_min_len"]
-                        if "dna_max_len" not in hinfo:
-                            max_len = self.filters["dna_min_len"]
-                        else:
-                            max_len = hinfo["dna_max_len"]
-                        if "min_dna_match_cov" not in hinfo:
-                            min_cov = self.filters['min_dna_match_cov']
-                        else:
-                            min_cov = hinfo["min_dna_match_cov"]
-                        if "dna_min_ident" not in hinfo:
-                            min_ident = self.filters["dna_min_ident"]
-                        else:
-                            min_ident = hinfo["dna_min_ident"]
+                    if self.override:
+                        min_len = self.filters["min_dna_len"]
+                        min_cov = self.filters["min_dna_match_cov"]
+                        min_ident = self.filters["min_dna_ident"]
+                        max_len = self.filters["max_dna_len"]
                     else:
-                        if qlen < hinfo["aa_min_len"] or qlen > hinfo["aa_max_len"] or pident < hinfo["aa_min_ident"]:
-                            continue
-                        if "aa_min_len" not in hinfo:
-                            min_len = self.filters["aa_min_len"]
+                        if dbtype == 'nucleotide':
+                            if "dna_min_len" not in hinfo:
+                                min_len = self.filters["dna_min_len"]
+                            else:
+                                min_len = hinfo["dna_min_len"]
+                            if "dna_max_len" not in hinfo:
+                                max_len = self.filters["dna_min_len"]
+                            else:
+                                max_len = hinfo["dna_max_len"]
+                            if "min_dna_match_cov" not in hinfo:
+                                min_cov = self.filters['min_dna_match_cov']
+                            else:
+                                min_cov = hinfo["min_dna_match_cov"]
+                            if "dna_min_ident" not in hinfo:
+                                min_ident = self.filters["dna_min_ident"]
+                            else:
+                                min_ident = hinfo["dna_min_ident"]
                         else:
-                            min_len = hinfo["aa_min_len"]
-                        if "aa_max_len" not in hinfo:
-                            max_len = self.filters["aa_min_len"]
-                        else:
-                            max_len = hinfo["aa_max_len"]
-                        if "min_aa_match_cov" not in hinfo:
-                            min_cov = self.filters["aa_min_cov"]
-                        else:
-                            min_cov = hinfo["min_aa_match_cov"]
-                        if "aa_min_ident" not in hinfo:
-                            min_ident = self.filters["aa_min_ident"]
-                        else:
-                            min_ident = hinfo["aa_min_ident"]
+                            if qlen < hinfo["aa_min_len"] or qlen > hinfo["aa_max_len"] or pident < hinfo["aa_min_ident"]:
+                                continue
+                            if "aa_min_len" not in hinfo:
+                                min_len = self.filters["aa_min_len"]
+                            else:
+                                min_len = hinfo["aa_min_len"]
+                            if "aa_max_len" not in hinfo:
+                                max_len = self.filters["aa_min_len"]
+                            else:
+                                max_len = hinfo["aa_max_len"]
+                            if "min_aa_match_cov" not in hinfo:
+                                min_cov = self.filters["aa_min_cov"]
+                            else:
+                                min_cov = hinfo["min_aa_match_cov"]
+                            if "aa_min_ident" not in hinfo:
+                                min_ident = self.filters["aa_min_ident"]
+                            else:
+                                min_ident = hinfo["aa_min_ident"]
 
                     if qlen < min_len or qlen > max_len or pident < min_ident or qcovs < min_cov:
                         continue

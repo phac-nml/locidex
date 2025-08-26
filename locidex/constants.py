@@ -18,7 +18,7 @@ PROTEIN_ALPHA = ['a', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'k', 'l', 'm', 'n', 'p'
 DNA_ALPHA = ['a', 'c', 'g', 't', 'r', 'y', 's', 'w', 'k', 'm', 'b', 'd', 'h', 'v', 'n']
 
 START_CODONS = ['atg','gtg','ctg','ttg','ata']
-STOP_CODONS = ['taa','tag','tta','tca','tga','aga','agg']
+STOP_CODONS = ['taa','tag','tga']
 
 
 @dataclass(frozen=True)

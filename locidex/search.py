@@ -55,6 +55,8 @@ def add_args(parser=None):
                         default=80.0)
     parser.add_argument('--max_target_seqs', type=int, required=False, help='Maximum number of hit seqs per query',
                         default=10)
+    parser.add_argument('--override', required=False, help='Overwrite individual loci thresholds for filtering and use the global parameters',
+                        action='store_true')
     parser.add_argument('--n_threads','-t', type=int, required=False,
                         help='CPU Threads to use', default=1)
     parser.add_argument('--format', type=str, required=False,
@@ -126,6 +128,7 @@ def run_search(config):
     sample_name = config['name']
     perform_annotation = config['annotate']
     max_target_seqs = config['max_target_seqs']
+    override = config['override']
 
     if max_count := config.get('max_ambig_count'):
         max_ambig_count = max_count
@@ -189,6 +192,7 @@ def run_search(config):
         'evalue': FilterOptions(min=None, max=min_evalue, include=None)
     }
 
+
     df = pd.DataFrame.from_dict(seq_obj.seq_data)
     filtered_df = df
     filtered_df['index'] = filtered_df.index.to_list()
@@ -205,7 +209,7 @@ def run_search(config):
     
 
     store_obj = seq_store(sample_name, db_data.config_data, db_data.metadata['meta'],
-                        seq_obj.seq_data, BlastColumns._fields, hit_filters)
+                        seq_obj.seq_data, BlastColumns._fields, hit_filters,override=override)
 
     protein_filter = DefaultSearchOpts(
         program=BlastCommands.blastp, 
